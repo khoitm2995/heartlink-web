@@ -5224,16 +5224,28 @@
         return;
       }
 
-      // TRUE LOVE OUTCOME
-      badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-      badge.textContent = '💖 KẾT QUẢ: TÌNH YÊU ĐÍCH THỰC & SỰ TÔN TRỌNG';
-      heading.textContent = `Khoảnh khắc ngọt ngào bên ${char.name}: Sự trân trọng đã biến đêm nay thành Tình Yêu Đích Thực!`;
-      story.textContent = `Không có bất kỳ cạm bẫy nào cả — ${char.name} chăm sóc bạn từng chút một, hai bạn tâm sự thâu đêm về tương lai, ước mơ và nắm chặt tay nhau hứa sẽ gắn bó lâu dài. Sáng hôm sau, ${char.name} nhìn bạn mỉm cười đầy yêu thương: “Mình chính thức ở bên nhau trọn đời nhé!”`;
-      choices.innerHTML = `
-        <button onclick="resolveHotelSafeOutcome('true_love_commit')" class="p-3.5 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm col-span-1 sm:col-span-2 shadow-lg">
-          💍 Xác Nhận Tình Yêu Đích Thực & Mở Khóa Kết Thúc Viên Mãn!
-        </button>
-      `;
+      // TRUE LOVE OUTCOME (Lifelong commitment ending ONLY when affection === 100%)
+      if (cs.affection >= 100) {
+        badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        badge.textContent = '💖 KẾT QUẢ: TÌNH YÊU ĐÍCH THỰC (100% TÌNH CẢM)';
+        heading.textContent = `Khoảnh khắc ngọt ngào bên ${char.name}: Tình cảm đạt 100% trọn vẹn — Mở khóa gắn bó trọn đời!`;
+        story.textContent = `Không có bất kỳ cạm bẫy nào cả — ${char.name} chăm sóc bạn từng chút một, hai bạn tâm sự thâu đêm về tương lai, ước mơ và nắm chặt tay nhau hứa sẽ gắn bó lâu dài. Sáng hôm sau, ${char.name} nhìn bạn mỉm cười đầy yêu thương: “Mình chính thức ở bên nhau trọn đời nhé!”`;
+        choices.innerHTML = `
+          <button onclick="resolveHotelSafeOutcome('true_love_commit')" class="p-3.5 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm col-span-1 sm:col-span-2 shadow-lg">
+            💍 Xác Nhận Gắn Bó Trọn Đời & Mở Khóa Kết Thúc Viên Mãn!
+          </button>
+        `;
+      } else {
+        badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/40';
+        badge.textContent = '💞 ĐÊM NGỌT NGÀO & CHÂN THÀNH';
+        heading.textContent = `Khoảnh khắc ấm áp bên ${char.name}: Hai bạn ngày càng thấu hiểu và gắn bó hơn!`;
+        story.textContent = `Không có bất kỳ cạm bẫy nào cả — ${char.name} đối xử với bạn rất dịu dàng, tôn trọng và hai bạn đã tâm sự thâu đêm về nhiều điều. Vì Tình cảm hiện tại đang ở mức ${cs.affection}% (cần đạt 100% để gắn bó trọn đời), cả hai quyết định tiếp tục tìm hiểu sâu sắc và vun đắp tình cảm thêm nữa!`;
+        choices.innerHTML = `
+          <button onclick="resolveHotelSafeOutcome('true_love_continue')" class="p-3.5 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm col-span-1 sm:col-span-2 shadow-lg">
+            💞 Tiếp Tục Đồng Hành & Vun Đắp Tình Cảm (+15% Tình cảm, +12% Tin tưởng)
+          </button>
+        `;
+      }
     }
 
     function resolveNewHotelTragedy(actionKey, costAmt) {
@@ -5365,6 +5377,28 @@
         triggerSpecificEnding('good_marriage', char);
         return;
       }
+      if (mode === 'true_love_continue') {
+        cs.affection = Math.min(100, cs.affection + 15);
+        cs.trust = Math.min(100, cs.trust + 12);
+        const canEnterLove = (cs.affection >= 75 && (cs.datesCount || 0) >= 2);
+        if (canEnterLove && (cs.relPhase || 1) < 5) {
+          cs.relPhase = 5;
+          cs.messages.push({
+            sender: 'system',
+            text: `💞 Sau đêm ngọt ngào & chân thành bên ${char.name}, Tình cảm tăng lên ${cs.affection}% và hai bạn chính thức chuyển sang 【Giai đoạn 5: YÊU ĐƯƠNG】!`
+          });
+          showToast(`💖 Chúc mừng! Bạn và ${char.name} đã chính thức chuyển sang giai đoạn Yêu đương!`, 'success');
+        } else {
+          cs.messages.push({
+            sender: 'system',
+            text: `💞 Sau đêm ấm áp bên ${char.name}, Tình cảm tăng lên ${cs.affection}% (+15%) và Tin tưởng đạt ${cs.trust}% (+12%). Hãy tiếp tục trò chuyện và hẹn hò để đạt 100% Tình cảm nhé!`
+          });
+          showToast(`💞 Tình cảm với ${char.name} tăng lên ${cs.affection}%! Đạt 100% để mở khóa gắn bó trọn đời.`, 'success');
+        }
+        saveState();
+        renderMessagesView();
+        return;
+      }
       if (mode === 'one_night_ghosted_end') {
         triggerSpecificEnding('neutral_ghosted', char);
         return;
@@ -5458,8 +5492,35 @@
       const choices = document.getElementById('irlOutcomeChoices');
       choices.innerHTML = '';
 
-      // SCENARIO C: Hotel / Private Home Privacy & Recording Blackmail Trap (If risky venue & scammer/bad intent, unless protected)
-      if ((venue.id === 'hotel' || venue.id === 'private_home') && (char.archetype === 'scam_sextortion' || char.isScammer)) {
+      // Direct Hotel Venue Selection -> Route directly into the Overnight Hotel Scenario!
+      if (venue.id === 'hotel') {
+        if (!char.isScammer && char.archetype !== 'casual_short' && char.archetype !== 'rebound_ex' && cs.affection < 50) {
+          closeIRLDateModal();
+          cs.affection = Math.max(0, cs.affection - 10);
+          cs.trust = Math.max(0, cs.trust - 12);
+          cs.messages.push({
+            sender: 'me',
+            text: `Hôm nay tụi mình gặp nhau ở ${venue.name} cho riêng tư nhé ${char.name}!`,
+            time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`
+          });
+          cs.messages.push({
+            sender: 'them',
+            text: `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết (cần ≥50% Tình cảm) để đi thẳng vào khách sạn riêng tư đâu. Mình hẹn ở quán cà phê công cộng trước nhé!`,
+            time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`
+          });
+          saveState();
+          renderMessagesView();
+          showToast(`🛡️ ${char.name} từ chối vào khách sạn vì chưa đủ 50% Tình cảm!`, 'warn');
+          return;
+        }
+        cs.datesCount = (cs.datesCount || 0) + 1;
+        state.datesCompleted += 1;
+        triggerHotelOvernightScenario(char, cs);
+        return;
+      }
+
+      // SCENARIO C: Private Home Privacy & Recording Blackmail Trap (If risky venue & scammer/bad intent, unless protected)
+      if (venue.id === 'private_home' && (char.archetype === 'scam_sextortion' || char.isScammer)) {
         if (cs.sharedScheduleFamily || cs.noAlcoholRule) {
           badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300';
           badge.textContent = '🛡️ LÁ CHẮN AN TOÀN PHÁT HUY TÁC DỤNG!';
