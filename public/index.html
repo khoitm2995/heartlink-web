@@ -112,10 +112,11 @@
           <span>🛡️</span>
           <span>Phát hiện: <strong id="headerScamDetected">0</strong>/<span id="headerScamTotal">13</span></span>
         </div>
-        <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold">
-          <span>📅</span>
-          <span id="headerDayText">Ngày 1</span>
-        </div>
+        <button id="btnOpenTimeSkip" onclick="openTimeSkipModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-xs font-semibold transition shrink-0" title="Đồng hồ trong game & Tua nhanh thời gian">
+          <span>🕒</span>
+          <span id="headerDayText">T2, Ngày 1 • 08:00</span>
+          <span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-[10px] font-bold">⏩ Tua</span>
+        </button>
       </div>
 
       <!-- Right Controls: Sound, Theme, Guide, Ending Trigger, Reset -->
@@ -678,6 +679,9 @@
                   <button id="btnChatInviteDate" onclick="openIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition flex items-center gap-1" title="Mời hẹn hò ngoài đời (15 địa điểm)">
                     <span>📅</span><span class="hidden sm:inline">Hẹn Hò IRL</span>
                   </button>
+                  <button id="btnChatTimeSkip" onclick="openTimeSkipModal()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-200 text-xs font-semibold transition flex items-center gap-1" title="Tua nhanh thời gian trong game">
+                    <span>⏩</span><span class="hidden sm:inline">Tua Thời Gian</span>
+                  </button>
                   <button id="btnChatReportScam" onclick="openReportForActiveChar()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center gap-1" title="Báo cáo lừa đảo hoặc Chặn">
                     <span>🚨</span><span class="hidden sm:inline">Báo Cáo</span>
                   </button>
@@ -698,9 +702,12 @@
                 </button>
               </div>
 
-              <!-- Subtle Current Relationship Stage Label (1 compact line, no stage boxes) -->
-              <div id="chatRelationshipStageBar" class="px-3 sm:px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2 text-[11px] shrink-0">
-                <span class="font-bold text-pink-300 truncate" id="relPhaseBadge">Giai đoạn: Chào hỏi</span>
+              <!-- Subtle Current Relationship Stage Label + Subtle Autonomous Signal -->
+              <div id="chatRelationshipStageBar" class="px-3 sm:px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-bold text-pink-300 truncate" id="relPhaseBadge">Giai đoạn: Chào hỏi</span>
+                  <span id="chatSubtleSignalPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/80 truncate">💬 Trò chuyện bình thường</span>
+                </div>
                 <span id="relMemorySummaryPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 shrink-0">Đã nhớ 0 chi tiết</span>
               </div>
 
@@ -1157,9 +1164,16 @@
       </div>
 
       <div id="irlVenueSelectionStep" class="space-y-3">
-        <p class="text-xs text-slate-300">
-          Chọn một trong <strong>15 địa điểm hẹn hò</strong> dưới đây (hoặc chọn <em>Địa điểm do đối phương đề xuất</em>). Giá dự kiến phù hợp bối cảnh thực tế Việt Nam:
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="text-xs text-slate-300">
+            Chọn một trong <strong>15 địa điểm hẹn hò</strong> dưới đây (hoặc chọn <em>Địa điểm do đối phương đề xuất</em>). Giá dự kiến phù hợp bối cảnh thực tế Việt Nam:
+          </p>
+          <button id="btnPreDateGiftShop" onclick="openPreDateGiftShopModal()" class="px-3.5 py-2 rounded-xl bg-purple-600/25 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0">
+            <span>🎁</span><span>Mua Quà Tặng Trước Buổi Hẹn</span>
+            <span id="preDateGiftCountBadge" class="hidden px-1.5 py-0.5 rounded-full bg-pink-500 text-white text-[10px]">0</span>
+          </button>
+        </div>
+        <div id="irlPendingGiftsBanner" class="hidden p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200 flex items-center justify-between gap-2"></div>
         <div id="irlVenuesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto custom-scroll pr-1">
           <!-- Populated by JS -->
         </div>
@@ -1189,6 +1203,125 @@
         <button id="btnUniModalOk" onclick="closeUniversalModal()" class="px-5 py-2 rounded-xl gradient-brand text-white text-xs font-bold">Đã hiểu</button>
       </div>
     </div>
+  </div>
+
+
+  <!-- MODAL: TIME SIMULATION & FAST-FORWARD -->
+  <div id="modal-time-skip" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">🕒 Đồng Hồ & Tua Nhanh Thời Gian</h3>
+          <p id="timeSkipCurrentClock" class="text-xs text-purple-300 mt-0.5">Hiện tại: Thứ Hai, Ngày 1 • 08:00</p>
+        </div>
+        <button onclick="closeTimeSkipModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Chọn nhanh khoảng thời gian muốn tua:</div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <button onclick="previewTimeSkipDays(0, true)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">☀️ Sáng ngày mai (08:00)</button>
+          <button onclick="previewTimeSkipDays(1)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +1 Ngày</button>
+          <button onclick="previewTimeSkipDays(2)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +2 Ngày</button>
+          <button onclick="previewTimeSkipDays(3)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +3 Ngày</button>
+          <button onclick="previewTimeSkipDays(5)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +5 Ngày</button>
+          <button onclick="previewTimeSkipDays(7)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +7 Ngày</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-950 border border-slate-800">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">Hoặc tự nhập số ngày tua thêm:</label>
+          <div class="flex gap-1.5">
+            <input id="inpCustomSkipDays" type="number" min="1" max="365" value="1" oninput="previewCustomSkipInput()" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+            <button onclick="previewCustomSkipInput()" class="px-3 py-2 rounded-xl bg-slate-800 text-xs font-bold text-purple-300 border border-slate-700 shrink-0">Xem</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">Hoặc tua tới Ngày & Giờ cụ thể:</label>
+          <div class="flex gap-1.5">
+            <input id="inpTargetDayNum" type="number" min="1" value="2" oninput="previewTargetDayTime()" class="w-20 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="Ngày" />
+            <input id="inpTargetClockTime" type="time" value="19:30" oninput="previewTargetDayTime()" class="flex-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+          </div>
+        </div>
+      </div>
+
+      <div id="timeSkipScheduledBtnWrap" class="hidden">
+        <button id="btnSkipToNextDate" onclick="previewSkipToNextScheduledDate()" class="w-full py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition"></button>
+      </div>
+
+      <div id="timeSkipPreviewBox" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-1.5">
+        <div class="font-bold">⚠️ Dự báo tác động khi tua thời gian:</div>
+        <div id="timeSkipPreviewText" class="text-[11px] text-slate-200 leading-relaxed">Chọn mốc thời gian ở trên để xem dự báo lịch hẹn và mức độ nguội lạnh quan hệ.</div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button onclick="closeTimeSkipModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Đóng</button>
+        <button id="btnConfirmTimeSkip" onclick="confirmPendingTimeSkip()" class="px-5 py-2.5 rounded-xl gradient-brand text-white text-xs font-bold shadow-lg">✅ Xác Nhận Tua Thời Gian</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INSTANT DATE INVITATION (LỜI MỜI HẸN HÒ CHỦ ĐỘNG TRONG NGÀY) -->
+  <div id="modal-instant-invite" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-slate-900 border border-pink-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 animate-pop max-h-[92dvh] overflow-y-auto custom-scroll">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <div id="instInviteAvatar" class="w-12 h-12 rounded-full overflow-hidden border-2 border-pink-500/60 shrink-0 bg-slate-800"></div>
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-bold uppercase tracking-wider">📅 Lời Mời Hẹn Hò Chủ Động</span>
+            <h3 id="instInvitePartnerName" class="text-base font-extrabold text-white mt-0.5">Tên Nhân Vật</h3>
+            <p id="instInviteRelStage" class="text-[11px] text-slate-400">Giai đoạn hiện tại</p>
+          </div>
+        </div>
+        <button onclick="closeInstantInviteModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold shrink-0">✕</button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+        <p id="instInviteMessage" class="text-slate-100 leading-relaxed italic">“Tối nay mình gặp nhau nhé!”</p>
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px]">
+          <div><span class="text-slate-400">📍 Địa điểm:</span> <strong id="instInviteVenue" class="text-emerald-300">Quán Cà Phê</strong></div>
+          <div><span class="text-slate-400">🕒 Thời gian:</span> <strong id="instInviteTime" class="text-sky-300">Hôm nay • 19:30</strong></div>
+          <div><span class="text-slate-400">🎯 Lý do:</span> <strong id="instInvitePurpose" class="text-pink-300">Gặp mặt trò chuyện</strong></div>
+          <div><span class="text-slate-400">⏳ Thời hạn:</span> <strong id="instInviteCountdown" class="text-amber-300">Còn 4 giờ</strong></div>
+        </div>
+      </div>
+
+      <div id="instInviteRescheduleBox" class="hidden p-3 rounded-2xl bg-slate-950 border border-sky-500/30 space-y-2.5">
+        <div class="text-xs font-bold text-sky-300">📆 Chọn ngày & giờ bạn muốn hẹn lại:</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">Ngày hẹn (Từ Ngày hiện tại trở đi)</label>
+            <input id="inpRescheduleDay" type="number" min="1" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">Giờ hẹn</label>
+            <input id="inpRescheduleTime" type="time" value="19:30" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+          </div>
+        </div>
+        <button onclick="submitInstantInviteReschedule()" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs">📩 Gửi Đề Xuất Lịch Hẹn Mới</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button onclick="handleInstantInviteChoice('accept')" class="py-3 px-3 rounded-xl gradient-brand text-white font-bold text-xs shadow-lg">✅ ĐỒNG Ý ĐI HẸN</button>
+        <button onclick="toggleInstantInviteReschedule()" class="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/40 text-sky-200 font-bold text-xs">📆 HẸN DỊP KHÁC</button>
+        <button onclick="handleInstantInviteChoice('decline')" class="py-3 px-3 rounded-xl bg-slate-800 hover:bg-rose-500/20 border border-slate-700 text-slate-200 font-bold text-xs">❌ TỪ CHỐI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DECISION IMPACT PANEL -->
+  <div id="modal-decision-impact" class="hidden fixed bottom-5 left-5 z-50 w-[calc(100%-2.5rem)] max-w-sm bg-slate-900/95 border border-slate-700 rounded-2xl p-4 shadow-2xl space-y-2.5 animate-pop">
+    <div class="flex items-start justify-between gap-2">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-purple-300">📊 Phân Tích Quyết Định</span>
+        <h4 id="decImpactTitle" class="text-xs sm:text-sm font-extrabold text-white mt-0.5">Quyết định</h4>
+      </div>
+      <button onclick="document.getElementById('modal-decision-impact').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+    </div>
+    <div id="decImpactRows" class="grid grid-cols-2 gap-1.5 text-xs"></div>
+    <div id="decImpactWalletRow" class="hidden text-[11px] text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800"></div>
+    <p id="decImpactReason" class="text-[11px] text-slate-300 leading-relaxed"></p>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
@@ -1647,6 +1780,897 @@
       return n.toLocaleString('vi-VN') + 'đ';
     }
 
+
+    // =====================================================================
+    // UPDATE ENGINE: TIME SIMULATION, EXPONENTIAL DECAY, GIFT SHOP,
+    // DECISION IMPACT, INSTANT INVITES, AUTONOMOUS BEHAVIOR & MSG EVALUATION
+    // =====================================================================
+    const WEEKDAYS_VN = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+
+    function ensureTimeAndUpdateState() {
+      if (!state.simTime || typeof state.simTime.totalMinutes !== 'number') {
+        state.simTime = { totalMinutes: ((Math.max(1, state.day || 1) - 1) * 1440) + 480 };
+      }
+      state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
+      if (!Array.isArray(state.scheduledDates)) state.scheduledDates = [];
+    }
+
+    function getSimTimeInfo(totalMins) {
+      ensureTimeAndUpdateState();
+      const mins = typeof totalMins === 'number' ? Math.max(0, Math.round(totalMins)) : state.simTime.totalMinutes;
+      const day = Math.floor(mins / 1440) + 1;
+      const minsInDay = mins % 1440;
+      const hour = Math.floor(minsInDay / 60);
+      const minute = minsInDay % 60;
+      const weekday = WEEKDAYS_VN[(day - 1) % 7];
+      const pad = n => String(n).padStart(2, '0');
+      const timeStr = `${pad(hour)}:${pad(minute)}`;
+      return {
+        totalMinutes: mins,
+        day,
+        weekday,
+        hour,
+        minute,
+        timeStr,
+        shortLabel: `${weekday.replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')}, Ngày ${day} • ${timeStr}`,
+        fullLabel: `${weekday}, Ngày ${day} • ${timeStr}`
+      };
+    }
+
+    function advanceSimMinutes(mins) {
+      ensureTimeAndUpdateState();
+      state.simTime.totalMinutes += Math.max(1, Math.round(mins));
+      state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
+      updateTopBarStats();
+    }
+
+    function ensureCharExtendedState(char, cs) {
+      if (!cs) return;
+      ensureTimeAndUpdateState();
+      if (typeof cs.intimacy !== 'number') cs.intimacy = Math.max(10, Math.round((cs.affection || 20) * 0.7));
+      if (typeof cs.respect !== 'number') cs.respect = 60;
+      if (typeof cs.lastContactMinutes !== 'number') cs.lastContactMinutes = state.simTime.totalMinutes;
+      if (typeof cs.lastDecayAppliedAtMinutes !== 'number') cs.lastDecayAppliedAtMinutes = state.simTime.totalMinutes;
+      if (!Array.isArray(cs.evaluatedMsgIds)) cs.evaluatedMsgIds = [];
+      if (!Array.isArray(cs.pendingDateGifts)) cs.pendingDateGifts = [];
+      if (!Array.isArray(cs.givenGifts)) cs.givenGifts = [];
+      if (!Array.isArray(cs.pastBillPayments)) cs.pastBillPayments = [];
+      if (!Array.isArray(cs.promisesMade)) cs.promisesMade = [];
+      if (!cs.evalMetrics) {
+        cs.evalMetrics = {
+          interest: 55,
+          compatibility: (char && char.hiddenStats && char.hiddenStats.compatibility) ? char.hiddenStats.compatibility : 60,
+          respectScore: cs.respect || 60,
+          communicationQuality: 55,
+          pressure: 0,
+          consecutiveShortReplies: 0,
+          consecutivePlayerMsgs: 0,
+          unansweredPlayerMsgs: 0,
+          postponeCount: 0,
+          status: 'active', // 'active' | 'paused_tomorrow' | 'withdrawn' | 'blocked_by_partner'
+          pausedAtDay: null,
+          finalReplyUsed: false,
+          lastSignalText: '💬 Trò chuyện bình thường'
+        };
+      }
+      if (!cs.scammerMetrics && char && char.isScammer) {
+        cs.scammerMetrics = {
+          exploitPotential: state.player.balance >= 15000000 ? 75 : 40,
+          playerGullibility: 50,
+          suspicionRisk: 15,
+          effortCost: 10
+        };
+      }
+    }
+
+    function getDecayProfile(char) {
+      if (!char) return { lambda: 0.11, graceDays: 1.5, style: 'standard' };
+      const arch = char.archetype || '';
+      const pers = (char.personality || []).join(' ').toLowerCase();
+      if (char.isScammer) return { lambda: 0.05, graceDays: 1.0, style: 'scammer' };
+      if (arch === 'casual_short' || arch === 'casual_materialistic') return { lambda: 0.18, graceDays: 1.0, style: 'casual' };
+      if (arch === 'neutral_busy' || pers.includes('độc lập') || pers.includes('điềm đạm')) return { lambda: 0.065, graceDays: 2.5, style: 'independent' };
+      if (pers.includes('nhạy cảm') || pers.includes('lãng mạn') || pers.includes('quan tâm')) return { lambda: 0.145, graceDays: 1.0, style: 'needy' };
+      if (arch === 'rebound_ex' || pers.includes('né tránh')) return { lambda: 0.12, graceDays: 2.0, style: 'avoidant' };
+      return { lambda: 0.105, graceDays: 1.5, style: 'standard' };
+    }
+
+    function applyRelationshipDecayForChar(char, cs, targetMinutes) {
+      ensureCharExtendedState(char, cs);
+      if (cs.blocked || cs.unmatched || cs.evalMetrics.status === 'blocked_by_partner' || cs.evalMetrics.status === 'withdrawn') {
+        cs.lastDecayAppliedAtMinutes = targetMinutes;
+        return null;
+      }
+      const prevApplied = Math.max(cs.lastDecayAppliedAtMinutes, cs.lastContactMinutes);
+      if (targetMinutes <= prevApplied) return null;
+
+      const profile = getDecayProfile(char);
+      const prevNoContactDays = Math.max(0, (prevApplied - cs.lastContactMinutes) / 1440);
+      const newNoContactDays = Math.max(0, (targetMinutes - cs.lastContactMinutes) / 1440);
+
+      const effPrev = Math.max(0, prevNoContactDays - profile.graceDays);
+      const effNew = Math.max(0, newNoContactDays - profile.graceDays);
+      const deltaEff = Math.max(0, effNew - effPrev);
+
+      cs.lastDecayAppliedAtMinutes = targetMinutes;
+      if (deltaEff <= 0) return { daysNoContact: newNoContactDays, changed: false };
+
+      const factor = Math.exp(-profile.lambda * deltaEff);
+      const before = { affection: cs.affection, trust: cs.trust, intimacy: cs.intimacy, respect: cs.respect };
+
+      cs.affection = Math.max(0, Math.round(cs.affection * factor));
+      cs.trust = Math.max(0, Math.round(cs.trust * Math.pow(factor, 0.85)));
+      cs.intimacy = Math.max(0, Math.round(cs.intimacy * Math.pow(factor, 1.15)));
+      cs.respect = Math.max(0, Math.round(cs.respect * Math.pow(factor, 0.6)));
+
+      // Insecure/avoidant or long silence can raise suspicion or trigger ghosting risk
+      if (newNoContactDays >= 5 && profile.style === 'insecure') {
+        cs.suspicion = Math.min(100, (cs.suspicion || 10) + Math.round(deltaEff * 4));
+      }
+
+      const tInfo = getSimTimeInfo(targetMinutes);
+      let proactiveEvent = null;
+
+      // Proactive messages or silence reactions during skipped period
+      if (newNoContactDays >= 7 && profile.style === 'casual') {
+        cs.evalMetrics.status = 'withdrawn';
+        cs.evalMetrics.lastSignalText = '👻 Đối phương đã ngừng liên lạc';
+        proactiveEvent = `👻 Sau hơn ${Math.floor(newNoContactDays)} ngày bạn không liên lạc, ${char.name} đã lặng lẽ rút lui và ngừng tìm hiểu.`;
+        cs.messages.push({ sender: 'system', text: proactiveEvent, time: tInfo.fullLabel });
+      } else if (newNoContactDays >= 2.5 && char.isScammer && !cs.sentDecayPing) {
+        cs.sentDecayPing = true;
+        const pingText = `Dạo này ${state.player.name} bận gì mà im lặng mấy hôm nay thế? Mình nhớ bạn và vẫn đang chờ bạn trả lời chuyện hôm trước nè 💕.`;
+        cs.messages.push({ sender: 'them', text: pingText, time: tInfo.fullLabel });
+        proactiveEvent = `💬 ${char.name} đã chủ động nhắn tin hỏi thăm vì thấy bạn im lặng.`;
+      } else if (newNoContactDays >= 3 && !char.isScammer && profile.style === 'needy' && !cs.sentDecayPing) {
+        cs.sentDecayPing = true;
+        const pingText = `${state.player.name} ơi, mấy ngày nay không thấy bạn nhắn gì làm mình hơi hụt hẫng... Có chuyện gì bận lắm hả?`;
+        cs.messages.push({ sender: 'them', text: pingText, time: tInfo.fullLabel });
+        proactiveEvent = `💬 ${char.name} nhắn tin bày tỏ sự hụt hẫng khi bạn im lặng ${Math.floor(newNoContactDays)} ngày.`;
+      }
+
+      return {
+        daysNoContact: newNoContactDays,
+        changed: (before.affection !== cs.affection || before.trust !== cs.trust || before.intimacy !== cs.intimacy),
+        deltaAff: cs.affection - before.affection,
+        deltaTrust: cs.trust - before.trust,
+        deltaIntimacy: cs.intimacy - before.intimacy,
+        proactiveEvent
+      };
+    }
+
+    // EXPANDED 10-CATEGORY VIETNAM MARKET GIFT CATALOG
+    const EXTENDED_GIFT_CATALOG = [
+      { id: "gift_flowers", icon: "💐", name: "Bó Hoa Hồng Tươi Nhập Khẩu", category: "Hoa tươi", cost: 450000, tier: "romantic", hobbiesMatch: ["Cắm hoa", "Lãng mạn", "Nhiếp ảnh", "Trang trí"], desc: "Bó hoa tinh tế gói giấy kraft sang trọng, hợp tặng khi hẹn ăn tối.", suitableFor: "Người lãng mạn, yêu cái đẹp" },
+      { id: "gift_choco", icon: "🍫", name: "Hộp Socola Thủ Công Bỉ", category: "Socola", cost: 280000, tier: "subtle", hobbiesMatch: ["Làm bánh", "Cà phê", "Trà chiều", "Ẩm thực"], desc: "Ngọt ngào, vừa túi tiền, không gây áp lực cho buổi hẹn đầu.", suitableFor: "Mọi đối tượng, dễ tạo thiện cảm nhẹ nhàng" },
+      { id: "gift_bear", icon: "🧸", name: "Gấu Bông Jellycat Chính Hãng", category: "Gấu bông", cost: 520000, tier: "romantic", hobbiesMatch: ["Nuôi mèo", "Nuôi thú cưng", "Xem phim"], desc: "Mềm mịn đáng yêu, hợp với người tính cách ngọt ngào.", suitableFor: "Người trẻ trung, thích sự dễ thương" },
+      { id: "gift_perfume", icon: "🧴", name: "Nước Hoa Chiết Niche 10ml", category: "Nước hoa", cost: 650000, tier: "romantic", hobbiesMatch: ["Thời trang", "Fine Dining", "Rượu vang"], desc: "Hương thơm tinh tế, sang trọng nhưng chưa quá phô trương.", suitableFor: "Người chú trọng phong cách & gu thẩm mỹ" },
+      { id: "gift_jewelry", icon: "💍", name: "Vòng Tay Bạc Tối Giản PNJ", category: "Trang sức", cost: 1850000, tier: "luxury", hobbiesMatch: ["Thời trang", "Mua sắm", "Fine Dining"], desc: "Món trang sức giá trị cao; hợp khi đã thân, dễ gây ngại nếu mới quen.", suitableFor: "Giai đoạn sâu sắc hoặc người thích sang trọng" },
+      { id: "gift_book", icon: "📚", name: "Sách Nghệ Thuật & Tâm Lý Chọn Lọc", category: "Sách", cost: 220000, tier: "practical", hobbiesMatch: ["Đọc sách", "Tâm lý học", "Cà phê", "Podcast", "Viết lách"], desc: "Món quà tinh tế, chiều sâu, ghi điểm cực mạnh với người thích tri thức.", suitableFor: "Người sâu sắc, hướng nội, thực tế" },
+      { id: "gift_cosmetic", icon: "💄", name: "Son Dưỡng & Kem Tay Cao Cấp", category: "Mỹ phẩm", cost: 780000, tier: "romantic", hobbiesMatch: ["Thời trang", "Làm đẹp", "Chụp ảnh"], desc: "Chăm sóc tinh tế, được lòng người thích làm đẹp.", suitableFor: "Người chăm chút ngoại hình" },
+      { id: "gift_handmade", icon: "🧶", name: "Nến Thơm & Thiệp Viết Tay Handmade", category: "Quà handmade", cost: 150000, tier: "subtle", hobbiesMatch: ["Thiền", "Trồng cây", "Nhạc Acoustic", "Cắm hoa"], desc: "Chân thành và ấm áp, thể hiện sự để tâm mà không nặng tiền bạc.", suitableFor: "Người trân trọng tình cảm hơn vật chất" },
+      { id: "gift_hobby", icon: "🎲", name: "Quà Theo Sở Thích Riêng (Board Game / Thủy Sinh / Phụ Kiện)", category: "Sở thích riêng", cost: 490000, tier: "hobby", hobbiesMatch: ["Board Games", "Cá cảnh", "Thủy sinh", "Pokémon GO", "Gym", "Cầu lông", "Cà phê"], desc: "Món quà được chọn đúng theo sở thích ghi trên hồ sơ đối phương!", suitableFor: "Người bạn thực sự dành thời gian tìm hiểu hồ sơ" },
+      { id: "gift_luxury", icon: "👜", name: "Túi Xách / Đồng Hồ Hàng Hiệu Cao Cấp", category: "Quà cao cấp", cost: 6500000, tier: "luxury", hobbiesMatch: ["Hàng hiệu", "Du thuyền", "Golf", "Mua sắm hàng hiệu"], desc: "Quà xa xỉ đắt tiền; người tối giản sẽ thấy áp lực, kẻ lừa đảo sẽ lợi dụng đòi thêm.", suitableFor: "Người thực dụng hoặc đã bước vào giai đoạn yêu sâu" }
+    ];
+
+    function showDecisionImpactCard({ title, changes = [], walletBefore = null, walletAfter = null, reason = '' }) {
+      const box = document.getElementById('modal-decision-impact');
+      if (!box) return;
+      document.getElementById('decImpactTitle').textContent = title || 'Tác động quyết định';
+      const rowsEl = document.getElementById('decImpactRows');
+      rowsEl.innerHTML = '';
+
+      const visibleChanges = changes.filter(c => c && typeof c.delta === 'number' && c.delta !== 0);
+      if (visibleChanges.length === 0) {
+        rowsEl.innerHTML = '<div class="col-span-2 text-[11px] text-slate-400">Các chỉ số bề mặt giữ nguyên ổn định.</div>';
+      } else {
+        visibleChanges.forEach(c => {
+          const isPos = c.delta > 0;
+          const sign = isPos ? '+' : '';
+          const cls = isPos ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+          const d = document.createElement('div');
+          d.className = `px-2.5 py-1.5 rounded-xl border flex items-center justify-between ${cls}`;
+          d.innerHTML = `<span class="text-slate-200 font-medium">${c.label}</span><strong class="font-extrabold">${sign}${c.delta}</strong>`;
+          rowsEl.appendChild(d);
+        });
+      }
+
+      const wRow = document.getElementById('decImpactWalletRow');
+      if (typeof walletBefore === 'number' && typeof walletAfter === 'number' && walletBefore !== walletAfter) {
+        wRow.classList.remove('hidden');
+        const diff = walletAfter - walletBefore;
+        wRow.innerHTML = `💳 Ví tiền: <span class="text-slate-400">${formatVND(walletBefore)}</span> → <strong class="${diff < 0 ? 'text-amber-300' : 'text-emerald-400'}">${formatVND(walletAfter)}</strong> (${diff < 0 ? '-' : '+'}${formatVND(Math.abs(diff))})`;
+      } else {
+        wRow.classList.add('hidden');
+      }
+
+      document.getElementById('decImpactReason').textContent = reason || '';
+      box.classList.remove('hidden');
+      clearTimeout(window._decImpactTimer);
+      window._decImpactTimer = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 8500);
+    }
+
+    // TIME FAST-FORWARD MODAL & ENGINE
+    let pendingTimeSkipTargetMins = null;
+
+    function openTimeSkipModal() {
+      ensureTimeAndUpdateState();
+      const info = getSimTimeInfo();
+      document.getElementById('timeSkipCurrentClock').textContent = `Hiện tại: ${info.fullLabel}`;
+      document.getElementById('inpTargetDayNum').value = info.day + 1;
+      document.getElementById('inpTargetDayNum').min = info.day;
+
+      const nextSched = (state.scheduledDates || [])
+        .filter(d => d.status === 'pending' && d.targetMinutes > state.simTime.totalMinutes)
+        .sort((a, b) => a.targetMinutes - b.targetMinutes)[0];
+      const wrap = document.getElementById('timeSkipScheduledBtnWrap');
+      if (nextSched) {
+        const sInfo = getSimTimeInfo(nextSched.targetMinutes);
+        wrap.classList.remove('hidden');
+        document.getElementById('btnSkipToNextDate').textContent = `📅 Tua thẳng tới lịch hẹn với ${nextSched.charName} (${sInfo.fullLabel})`;
+        window._nextSchedTargetMins = nextSched.targetMinutes;
+      } else {
+        wrap.classList.add('hidden');
+      }
+
+      previewTimeSkipDays(1);
+      document.getElementById('modal-time-skip').classList.remove('hidden');
+    }
+
+    function closeTimeSkipModal() {
+      document.getElementById('modal-time-skip').classList.add('hidden');
+    }
+
+    function previewTimeSkipDays(days, nextMorning = false) {
+      ensureTimeAndUpdateState();
+      let target;
+      if (nextMorning) {
+        const curDay = Math.floor(state.simTime.totalMinutes / 1440) + 1;
+        target = curDay * 1440 + 480; // Next day 08:00
+      } else {
+        target = state.simTime.totalMinutes + Math.max(1, days) * 1440;
+      }
+      setAndPreviewTimeSkipTarget(target);
+    }
+
+    function previewCustomSkipInput() {
+      const d = Math.max(1, parseInt(document.getElementById('inpCustomSkipDays').value || '1', 10));
+      previewTimeSkipDays(d, false);
+    }
+
+    function previewTargetDayTime() {
+      ensureTimeAndUpdateState();
+      const dayNum = Math.max(1, parseInt(document.getElementById('inpTargetDayNum').value || '1', 10));
+      const tVal = (document.getElementById('inpTargetClockTime').value || '08:00').split(':');
+      const hh = parseInt(tVal[0] || '8', 10);
+      const mm = parseInt(tVal[1] || '0', 10);
+      const target = (dayNum - 1) * 1440 + (hh * 60 + mm);
+      setAndPreviewTimeSkipTarget(Math.max(state.simTime.totalMinutes + 15, target));
+    }
+
+    function previewSkipToNextScheduledDate() {
+      if (window._nextSchedTargetMins) setAndPreviewTimeSkipTarget(window._nextSchedTargetMins);
+    }
+
+    function setAndPreviewTimeSkipTarget(targetMins) {
+      pendingTimeSkipTargetMins = targetMins;
+      const targetInfo = getSimTimeInfo(targetMins);
+      const deltaDays = ((targetMins - state.simTime.totalMinutes) / 1440);
+      const warnings = [];
+
+      const missedInvites = state.matchedIds.filter(cid => {
+        const cs = state.charStates[cid];
+        return cs && cs.activePartnerInvite && cs.activePartnerInvite.expiresAtMinutes && targetMins > cs.activePartnerInvite.expiresAtMinutes;
+      });
+      if (missedInvites.length > 0) {
+        warnings.push(`⏳ ${missedInvites.length} lời mời hẹn hò trong ngày sẽ hết hạn nếu bạn không phản hồi trước khi tua.`);
+      }
+
+      const schedHit = (state.scheduledDates || []).filter(d => d.status === 'pending' && d.targetMinutes <= targetMins);
+      if (schedHit.length > 0) {
+        warnings.push(`📅 Có ${schedHit.length} cuộc hẹn đã lên lịch rơi vào mốc thời gian này (hệ thống sẽ kiểm tra lại mức độ tình cảm khi đến ngày hẹn).`);
+      }
+
+      const decayRisks = [];
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid);
+        const cs = state.charStates[cid];
+        if (!c || !cs || cs.blocked || cs.unmatched) return;
+        ensureCharExtendedState(c, cs);
+        const silenceDays = (targetMins - cs.lastContactMinutes) / 1440;
+        const prof = getDecayProfile(c);
+        if (silenceDays > prof.graceDays + 1) {
+          decayRisks.push(`${c.name} (${silenceDays.toFixed(1)} ngày chưa nhắn)`);
+        }
+      });
+      if (decayRisks.length > 0) {
+        warnings.push(`💔 Nguy cơ nguội lạnh tình cảm nếu bỏ bẵng không nhắn tin với: ${decayRisks.slice(0, 3).join(', ')}.`);
+      }
+
+      const box = document.getElementById('timeSkipPreviewText');
+      if (warnings.length === 0) {
+        box.innerHTML = `Sẽ tua tới <strong>${targetInfo.fullLabel}</strong> (+${deltaDays.toFixed(1)} ngày). Hiện chưa có lịch hẹn hay nguy cơ nguội lạnh đáng kể.`;
+      } else {
+        box.innerHTML = `Sẽ tua tới <strong>${targetInfo.fullLabel}</strong> (+${deltaDays.toFixed(1)} ngày):<br>` + warnings.map(w => `• ${w}`).join('<br>');
+      }
+    }
+
+    function confirmPendingTimeSkip() {
+      if (!pendingTimeSkipTargetMins || pendingTimeSkipTargetMins <= state.simTime.totalMinutes) return;
+      executeTimeFastForward(pendingTimeSkipTargetMins);
+      closeTimeSkipModal();
+    }
+
+    function executeTimeFastForward(targetMinutes) {
+      ensureTimeAndUpdateState();
+      if (targetMinutes <= state.simTime.totalMinutes) return;
+
+      const prevDay = state.day;
+      const targetInfo = getSimTimeInfo(targetMinutes);
+      state.simTime.totalMinutes = targetMinutes;
+      state.day = targetInfo.day;
+
+      const eventSummary = [];
+
+      // 1. Check expired instant invitations
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid);
+        const cs = state.charStates[cid];
+        if (!c || !cs || cs.blocked || cs.unmatched) return;
+        ensureCharExtendedState(c, cs);
+        if (cs.evalMetrics.status === 'paused_tomorrow' && targetInfo.day > (cs.evalMetrics.pausedAtDay || prevDay)) {
+          cs.evalMetrics.status = 'active';
+          cs.evalMetrics.lastSignalText = '💬 Sẵn sàng trò chuyện lại';
+        }
+        if (cs.activePartnerInvite && cs.activePartnerInvite.expiresAtMinutes && targetMinutes > cs.activePartnerInvite.expiresAtMinutes) {
+          cs.messages.push({
+            sender: 'system',
+            text: `⏳ Lời mời hẹn hò "${cs.activePartnerInvite.venueName}" từ ${c.name} đã hết hạn do bạn không phản hồi kịp.`,
+            time: targetInfo.fullLabel
+          });
+          cs.activePartnerInvite = null;
+          cs.affection = Math.max(0, cs.affection - 4);
+          eventSummary.push(`⏳ Lời mời từ ${c.name} đã hết hạn.`);
+        }
+      });
+
+      // 2. Apply exponential decay per matched character
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid);
+        const cs = state.charStates[cid];
+        if (!c || !cs) return;
+        const res = applyRelationshipDecayForChar(c, cs, targetMinutes);
+        if (res && res.proactiveEvent) eventSummary.push(res.proactiveEvent);
+      });
+
+      // 3. Check scheduled dates due by targetMinutes
+      let dateToTriggerNow = null;
+      (state.scheduledDates || []).forEach(sd => {
+        if (sd.status !== 'pending' || sd.targetMinutes > targetMinutes) return;
+        const c = getCharById(sd.charId);
+        const cs = state.charStates[sd.charId];
+        if (!c || !cs || cs.blocked || cs.unmatched || cs.evalMetrics.status === 'withdrawn' || cs.evalMetrics.status === 'blocked_by_partner') {
+          sd.status = 'cancelled';
+          return;
+        }
+        ensureCharExtendedState(c, cs);
+        const sdInfo = getSimTimeInfo(sd.targetMinutes);
+
+        // Check flake / ghosting risk based on relationship thresholds + character
+        const lowAff = cs.affection < 30;
+        const lowTrust = cs.trust < 25;
+        const lowInt = cs.intimacy < 20;
+        const multiLow = [lowAff, lowTrust, lowInt].filter(Boolean).length >= 2;
+
+        if (!c.isScammer && (multiLow || (lowAff && Math.random() < 0.7) || (lowTrust && Math.random() < 0.65))) {
+          sd.status = 'cancelled';
+          cs.affection = Math.max(0, cs.affection - 8);
+          cs.trust = Math.max(0, cs.trust - 10);
+          const flakeMsg = lowTrust
+            ? `Xin lỗi ${state.player.name}, mấy hôm nay không thấy bạn liên lạc gì nên mình thấy không yên tâm lắm. Chắc mình xin hủy buổi hẹn ở ${sd.venueName} hôm nay nhé.`
+            : `Tự nhiên mình thấy hai đứa hơi nguội lạnh mấy hôm nay... Chắc hôm nay mình bận đột xuất, không đi hẹn ở ${sd.venueName} được rồi.`;
+          cs.messages.push({ sender: 'them', text: flakeMsg, time: sdInfo.fullLabel });
+          cs.evalMetrics.lastSignalText = '💨 Đối phương vừa hủy lịch hẹn';
+          eventSummary.push(`💨 ${c.name} đã hủy lịch hẹn (${sd.venueName}) do thiếu tương tác trước ngày hẹn!`);
+        } else {
+          sd.status = 'completed';
+          dateToTriggerNow = { sd, c, cs };
+          eventSummary.push(`📅 Đã đến giờ hẹn với ${c.name} tại ${sd.venueName}!`);
+        }
+      });
+
+      saveState();
+      updateTopBarStats();
+      if (state.activeChatCharId) renderMessagesView();
+
+      if (eventSummary.length > 0) {
+        showToast(eventSummary[0], 'info');
+      } else {
+        showToast(`⏩ Đã tua tới ${targetInfo.fullLabel}`, 'success');
+      }
+
+      if (dateToTriggerNow) {
+        state.activeChatCharId = dateToTriggerNow.c.id;
+        const venueObj = IRL_VENUES.find(v => v.id === dateToTriggerNow.sd.venueId) || IRL_VENUES[0];
+        setTimeout(() => {
+          document.getElementById('irlModalTitle').textContent = `📅 Đã Đến Lịch Hẹn Với ${dateToTriggerNow.c.name}`;
+          document.getElementById('modal-irl-date').classList.remove('hidden');
+          executeIRLDateAtVenue(venueObj);
+        }, 350);
+      }
+    }
+
+    // PRE-DATE GIFT SHOP MODAL
+    function openPreDateGiftShopModal() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      ensureCharExtendedState(char, cs);
+
+      let cardsHtml = EXTENDED_GIFT_CATALOG.map(g => `
+        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+          <div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-base">${g.icon} <strong class="text-xs text-white">${g.name}</strong></span>
+            </div>
+            <span class="inline-block text-[10px] px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 mt-1">${g.category}</span>
+            <p class="text-[11px] text-slate-400 mt-1.5 leading-snug">${g.desc}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Phù hợp: ${g.suitableFor}</p>
+          </div>
+          <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
+            <div class="text-xs font-extrabold text-emerald-400">${formatVND(g.cost)}</div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="buyGiftForDate('${g.id}', 'before')" class="py-1.5 px-2 rounded-lg bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 text-[10px] font-bold">📩 Tặng Trước</button>
+              <button onclick="buyGiftForDate('${g.id}', 'during')" class="py-1.5 px-2 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 text-[10px] font-bold">🤝 Mang Đi Tặng</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const html = `
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+            <span>Người nhận: <strong class="text-pink-300">${char.name}</strong> (${(char.hobbies || []).slice(0, 3).join(', ')})</span>
+            <span>Ví hiện có: <strong class="text-emerald-400">${formatVND(state.player.balance)}</strong></span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[55vh] overflow-y-auto custom-scroll pr-1">
+            ${cardsHtml}
+          </div>
+        </div>
+      `;
+      openUniversalModal('🎁 Cửa Hàng Quà Tặng Trước Buổi Hẹn', html);
+    }
+
+    function evaluateGiftReaction(char, cs, gift, timing) {
+      ensureCharExtendedState(char, cs);
+      const hobbiesStr = (char.hobbies || []).join(' ').toLowerCase();
+      const persStr = (char.personality || []).join(' ').toLowerCase();
+      const matchedHobby = (gift.hobbiesMatch || []).some(h => hobbiesStr.includes(h.toLowerCase()));
+
+      let dAff = 2, dInt = 1, dTrust = 1, dResp = 1, dFinRisk = 0;
+      let reactionText = '';
+
+      if (char.isScammer) {
+        dAff = 3; dInt = 2; dFinRisk = 12;
+        if (gift.cost >= 1500000) {
+          dFinRisk += 15;
+          reactionText = `Ôi ${gift.name} xịn quá 🥰! ${state.player.name} đúng là người hào phóng. Nhân tiện chuyện dự án/việc gấp hôm trước mình kể, bạn cân nhắc giúp mình luôn nhé 😉.`;
+        } else {
+          reactionText = `Cảm ơn món quà ${gift.name} của bạn nha 💕. Mà nói thật, mình cần bạn hỗ trợ chuyện tài chính hôm trước hơn á!`;
+        }
+      } else if (gift.tier === 'luxury' && (char.archetype === 'genuine_strict' || persStr.includes('giản dị') || persStr.includes('nguyên tắc')) && cs.relPhase < 4) {
+        dAff = -2; dResp = -3; dTrust = -1;
+        reactionText = `Cảm ơn ${state.player.name} đã có lòng, nhưng ${gift.name} đắt tiền quá... tụi mình mới tìm hiểu nên mình hơi ngại nhận món quà giá trị lớn thế này 😅.`;
+      } else if (gift.tier === 'luxury' && char.archetype === 'casual_materialistic') {
+        dAff = 12; dInt = 8; dResp = 4;
+        reactionText = `Trời ơi đúng gu của mình luôn!! ${gift.name} sang xịn quá đi 🥰✨ Cảm ơn bạn nhiều lắm!`;
+      } else if (matchedHobby || gift.tier === 'hobby') {
+        dAff = 9; dInt = 6; dTrust = 5; dResp = 7;
+        reactionText = `Bất ngờ thật sự luôn! Sao bạn biết mình thích ${gift.name} hay vậy 😍? Cảm ơn ${state.player.name} đã để ý từng sở thích nhỏ của mình nhé!`;
+      } else if (gift.tier === 'subtle' || gift.tier === 'practical') {
+        dAff = 5; dInt = 4; dTrust = 4; dResp = 5;
+        reactionText = `Món quà ${gift.name} tinh tế và dễ thương quá! Cảm ơn ${state.player.name} nhiều nha 💕.`;
+      } else {
+        dAff = 6; dInt = 4; dTrust = 2; dResp = 3;
+        reactionText = `Cảm ơn ${state.player.name} đã chuẩn bị ${gift.name} nhé, mình rất vui 🥰!`;
+      }
+
+      if (timing === 'during') {
+        dInt += 2;
+        dResp += 2;
+      }
+
+      return { dAff, dInt, dTrust, dResp, dFinRisk, reactionText };
+    }
+
+    function buyGiftForDate(giftId, timing = 'before') {
+      const gift = EXTENDED_GIFT_CATALOG.find(g => g.id === giftId);
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!gift || !char || !cs) return;
+      ensureCharExtendedState(char, cs);
+
+      if (state.player.balance < gift.cost) {
+        showToast('Số dư ví không đủ để mua món quà này!', 'danger');
+        return;
+      }
+
+      const walletBefore = state.player.balance;
+      state.player.balance -= gift.cost;
+      const walletAfter = state.player.balance;
+      state.finance.giftSpent += gift.cost;
+      state.finance.ledger.unshift({
+        day: state.day,
+        title: `Mua ${gift.name} (${timing === 'before' ? 'tặng trước' : 'mang đi hẹn'}) cho ${char.name}`,
+        amount: gift.cost,
+        type: 'out'
+      });
+      playSfx('cash');
+
+      const rx = evaluateGiftReaction(char, cs, gift, timing);
+      cs.givenGifts.push({ id: gift.id, name: gift.name, cost: gift.cost, day: state.day, timing });
+
+      if (timing === 'before') {
+        cs.affection = Math.max(0, Math.min(100, cs.affection + rx.dAff));
+        cs.intimacy = Math.max(0, Math.min(100, cs.intimacy + rx.dInt));
+        cs.trust = Math.max(0, Math.min(100, cs.trust + rx.dTrust));
+        cs.respect = Math.max(0, Math.min(100, cs.respect + rx.dResp));
+        cs.financialRisk = Math.min(100, (cs.financialRisk || 10) + rx.dFinRisk);
+        const tInfo = getSimTimeInfo();
+        cs.messages.push({ sender: 'system', text: `🎁 Bạn đã mua và gửi tặng "${gift.name}" (${formatVND(gift.cost)}) trước buổi hẹn.`, time: tInfo.fullLabel });
+        cs.messages.push({ sender: 'them', text: rx.reactionText, time: tInfo.fullLabel });
+        showDecisionImpactCard({
+          title: `Gửi tặng ${gift.name}`,
+          changes: [
+            { label: 'Thiện cảm', delta: rx.dAff },
+            { label: 'Tin tưởng', delta: rx.dTrust },
+            { label: 'Thân mật', delta: rx.dInt },
+            { label: 'Tôn trọng', delta: rx.dResp }
+          ],
+          walletBefore,
+          walletAfter,
+          reason: rx.dAff < 0 ? 'Món quà hơi đắt so với giai đoạn hiện tại khiến đối phương ngại.' : 'Món quà thể hiện sự quan tâm của bạn trước buổi hẹn.'
+        });
+      } else {
+        cs.pendingDateGifts.push({ id: gift.id, name: gift.name, cost: gift.cost, rx });
+        showDecisionImpactCard({
+          title: `Đã chuẩn bị ${gift.name}`,
+          changes: [],
+          walletBefore,
+          walletAfter,
+          reason: `Bạn đã mua sẵn ${gift.name} để trao trực tiếp khi gặp ${char.name} ngoài đời.`
+        });
+      }
+
+      closeUniversalModal();
+      saveState();
+      updateTopBarStats();
+      updatePreDateGiftBanner(cs);
+      if (state.activeChatCharId) renderMessagesView();
+    }
+
+    function updatePreDateGiftBanner(cs) {
+      const badge = document.getElementById('preDateGiftCountBadge');
+      const banner = document.getElementById('irlPendingGiftsBanner');
+      if (!cs || !cs.pendingDateGifts) return;
+      const cnt = cs.pendingDateGifts.length;
+      if (badge) {
+        badge.textContent = cnt;
+        badge.classList.toggle('hidden', cnt === 0);
+      }
+      if (banner) {
+        if (cnt > 0) {
+          banner.classList.remove('hidden');
+          banner.innerHTML = `<span>🎁 Đang mang theo <strong>${cnt} món quà</strong> (${cs.pendingDateGifts.map(g => g.name).join(', ')}) để trao trực tiếp khi gặp mặt!</span>`;
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+    }
+
+    // INSTANT DATE INVITATION MODAL
+    let activeInstantInviteCharId = null;
+
+    function openInstantInviteModal(char, cs, invData) {
+      if (!char || !cs || !invData) return;
+      ensureTimeAndUpdateState();
+      ensureCharExtendedState(char, cs);
+      if (!invData.expiresAtMinutes) {
+        invData.expiresAtMinutes = state.simTime.totalMinutes + 240; // 4 hours to reply
+      }
+      activeInstantInviteCharId = char.id;
+      const avatarEl = document.getElementById('instInviteAvatar');
+      if (avatarEl) avatarEl.innerHTML = generateCharacterSVG(char, 0);
+      document.getElementById('instInvitePartnerName').textContent = `${char.name} (${char.age}t • ${char.job})`;
+      const stgNames = { 1: 'Giai đoạn 1: Chào hỏi', 2: 'Giai đoạn 2: Thăm dò', 3: 'Giai đoạn 3: Tìm hiểu', 4: 'Giai đoạn 4: Tán tỉnh', 5: 'Giai đoạn 5: Yêu đương' };
+      document.getElementById('instInviteRelStage').textContent = stgNames[cs.relPhase || 1] || 'Đang tìm hiểu';
+      document.getElementById('instInviteMessage').textContent = `“${invData.message}”`;
+      document.getElementById('instInviteVenue').textContent = invData.venueName || 'Quán Cà Phê';
+      const curInfo = getSimTimeInfo();
+      const meetHour = Math.min(22, Math.max(curInfo.hour + 2, 18));
+      document.getElementById('instInviteTime').textContent = `Hôm nay (Ngày ${curInfo.day}) • ${String(meetHour).padStart(2, '0')}:30`;
+      document.getElementById('instInvitePurpose').textContent = invData.motiveType === 'genuine' ? 'Gặp gỡ trò chuyện ngoài đời' : 'Muốn gặp mặt trực tiếp';
+      const remHrs = Math.max(1, Math.round((invData.expiresAtMinutes - state.simTime.totalMinutes) / 60));
+      document.getElementById('instInviteCountdown').textContent = `Còn khoảng ${remHrs} giờ`;
+      document.getElementById('instInviteRescheduleBox').classList.add('hidden');
+      document.getElementById('inpRescheduleDay').value = curInfo.day + 1;
+      document.getElementById('inpRescheduleDay').min = curInfo.day;
+      document.getElementById('modal-instant-invite').classList.remove('hidden');
+    }
+
+    function closeInstantInviteModal() {
+      document.getElementById('modal-instant-invite').classList.add('hidden');
+    }
+
+    function toggleInstantInviteReschedule() {
+      document.getElementById('instInviteRescheduleBox').classList.toggle('hidden');
+    }
+
+    function handleInstantInviteChoice(choice) {
+      const char = getCharById(activeInstantInviteCharId || state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) { closeInstantInviteModal(); return; }
+      ensureCharExtendedState(char, cs);
+      closeInstantInviteModal();
+
+      if (choice === 'accept') {
+        respondToPartnerDateInvite('accept_direct');
+        return;
+      }
+
+      if (choice === 'decline') {
+        const inv = cs.activePartnerInvite;
+        cs.activePartnerInvite = null;
+        const tInfo = getSimTimeInfo();
+        cs.messages.push({ sender: 'me', text: `Cảm ơn ${char.name} đã rủ nhưng hôm nay mình chưa sắp xếp được thời gian rồi, hẹn bạn dịp khác nhé!`, time: tInfo.fullLabel });
+
+        let dAff = 0, dTrust = 0, dResp = 1;
+        let replyText = '';
+        let reasonText = '';
+
+        if (char.isScammer) {
+          dAff = -3;
+          replyText = `Ủa sao lại từ chối gấp vậy ${state.player.name}? Cơ hội tốt thế này mà bỏ lỡ tiếc lắm đó, hay cố sắp xếp ghé 30 phút thôi đi mà!`;
+          reasonText = 'Đối phương cố gắng thuyết phục/gây áp lực dù bạn đã từ chối.';
+          cs.suspicion = Math.min(100, (cs.suspicion || 10) + 12);
+        } else if (char.archetype === 'casual_short' || char.archetype === 'casual_materialistic') {
+          dAff = -4; dResp = 0;
+          replyText = `Ờ vậy thôi, tưởng bạn rảnh chứ bận suốt thì chán lắm 😅.`;
+          reasonText = 'Người thiếu kiên nhẫn tỏ ra hơi hụt hẫng khi bị từ chối.';
+        } else {
+          dTrust = 2; dResp = 3;
+          replyText = `Không sao đâu ${state.player.name} ơi, công việc và lịch cá nhân ưu tiên hơn mà 😊. Khi nào bạn thật sự rảnh thì báo mình nhé!`;
+          reasonText = 'Người chân thành tôn trọng ranh giới và lịch trình của bạn.';
+        }
+
+        cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
+        cs.trust = Math.max(0, Math.min(100, cs.trust + dTrust));
+        cs.respect = Math.max(0, Math.min(100, cs.respect + dResp));
+        cs.messages.push({ sender: 'them', text: replyText, time: tInfo.fullLabel });
+        cs.lastContactMinutes = state.simTime.totalMinutes;
+
+        showDecisionImpactCard({
+          title: 'Từ chối lời mời gặp trong ngày',
+          changes: [
+            { label: 'Thiện cảm', delta: dAff },
+            { label: 'Tin tưởng', delta: dTrust },
+            { label: 'Tôn trọng', delta: dResp }
+          ],
+          reason: reasonText
+        });
+        saveState();
+        renderMessagesView();
+      }
+    }
+
+    function submitInstantInviteReschedule() {
+      const char = getCharById(activeInstantInviteCharId || state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      ensureCharExtendedState(char, cs);
+
+      const targetDay = Math.max(state.day, parseInt(document.getElementById('inpRescheduleDay').value || (state.day + 1), 10));
+      const timeParts = (document.getElementById('inpRescheduleTime').value || '19:30').split(':');
+      const hh = parseInt(timeParts[0] || '19', 10);
+      const mm = parseInt(timeParts[1] || '30', 10);
+      const targetMins = (targetDay - 1) * 1440 + hh * 60 + mm;
+      const targetInfo = getSimTimeInfo(targetMins);
+
+      const inv = cs.activePartnerInvite || {};
+      cs.evalMetrics.postponeCount = (cs.evalMetrics.postponeCount || 0) + 1;
+      const pCount = cs.evalMetrics.postponeCount;
+      cs.activePartnerInvite = null;
+      closeInstantInviteModal();
+
+      const tInfo = getSimTimeInfo();
+      cs.messages.push({
+        sender: 'me',
+        text: `Hôm nay mình hơi bận, tụi mình hẹn sang ${targetInfo.fullLabel} tại ${inv.venueName || 'Quán Cà Phê'} được không ${char.name}?`,
+        time: tInfo.fullLabel
+      });
+
+      let dAff = 0, dTrust = 0, dResp = 1;
+      let replyText = '';
+      if (char.isScammer) {
+        dAff = -2;
+        replyText = `Để tới ${targetInfo.fullLabel} thì lâu quá ${state.player.name} ơi! Hôm nay mình mới có mặt ở khu đó, hay bạn ráng thu xếp gặp hôm nay luôn đi?`;
+        cs.suspicion = Math.min(100, (cs.suspicion || 10) + 10);
+      } else if (pCount >= 3) {
+        dAff = -8; dTrust = -6; dResp = -5;
+        replyText = `Bạn dời lịch tới lần thứ ${pCount} rồi đó... Mình cảm thấy bạn không thật sự muốn gặp đâu.`;
+      } else {
+        dAff = 2; dTrust = 3; dResp = 3;
+        state.scheduledDates.push({
+          id: 'sched_' + Date.now(),
+          charId: char.id,
+          charName: char.name,
+          venueId: inv.venueId || 'cafe',
+          venueName: inv.venueName || 'Quán Cà Phê Acoustic & Sách',
+          targetMinutes: targetMins,
+          day: targetInfo.day,
+          hour: hh,
+          minute: mm,
+          status: 'pending'
+        });
+        replyText = `Ok chốt lịch ${targetInfo.fullLabel} nhé ${state.player.name} 📅! Nhớ giữ liên lạc tới hôm đó nha!`;
+      }
+
+      cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + dTrust));
+      cs.respect = Math.max(0, Math.min(100, cs.respect + dResp));
+      cs.messages.push({ sender: 'them', text: replyText, time: tInfo.fullLabel });
+      cs.lastContactMinutes = state.simTime.totalMinutes;
+
+      showDecisionImpactCard({
+        title: `Đề xuất dời lịch sang ${targetInfo.shortLabel}`,
+        changes: [
+          { label: 'Thiện cảm', delta: dAff },
+          { label: 'Tin tưởng', delta: dTrust },
+          { label: 'Tôn trọng', delta: dResp }
+        ],
+        reason: char.isScammer ? 'Đối phương cố thúc ép gặp ngay hôm nay.' : (pCount >= 3 ? 'Dời lịch quá nhiều lần làm giảm sự tin cậy.' : 'Đã lên lịch hẹn thành công — bạn có thể tua thẳng tới ngày hẹn!')
+      });
+      saveState();
+      renderMessagesView();
+    }
+
+    // MESSAGE-BY-MESSAGE EVALUATION & AUTONOMOUS DATING BEHAVIOR
+    function evaluatePlayerMessageEngine(char, cs, text, msgId) {
+      ensureCharExtendedState(char, cs);
+      if (msgId && cs.evaluatedMsgIds.includes(msgId)) return null;
+      if (msgId) cs.evaluatedMsgIds.push(msgId);
+
+      const trimmed = (text || '').trim();
+      const lower = trimmed.toLowerCase();
+      const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+
+      // Check if partner already paused for tomorrow and player keeps messaging
+      if (cs.evalMetrics.status === 'paused_tomorrow') {
+        cs.respect = Math.max(0, cs.respect - 6);
+        cs.evalMetrics.pressure = Math.min(100, cs.evalMetrics.pressure + 18);
+        cs.evalMetrics.unansweredPlayerMsgs += 1;
+        if (cs.evalMetrics.unansweredPlayerMsgs >= 4 || cs.respect < 20) {
+          return { triggerAutonomous: 'block', reason: 'Nhắn dồn dập sau khi đối phương đã xin phép tạm nghỉ đến ngày mai.' };
+        }
+        return { dAff: -2, dResp: -6, dPress: 18, signal: '⚠️ Đối phương đang muốn nghỉ ngơi tới ngày mai' };
+      }
+
+      // Track consecutive messages & smart spam vs storytelling detection
+      const lastMsg = cs.messages.length >= 2 ? cs.messages[cs.messages.length - 2] : null;
+      if (lastMsg && lastMsg.sender === 'me') {
+        cs.evalMetrics.consecutivePlayerMsgs += 1;
+        cs.evalMetrics.unansweredPlayerMsgs += 1;
+      } else {
+        cs.evalMetrics.consecutivePlayerMsgs = 1;
+        cs.evalMetrics.unansweredPlayerMsgs = 1;
+      }
+
+      const isDemandingReply = /^(alo+|rep|trả lời|đâu rồi|bơ|sao không|\?+|\.+)$/i.test(trimmed) || (trimmed.length < 18 && (lower.includes('sao không trả lời') || lower.includes('rep đi')));
+      const isShortDry = wordCount <= 2 && !trimmed.includes('?');
+      if (isShortDry) cs.evalMetrics.consecutiveShortReplies += 1;
+      else cs.evalMetrics.consecutiveShortReplies = 0;
+
+      let dAff = 0, dTrust = 0, dInt = 0, dResp = 0, dSusp = 0, dInterest = 0, dCompat = 0, dPress = 0;
+
+      // Polite / attentive / remembers context
+      if (wordCount >= 8 && (trimmed.includes('?') || lower.includes('nghỉ ngơi') || lower.includes('vất vả') || lower.includes('kể'))) {
+        dAff += 2; dTrust += 1; dResp += 2; dInt += 1; dInterest += 4; dCompat += 2;
+      }
+      // Overly private money questions too early
+      if (cs.relPhase <= 2 && (lower.includes('bao nhiêu tiền') || lower.includes('lương tháng') || lower.includes('nhà giàu'))) {
+        dTrust -= 2; dResp -= 2; dSusp += 4; dPress += 3;
+      }
+      // Disrespect / offensive
+      if (lower.includes('ngu') || lower.includes('cút') || lower.includes('lừa đảo à') || lower.includes('đồ điên') || lower.includes('gửi ảnh nóng')) {
+        dAff -= 12; dResp -= 15; dTrust -= 10; dPress += 20;
+      }
+      // Dry replies repeatedly
+      if (cs.evalMetrics.consecutiveShortReplies >= 3) {
+        dInterest -= 5; dAff -= 2;
+      }
+      // Smart Spam Pressure: only penalize when demanding reply or >4 unanswered short messages
+      if (cs.evalMetrics.unansweredPlayerMsgs >= 3 && isDemandingReply) {
+        dPress += 12; dResp -= 3; dAff -= 2;
+      } else if (cs.evalMetrics.unansweredPlayerMsgs >= 5 && wordCount < 6) {
+        dPress += 10; dResp -= 2;
+      }
+
+      // Scammer hidden evaluation
+      if (char.isScammer && cs.scammerMetrics) {
+        if (lower.includes('lừa đảo') || lower.includes('cảnh sát') || lower.includes('cccd') || lower.includes('không chuyển') || lower.includes('video call')) {
+          cs.scammerMetrics.suspicionRisk = Math.min(100, cs.scammerMetrics.suspicionRisk + 18);
+          cs.scammerMetrics.playerGullibility = Math.max(0, cs.scammerMetrics.playerGullibility - 10);
+        }
+        if (lower.includes('không có tiền') || lower.includes('đang nợ') || lower.includes('thất nghiệp')) {
+          cs.scammerMetrics.exploitPotential = Math.max(0, cs.scammerMetrics.exploitPotential - 25);
+        }
+      }
+
+      cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + dTrust));
+      cs.intimacy = Math.max(0, Math.min(100, cs.intimacy + dInt));
+      cs.respect = Math.max(0, Math.min(100, cs.respect + dResp));
+      cs.suspicion = Math.max(0, Math.min(100, (cs.suspicion || 10) + dSusp));
+      cs.evalMetrics.interest = Math.max(0, Math.min(100, cs.evalMetrics.interest + dInterest));
+      cs.evalMetrics.compatibility = Math.max(0, Math.min(100, cs.evalMetrics.compatibility + dCompat));
+      cs.evalMetrics.pressure = Math.max(0, Math.min(100, cs.evalMetrics.pressure + dPress));
+
+      // Autonomous decision check by Game Engine
+      let triggerAutonomous = null;
+      if (cs.respect < 18 || cs.evalMetrics.pressure >= 75) {
+        triggerAutonomous = 'block';
+      } else if (char.isScammer && cs.scammerMetrics && (cs.scammerMetrics.suspicionRisk >= 75 || cs.scammerMetrics.exploitPotential <= 15)) {
+        triggerAutonomous = Math.random() < 0.55 ? 'block' : 'withdraw';
+      } else if (cs.evalMetrics.compatibility < 28 && (cs.turnsToday || 0) >= 4) {
+        triggerAutonomous = 'withdraw';
+      } else if (cs.evalMetrics.consecutiveShortReplies >= 4 || cs.evalMetrics.interest < 25) {
+        triggerAutonomous = 'pause_tomorrow';
+      }
+
+      // Subtle UI signal (never expose raw hidden scores!)
+      let signal = '💬 Trò chuyện bình thường';
+      if (cs.evalMetrics.pressure >= 35 || dResp < -3) signal = '⚠️ Đối phương có vẻ không thoải mái';
+      else if (cs.evalMetrics.interest >= 68 && dAff > 0) signal = '✨ Đối phương đang hào hứng';
+      else if (cs.evalMetrics.interest <= 38 || cs.evalMetrics.consecutiveShortReplies >= 2) signal = '💬 Cuộc trò chuyện đang chững lại';
+      cs.evalMetrics.lastSignalText = signal;
+
+      return { dAff, dTrust, dInt, dResp, dPress, triggerAutonomous, signal };
+    }
+
+    function executeAutonomousBehavior(char, cs, action, customMsg) {
+      ensureCharExtendedState(char, cs);
+      const tInfo = getSimTimeInfo();
+      if (action === 'pause_tomorrow') {
+        cs.evalMetrics.status = 'paused_tomorrow';
+        cs.evalMetrics.pausedAtDay = state.day;
+        cs.evalMetrics.lastSignalText = '⏸️ Đối phương muốn nói chuyện vào ngày mai';
+        const msg = customMsg || `Hôm nay mình hơi mệt và cần xử lý chút việc riêng, để mai tụi mình nói chuyện tiếp nhé ${state.player.name}. Chúc bạn nghỉ ngơi vui vẻ!`;
+        cs.messages.push({ sender: 'them', text: msg, time: tInfo.fullLabel });
+        cs.messages.push({ sender: 'system', text: `⏸️ ${char.name} đã xin phép tạm dừng cuộc trò chuyện đến ngày mai.`, time: tInfo.fullLabel });
+        return true;
+      }
+      if (action === 'withdraw') {
+        cs.evalMetrics.status = 'withdrawn';
+        cs.evalMetrics.finalReplyUsed = false;
+        cs.evalMetrics.lastSignalText = '🚪 Đối phương đã dừng tìm hiểu';
+        const msg = customMsg || `Nói chuyện với ${state.player.name} thời gian qua cũng vui, nhưng mình cảm thấy hai đứa không thực sự hợp nhau lắm. Mình nghĩ tụi mình nên dừng lại ở đây nhé.`;
+        cs.messages.push({ sender: 'them', text: msg, time: tInfo.fullLabel });
+        cs.messages.push({ sender: 'system', text: `🚪 Đối phương không còn muốn tiếp tục tìm hiểu. Bạn có thể gửi 1 lời phản hồi lịch sự cuối cùng.`, time: tInfo.fullLabel });
+        return true;
+      }
+      if (action === 'block') {
+        cs.evalMetrics.status = 'blocked_by_partner';
+        cs.blocked = true;
+        cs.evalMetrics.lastSignalText = '🚫 Đối phương đã chặn bạn';
+        if (customMsg) cs.messages.push({ sender: 'them', text: customMsg, time: tInfo.fullLabel });
+        cs.messages.push({ sender: 'system', text: `🚫 ${char.name} đã chặn bạn. Bạn không thể gửi tin nhắn mới, nhưng toàn bộ lịch sử trò chuyện vẫn được lưu giữ.`, time: tInfo.fullLabel });
+        return true;
+      }
+      return false;
+    }
+
     function saveState() {
       try {
         localStorage.setItem('heartlink_dating_sim_v1', JSON.stringify(state));
@@ -2032,7 +3056,7 @@
       if (momBadge) momBadge.textContent = (state.momentsFeed || []).length;
       const achCountEl = document.getElementById('headerAchCount');
       if (achCountEl) achCountEl.textContent = `${(state.achievements || []).length}/6`;
-      document.getElementById('headerDayText').textContent = `Tháng ${state.month} • Ngày ${state.day}`;
+      const _ti = getSimTimeInfo(); document.getElementById('headerDayText').textContent = _ti.shortLabel;
 
       const remain = state.deckOrder.length;
       document.getElementById('navRemainCount').textContent = remain;
@@ -3966,7 +4990,7 @@
       // Partner Proactive Date Invitation Trigger (Genuine / Hotel Sextortion / Booking Bar / Investment Pitch)
       if (!cs.partnerInvitedDate && (newPhase >= 3 || ( (char.archetype === 'scam_sales_booking' || char.archetype === 'scam_sextortion' || char.archetype === 'casual_short') && newPhase >= 2 ))) {
         cs.partnerInvitedDate = true;
-        cs.activePartnerInvite = buildPartnerProactiveInviteData(char, cs);
+        cs.activePartnerInvite = buildPartnerProactiveInviteData(char, cs); setTimeout(() => openInstantInviteModal(char, cs, cs.activePartnerInvite), 450);
         bubbles.push(`📅 [Lời mời hẹn hò chủ động]: ${cs.activePartnerInvite.chatMessage}`);
       }
 
@@ -4390,7 +5414,11 @@
       if (stgBar) stgBar.classList.toggle('hidden', !!state.realismMode);
 
       // Lock Chat Input & Toolbar Buttons if Unmatched or Blocked!
-      const isLocked = !!(cs.unmatched || cs.blocked);
+      ensureCharExtendedState(char, cs);
+      const sigEl = document.getElementById('chatSubtleSignalPill');
+      if (sigEl) sigEl.textContent = cs.evalMetrics.lastSignalText || '💬 Trò chuyện bình thường';
+      const isWithdrawnDone = (cs.evalMetrics.status === 'withdrawn' && cs.evalMetrics.finalReplyUsed);
+      const isLocked = !!(cs.unmatched || cs.blocked || cs.evalMetrics.status === 'blocked_by_partner' || isWithdrawnDone);
       const freeInp = document.getElementById('inpFreeChatMessage');
       const freeBtn = document.getElementById('btnSendFreeChat');
       const refreshBtn = document.getElementById('btnAIRefreshChoices');
@@ -4486,10 +5514,12 @@
       const cs = state.charStates[cid];
       if (!char || !cs || cs.blocked || cs.unmatched) return;
 
-      if (cs.isSleeping) {
-        showToast(`${char.name} đã đi ngủ rồi! Hãy bấm "Đi Ngủ & Sang Ngày Tiếp Theo" để trò chuyện tiếp vào sáng mai nhé.`, 'info');
-        return;
-      }
+      ensureCharExtendedState(char, cs);
+      if (cs.evalMetrics.status === 'blocked_by_partner' || cs.blocked) { showToast('Bạn không thể gửi tin nhắn cho người này.', 'danger'); return; }
+      if (cs.evalMetrics.status === 'withdrawn') { if (cs.evalMetrics.finalReplyUsed) { showToast('Đối phương đã dừng tìm hiểu.', 'info'); return; } cs.evalMetrics.finalReplyUsed = true; }
+      advanceSimMinutes(6);
+      cs.lastContactMinutes = state.simTime.totalMinutes;
+      cs.sentDecayPing = false;
 
       playSfx('msg');
       cs.chatted = true;
@@ -4498,7 +5528,13 @@
       const playerMsgText = opt.playerText || opt.label;
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`;
 
-      cs.messages.push({ sender: 'me', text: playerMsgText, time: timeStr });
+      const _bMsgId = 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      cs.messages.push({ id: _bMsgId, sender: 'me', text: playerMsgText, time: getSimTimeInfo().fullLabel });
+      const _bEval = evaluatePlayerMessageEngine(char, cs, playerMsgText, _bMsgId);
+      if (_bEval && _bEval.triggerAutonomous) {
+        executeAutonomousBehavior(char, cs, _bEval.triggerAutonomous);
+        saveState(); renderMessagesView(); return;
+      }
       if (!cs.usedChoiceLabels) cs.usedChoiceLabels = [];
       if (opt.label) cs.usedChoiceLabels.push(opt.label);
       if (opt.memoryFact && !(cs.sharedMemories || []).includes(opt.memoryFact)) {
@@ -4796,7 +5832,7 @@
           ? '🥤 Bạn đã đặt nguyên tắc: Tuyệt đối không uống rượu/bia hay đồ uống mở sẵn trong buổi hẹn!'
           : 'Đã tắt nguyên tắc kiêng rượu.', 'success');
       }
-      renderIRLSevenStatsBar();
+      renderIRLSevenStatsBar(); updatePreDateGiftBanner(cs);
       saveState();
     }
 
@@ -5541,6 +6577,17 @@
           return;
         }
         cs.datesCount = (cs.datesCount || 0) + 1;
+        if (cs.pendingDateGifts && cs.pendingDateGifts.length > 0) {
+          cs.pendingDateGifts.forEach(pg => {
+            cs.affection = Math.max(0, Math.min(100, cs.affection + pg.rx.dAff));
+            cs.intimacy = Math.max(0, Math.min(100, cs.intimacy + pg.rx.dInt));
+            cs.trust = Math.max(0, Math.min(100, cs.trust + pg.rx.dTrust));
+            cs.respect = Math.max(0, Math.min(100, cs.respect + pg.rx.dResp));
+            cs.messages.push({ sender: 'system', text: `🎁 Bạn đã trao tận tay "${pg.name}" trong buổi hẹn!`, time: getSimTimeInfo().fullLabel });
+            cs.messages.push({ sender: 'them', text: pg.rx.reactionText, time: getSimTimeInfo().fullLabel });
+          });
+          cs.pendingDateGifts = [];
+        }
         state.datesCompleted += 1;
         triggerHotelOvernightScenario(char, cs);
         return;
@@ -7727,6 +8774,10 @@ TUYỆT ĐỐI KHÔNG BAO GIỜ XƯNG LÀ AI HAY TIẾT LỘ KỊCH BẢN GAME.
 - Mức độ thiện cảm hiện tại: Tình cảm ${cs.affection}/100, Tin tưởng ${cs.trust}/100, Thiện cảm ${cs.goodwill || 55}/100.
 - Giai đoạn hiện tại: ${curStageName}.
 - Chi tiết bạn đã nhớ về người chơi: ${playerMemories}.
+- Thời gian hiện tại trong game: ${getSimTimeInfo().fullLabel}.
+- Số ngày không liên lạc trước tin này: ${((state.simTime.totalMinutes - (cs.lastContactMinutes || state.simTime.totalMinutes)) / 1440).toFixed(1)} ngày.
+- Lịch hẹn đã lên lịch: ${(state.scheduledDates || []).filter(d => d.charId === char.id && d.status === 'pending').map(d => d.venueName + ' (Ngày ' + d.day + ')').join(', ') || 'Chưa có'}.
+- Quà đã nhận: ${(cs.givenGifts || []).map(g => g.name).join(', ') || 'Chưa có'}.
 - Lịch sử hẹn hò ngoài đời: ${dateMemories}.
 
 [TOÀN BỘ LỊCH SỬ TRÒ CHUYỆN GẦN ĐÂY (NHỚ NGỮ CẢNH)]
@@ -7810,10 +8861,12 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       const cs = state.charStates[cid];
       if (!char || !cs || cs.blocked) return;
 
-      if (cs.isSleeping) {
-        showToast(`${char.name} đã đi ngủ rồi 🌙! Hãy bấm nút "Đi Ngủ & Sang Ngày Tiếp Theo" để bắt đầu ngày mới nhé.`, 'info');
-        return;
-      }
+      ensureCharExtendedState(char, cs);
+      if (cs.evalMetrics.status === 'blocked_by_partner' || cs.blocked) { showToast('Bạn không thể gửi tin nhắn cho người này.', 'danger'); return; }
+      if (cs.evalMetrics.status === 'withdrawn') { if (cs.evalMetrics.finalReplyUsed) { showToast('Đối phương đã dừng tìm hiểu.', 'info'); return; } cs.evalMetrics.finalReplyUsed = true; }
+      advanceSimMinutes(5);
+      cs.lastContactMinutes = state.simTime.totalMinutes;
+      cs.sentDecayPing = false;
       inp.value = '';
       playSfx('msg');
       cs.chatted = true;
@@ -7821,7 +8874,14 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       cs.justStartedNewDay = false;
       cs.turnsToday = (cs.turnsToday || 0) + 1;
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday)}`;
-      cs.messages.push({ sender: 'me', text: text, time: timeStr });
+      const _msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      cs.messages.push({ id: _msgId, sender: 'me', text: text, time: getSimTimeInfo().fullLabel });
+      const _evalRes = evaluatePlayerMessageEngine(char, cs, text, _msgId);
+      if (_evalRes && _evalRes.triggerAutonomous) {
+        if (typingEl) typingEl.classList.add('hidden');
+        executeAutonomousBehavior(char, cs, _evalRes.triggerAutonomous);
+        saveState(); renderMessagesView(); return;
+      }
       renderActiveChatRoom();
 
       // Show typing indicator
