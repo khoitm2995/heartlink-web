@@ -2666,6 +2666,7 @@
           if (typeof cs.maxTurnsBeforeSleep !== 'number') cs.maxTurnsBeforeSleep = 5 + (c.id.charCodeAt(c.id.length - 1) % 3);
           if (typeof cs.isSleeping !== 'boolean') cs.isSleeping = false;
           if (typeof cs.awaitingMaleFirstMessage !== 'boolean') cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
           if (!cs.pendingPartnerQuestion) cs.pendingPartnerQuestion = null;
           if (!cs.askedTopics) cs.askedTopics = [];
           if (!cs.usedChoiceIds) cs.usedChoiceIds = [];
@@ -2774,6 +2775,7 @@
       }
 
       cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
       let greeting = `Chào ${state.player.name}! Vừa lướt thấy hồ sơ của bạn ở ${state.player.location} là mình dừng lại ngay. Công việc ${state.player.job} của bạn dạo này có bận lắm không?`;
       let secondBubble = null;
       let reverseQ = "stage1_intro";
@@ -3228,10 +3230,20 @@
         ];
       }
 
-      // Morning initiation when player is Male
-      if (cs.awaitingMaleFirstMessage) {
+      // Morning greeting & continuing yesterday's story (for ALL genders when starting a new day!)
+      if (cs.awaitingMaleFirstMessage || cs.justStartedNewDay) {
         const nick = cs.relPhase >= 4 ? cs.nicknameForPlayer : char.name;
+        const ySnippet = cs.yesterdayTopicSnippet || `chuyện ${char.hobbies && char.hobbies[0] ? char.hobbies[0].toLowerCase() : 'hôm qua'}`;
         return [
+          {
+            id: "morn_continue_yesterday",
+            label: `“Chào ngày mới ${nick} ☀️! Tiếp tục câu chuyện hôm qua tụi mình đang nói dở (${ySnippet}) nhé...”`,
+            playerText: `Chào ngày mới ${nick} nhé ☀️! Đêm qua ngủ ngon không? Sáng nay mình nhớ ngay tới câu chuyện hôm qua tụi mình đang nói dở về “${ySnippet}” — hôm nay kể tiếp cho mình nghe nha!`,
+            intent: "friendly",
+            topic: "morning_continue_yesterday",
+            affectionDelta: 10,
+            trustDelta: 8
+          },
           {
             id: "male_morn_1",
             label: `“Chào buổi sáng ${nick} nhé ☀️! Đêm qua ngủ ngon không, hôm nay lịch làm việc của bạn thế nào?”`,
@@ -3243,7 +3255,7 @@
           },
           {
             id: "male_morn_2",
-            label: `“Sáng nay vừa pha ly cà phê là nhớ ngay tới câu chuyện tối qua của tụi mình ☕. Bạn ăn sáng chưa?”`,
+            label: `“Sáng nay vừa pha ly cà phê là nhớ ngay tới cuộc trò chuyện tối qua của tụi mình ☕. Bạn ăn sáng chưa?”`,
             playerText: `Sáng nay vừa pha ly cà phê là nhớ ngay tới câu chuyện tối qua của tụi mình ☕. ${char.name} ăn sáng chưa đó?`,
             intent: "flirty",
             topic: "morning_hobby_hook",
@@ -3698,6 +3710,7 @@
 
       cs.pendingPartnerQuestion = null;
       cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
 
       // Direct handling of Partner Date Invite contextual responses (Section 6)
       if (topic === 'partner_invite_accept_direct') {
@@ -4003,6 +4016,15 @@
     }
 
     // ADVANCE TO NEXT DAY WHEN AI PARTNER HAS GONE TO SLEEP
+    function getYesterdayTopicSnippet(cs) {
+      if (!cs || !cs.messages || cs.messages.length === 0) return '';
+      const chatMsgs = cs.messages.filter(m => (m.sender === 'them' || m.sender === 'me') && m.text);
+      if (chatMsgs.length === 0) return '';
+      const lastMsg = chatMsgs[chatMsgs.length - 1].text.split('🌙 Ôi đã hơn 23h30')[0].trim();
+      if (!lastMsg) return '';
+      return lastMsg.length > 52 ? lastMsg.slice(0, 52).trim() + '...' : lastMsg;
+    }
+
     function startNextChatDay() {
       state.day += 1;
       const isPlayerMale = state.player.gender === 'Nam';
@@ -4014,6 +4036,9 @@
 
         cs.isSleeping = false;
         cs.turnsToday = 0;
+        cs.justStartedNewDay = true;
+        cs.yesterdayTopicSnippet = getYesterdayTopicSnippet(cs);
+        const yText = cs.yesterdayTopicSnippet ? ` (${cs.yesterdayTopicSnippet})` : '';
         const nick = (cs.relPhase >= 4) ? cs.nicknameForPlayer : state.player.name;
 
         if (isPlayerMale) {
@@ -4021,20 +4046,21 @@
           cs.pendingPartnerQuestion = null;
           cs.messages.push({
             sender: 'system',
-            text: `☀️ Bắt đầu Ngày ${state.day} (08:00 Sáng) — Hãy chủ động gửi tin nhắn chào ngày mới tới ${c.name}!`
+            text: `☀️ Chào ngày mới (Ngày ${state.day} • 08:00 Sáng) — Bạn có thể chào buổi sáng và tiếp tục câu chuyện hôm qua với ${c.name}!`
           });
         } else {
           cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
           cs.pendingPartnerQuestion = null;
-          let proactiveMorningMsg = `Chào buổi sáng ${nick} nhé ☀️! Đêm qua ngủ ngon không? Chúc bạn một ngày mới tràn đầy năng lượng, rảnh nhớ nhắn tin cho mình nha 💕!`;
+          let proactiveMorningMsg = `Chào ngày mới ${nick} nhé ☀️! Đêm qua ngủ ngon không? Tối qua đang nói chuyện${yText} mà buồn ngủ quá, sáng nay tụi mình kể tiếp nha 💕!`;
           if (c.isScammer && c.scamOffer) {
-            proactiveMorningMsg = `Chào buổi sáng ${nick} yêu quý ☀️! Sáng nay vừa thức dậy là mình nghĩ ngay tới bạn và kế hoạch hôm qua mình kể. Hôm nay của bạn thế nào?`;
+            proactiveMorningMsg = `Chào buổi sáng ${nick} yêu quý ☀️! Sáng nay vừa thức dậy là mình nghĩ ngay tới bạn và câu chuyện hôm qua${yText}. Hôm nay của bạn thế nào?`;
           } else if (c.archetype === 'single_parent') {
-            proactiveMorningMsg = `Chào buổi sáng ${state.player.name} 🌸! Mình vừa đưa bé đi học mẫu giáo xong là nhắn tin chúc ngày mới bạn liền nè. Hôm nay bạn có bận lắm không?`;
+            proactiveMorningMsg = `Chào buổi sáng ${state.player.name} 🌸! Mình vừa đưa bé đi học mẫu giáo xong là nhắn tin chúc ngày mới bạn và nối tiếp câu chuyện hôm qua liền nè. Hôm nay bạn có bận lắm không?`;
           }
           cs.messages.push({
             sender: 'system',
-            text: `☀️ Bắt đầu Ngày ${state.day} (08:00 Sáng) — ${c.name} đã chủ động nhắn tin chào buổi sáng bạn!`
+            text: `☀️ Chào ngày mới (Ngày ${state.day} • 08:00 Sáng) — ${c.name} đã chủ động nhắn tin chào buổi sáng & tiếp tục câu chuyện hôm qua!`
           });
           cs.messages.push({
             sender: 'them',
@@ -4468,6 +4494,7 @@
       playSfx('msg');
       cs.chatted = true;
       cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
       const playerMsgText = opt.playerText || opt.label;
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`;
 
@@ -4863,12 +4890,12 @@
         });
         cs.messages.push({
           sender: 'them',
-          text: `Mình khá kỹ tính trong chuyện gặp gỡ ngoài đời (cần đủ 65% Thiện cảm & 60% Tin tưởng). Tụi mình trò chuyện sâu sắc hơn nữa rồi hãy hẹn nha ${state.player.name}!`,
+          text: `Mình khá kỹ tính trong chuyện gặp gỡ ngoài đời. Tụi mình trò chuyện thêm để hiểu nhau sâu sắc hơn nữa rồi hãy hẹn nha ${state.player.name}!`,
           time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`
         });
         saveState();
         renderMessagesView();
-        showToast(`👑 Boss Cuối ${char.name} từ chối hẹn hò (Cần ≥65% Thiện cảm & ≥60% Tin tưởng)!`, 'warn');
+        showToast(`${char.name} muốn trò chuyện thêm cho thật hiểu nhau trước khi hẹn gặp ngoài đời!`, 'warn');
         return;
       }
 
@@ -4881,13 +4908,13 @@
         });
         cs.messages.push({
           sender: 'them',
-          text: `Cảm ơn ${state.player.name} đã ngỏ lời nha, nhưng tụi mình mới trò chuyện chưa thực sự hiểu nhau lắm (Điểm thiện cảm hiện tại: ${cs.affection}% — cần đạt tối thiểu 35%). Để hai đứa nhắn tin tìm hiểu thêm một chút rồi hãy hẹn gặp ngoài đời nhé 😊!`,
+          text: `Cảm ơn ${state.player.name} đã ngỏ lời nha, nhưng tụi mình mới trò chuyện chưa thực sự hiểu nhau lắm. Để hai đứa nhắn tin tìm hiểu thêm một chút rồi hãy hẹn gặp ngoài đời nhé 😊!`,
           time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`
         });
         playSfx('msg');
         saveState();
         renderMessagesView();
-        showToast(`💬 ${char.name} từ chối hẹn hò vì độ thiện cảm (${cs.affection}%) chưa đủ 35%! Hãy trò chuyện thêm nhé.`, 'warn');
+        showToast(`💬 ${char.name} cảm thấy hai người chưa đủ thân để hẹn gặp ngoài đời. Hãy trò chuyện thêm nhé!`, 'warn');
         return;
       }
       document.getElementById('irlModalTitle').textContent = `📅 Hẹn Hò Thực Tế Cùng ${char.name} (${char.age}t • ${char.job})`;
@@ -5239,7 +5266,7 @@
         badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/40';
         badge.textContent = '💞 ĐÊM NGỌT NGÀO & CHÂN THÀNH';
         heading.textContent = `Khoảnh khắc ấm áp bên ${char.name}: Hai bạn ngày càng thấu hiểu và gắn bó hơn!`;
-        story.textContent = `Không có bất kỳ cạm bẫy nào cả — ${char.name} đối xử với bạn rất dịu dàng, tôn trọng và hai bạn đã tâm sự thâu đêm về nhiều điều. Vì Tình cảm hiện tại đang ở mức ${cs.affection}% (cần đạt 100% để gắn bó trọn đời), cả hai quyết định tiếp tục tìm hiểu sâu sắc và vun đắp tình cảm thêm nữa!`;
+        story.textContent = `Không có bất kỳ cạm bẫy nào cả — ${char.name} đối xử với bạn rất dịu dàng, tôn trọng và hai bạn đã tâm sự thâu đêm về nhiều điều. Cả hai quyết định tiếp tục đồng hành, tìm hiểu sâu sắc và vun đắp tình cảm thêm nữa!`;
         choices.innerHTML = `
           <button onclick="resolveHotelSafeOutcome('true_love_continue')" class="p-3.5 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm col-span-1 sm:col-span-2 shadow-lg">
             💞 Tiếp Tục Đồng Hành & Vun Đắp Tình Cảm (+15% Tình cảm, +12% Tin tưởng)
@@ -5391,9 +5418,9 @@
         } else {
           cs.messages.push({
             sender: 'system',
-            text: `💞 Sau đêm ấm áp bên ${char.name}, Tình cảm tăng lên ${cs.affection}% (+15%) và Tin tưởng đạt ${cs.trust}% (+12%). Hãy tiếp tục trò chuyện và hẹn hò để đạt 100% Tình cảm nhé!`
+            text: `💞 Sau đêm ấm áp bên ${char.name}, Tình cảm tăng lên ${cs.affection}% (+15%) và Tin tưởng đạt ${cs.trust}% (+12%). Hai bạn tiếp tục đồng hành và tìm hiểu nhau sâu sắc hơn!`
           });
-          showToast(`💞 Tình cảm với ${char.name} tăng lên ${cs.affection}%! Đạt 100% để mở khóa gắn bó trọn đời.`, 'success');
+          showToast(`💞 Tình cảm với ${char.name} tăng lên ${cs.affection}%!`, 'success');
         }
         saveState();
         renderMessagesView();
@@ -5505,12 +5532,12 @@
           });
           cs.messages.push({
             sender: 'them',
-            text: `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết (cần ≥50% Tình cảm) để đi thẳng vào khách sạn riêng tư đâu. Mình hẹn ở quán cà phê công cộng trước nhé!`,
+            text: `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết để đi thẳng vào khách sạn riêng tư đâu. Mình hẹn ở quán cà phê công cộng trước nhé!`,
             time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`
           });
           saveState();
           renderMessagesView();
-          showToast(`🛡️ ${char.name} từ chối vào khách sạn vì chưa đủ 50% Tình cảm!`, 'warn');
+          showToast(`🛡️ ${char.name} từ chối vào khách sạn riêng tư vì hai người chưa đủ thân thiết!`, 'warn');
           return;
         }
         cs.datesCount = (cs.datesCount || 0) + 1;
@@ -6262,12 +6289,12 @@
             cs.trust = Math.min(100, cs.trust + 8);
             cs.messages.push({
               sender: 'them',
-              text: `Buổi hẹn hôm nay rất tuyệt, nhưng anh muốn tụi mình hẹn hò thêm ít nhất ${Math.max(1, 2 - (cs.datesCount || 0))} lần nữa và hiểu nhau thật sâu (≥80% Thiện cảm, ≥75% Tin tưởng) trước khi chính thức nhận lời nhé!`,
+              text: `Buổi hẹn hôm nay rất tuyệt, nhưng anh muốn tụi mình dành thêm thời gian gặp gỡ và hiểu nhau thật sâu sắc trước khi chính thức nhận lời nhé!`,
               time: `Ngày ${state.day} • 22:00 Tối`
             });
             saveState();
             renderMessagesView();
-            showToast(`👑 Boss Cuối cần tối thiểu 2 buổi hẹn & ≥80% Thiện cảm để mở khóa kết cục bí mật!`, 'info');
+            showToast(`${char.name} muốn hai người dành thêm thời gian hẹn hò và hiểu nhau sâu hơn nữa!`, 'info');
             return;
           }
         }
@@ -7791,6 +7818,7 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       playSfx('msg');
       cs.chatted = true;
       cs.awaitingMaleFirstMessage = false;
+      cs.justStartedNewDay = false;
       cs.turnsToday = (cs.turnsToday || 0) + 1;
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday)}`;
       cs.messages.push({ sender: 'me', text: text, time: timeStr });
