@@ -76,11 +76,11 @@
     .msg-bubble { animation: floatUp 0.22s ease-out forwards; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden max-w-full">
 
   <!-- TOP GLOBAL HEADER -->
   <header class="w-full border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 min-h-14 py-1.5 flex flex-wrap items-center justify-between gap-1.5">
       <!-- Brand Logo -->
       <div class="flex items-center gap-2.5">
         <button id="btnLogoHome" onclick="navToScreen('swipe')" class="flex items-center gap-2 group text-left">
@@ -98,7 +98,7 @@
       </div>
 
       <!-- Live Status Pills (Day, Wallet, Alert Score, Remaining Profiles) -->
-      <div id="topStatsBar" class="hidden items-center gap-1.5 sm:gap-3 overflow-x-auto py-1">
+      <div id="topStatsBar" class="hidden flex-wrap items-center gap-1.5 sm:gap-2.5 py-0.5 max-w-full">
         <button id="btnHeaderWallet" onclick="navToScreen('finance')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition" title="Quản lý tài chính">
           <span>💳</span>
           <span id="headerBalanceText">25.000.000đ</span>
@@ -133,17 +133,10 @@
           <span>🏆</span>
           <span class="hidden sm:inline" id="headerAchCount">0/6</span>
         </button>
-        <button id="btnOpenGuide" onclick="openScampediaModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 border border-slate-700 transition" title="Cẩm nang 12 Kịch bản Lừa đảo">
-          <span>📘</span>
-          <span class="hidden sm:inline">Cẩm nang</span>
-        </button>
-        <button id="btnSoundToggle" onclick="toggleSound()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition" title="Bật/Tắt Âm thanh">
+        <button id="btnSoundToggle" onclick="toggleSound()" class="p-1.5 sm:p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition shrink-0" title="Bật/Tắt Âm thanh">
           <span id="soundIcon">🔊</span>
         </button>
-        <button id="btnThemeToggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition" title="Đổi giao diện Sáng/Tối">
-          <span id="themeIcon">🌙</span>
-        </button>
-        <button id="btnFinishSummary" onclick="triggerManualSummaryEnding()" class="hidden px-2.5 py-1.5 rounded-lg gradient-brand text-white text-xs font-semibold shadow-sm hover:opacity-90 transition" title="Tổng kết hành trình & Xem kết thúc">
+        <button id="btnFinishSummary" onclick="triggerManualSummaryEnding()" class="hidden px-2 sm:px-2.5 py-1.5 rounded-lg gradient-brand text-white text-[11px] sm:text-xs font-semibold shadow-sm hover:opacity-90 transition shrink-0 whitespace-nowrap" title="Tổng kết hành trình & Xem kết thúc">
           <span>🏁 Kết thúc</span>
         </button>
       </div>
@@ -193,7 +186,7 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-3 pt-2">
-            <button id="btnStartSetup" onclick="navToScreen('setup')" class="px-6 py-3.5 rounded-2xl gradient-brand text-white font-bold text-sm sm:text-base shadow-xl shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition flex items-center gap-2">
+            <button id="btnStartSetup" onclick="openGenderPreselectModal()" class="px-6 py-3.5 rounded-2xl gradient-brand text-white font-bold text-sm sm:text-base shadow-xl shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition flex items-center gap-2">
               <span>🚀 Tạo Hồ Sơ & Bắt Đầu Chơi</span>
             </button>
             <button id="btnQuickStartDefault" onclick="quickStartGame()" class="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-sm border border-slate-700 transition flex items-center gap-2">
@@ -1324,6 +1317,33 @@
     <p id="decImpactReason" class="text-[11px] text-slate-300 leading-relaxed"></p>
   </div>
 
+
+  <!-- MODAL: GENDER PRESELECT POP-UP BEFORE SETUP -->
+  <div id="modal-gender-preselect" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-6 shadow-2xl space-y-4 animate-pop">
+      <div class="text-center space-y-1.5">
+        <div class="w-12 h-12 mx-auto rounded-2xl gradient-brand flex items-center justify-center text-2xl shadow-lg shadow-pink-500/30">💫</div>
+        <h3 class="text-lg font-extrabold text-white">Chọn Giới Tính Của Bạn</h3>
+        <p class="text-xs text-slate-400">Hệ thống sẽ cá nhân hóa hồ sơ, phong cách trò chuyện và các tình huống hẹn hò phù hợp nhất với bạn.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="selectPreSetupGender('Nam')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-sky-500/20 border border-slate-700 hover:border-sky-400 text-white font-bold text-sm transition flex flex-col items-center gap-1">
+          <span class="text-2xl">👨</span><span>Nam</span>
+        </button>
+        <button onclick="selectPreSetupGender('Nữ')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-pink-500/20 border border-slate-700 hover:border-pink-400 text-white font-bold text-sm transition flex flex-col items-center gap-1">
+          <span class="text-2xl">👩</span><span>Nữ</span>
+        </button>
+        <button onclick="selectPreSetupGender('Phi nhị nguyên')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-purple-500/20 border border-slate-700 hover:border-purple-400 text-white font-bold text-sm transition flex flex-col items-center gap-1">
+          <span class="text-2xl">🌈</span><span>Phi nhị nguyên</span>
+        </button>
+        <button onclick="selectPreSetupGender('Khác')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-400 text-white font-bold text-sm transition flex flex-col items-center gap-1">
+          <span class="text-2xl">✨</span><span>Khác</span>
+        </button>
+      </div>
+      <button onclick="document.getElementById('modal-gender-preselect').classList.add('hidden')" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-400 font-semibold">Đóng</button>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
@@ -1444,11 +1464,11 @@
       if (isDark) {
         htmlEl.classList.remove('dark');
         document.body.className = 'bg-rose-50 text-slate-900 min-h-screen flex flex-col';
-        document.getElementById('themeIcon').textContent = '☀️';
+        // dark theme fixed
       } else {
         htmlEl.classList.add('dark');
         document.body.className = 'bg-slate-950 text-slate-100 min-h-screen flex flex-col';
-        document.getElementById('themeIcon').textContent = '🌙';
+        // dark theme fixed
       }
     }
 
@@ -2120,9 +2140,21 @@
         const cs = state.charStates[cid];
         if (!c || !cs || cs.blocked || cs.unmatched) return;
         ensureCharExtendedState(c, cs);
-        if (cs.evalMetrics.status === 'paused_tomorrow' && targetInfo.day > (cs.evalMetrics.pausedAtDay || prevDay)) {
-          cs.evalMetrics.status = 'active';
-          cs.evalMetrics.lastSignalText = '💬 Sẵn sàng trò chuyện lại';
+        if (targetInfo.day > prevDay) {
+          // Next-day autonomous verdict based on accumulated stats (block or withdraw "chúng ta không hợp")
+          if (cs.respect < 25 || cs.evalMetrics.pressure >= 65) {
+            executeAutonomousBehavior(c, cs, 'block', `Sau chuyện hôm qua, mình thấy không thể tiếp tục nói chuyện được nữa. Chào bạn.`);
+            eventSummary.push(`🚫 Sang ngày mới, ${c.name} đã quyết định chặn bạn.`);
+            return;
+          } else if (cs.evalMetrics.compatibility < 35 || cs.affection < 22 || (cs.evalMetrics.status === 'paused_tomorrow' && cs.evalMetrics.interest < 32)) {
+            executeAutonomousBehavior(c, cs, 'withdraw', `Chào ${state.player.name}, qua một đêm suy nghĩ lại thì mình thấy hai đứa chúng ta không hợp nhau lắm. Chúc bạn sớm tìm được người phù hợp hơn nhé.`);
+            eventSummary.push(`🚪 Sang ngày mới, ${c.name} nhắn tin nói chúng ta không hợp và dừng tìm hiểu.`);
+            return;
+          }
+          if (cs.evalMetrics.status === 'paused_tomorrow') {
+            cs.evalMetrics.status = 'active';
+            cs.evalMetrics.lastSignalText = '💬 Sẵn sàng trò chuyện lại';
+          }
         }
         if (cs.activePartnerInvite && cs.activePartnerInvite.expiresAtMinutes && targetMinutes > cs.activePartnerInvite.expiresAtMinutes) {
           cs.messages.push({
@@ -2669,6 +2701,27 @@
         return true;
       }
       return false;
+    }
+
+    function openGenderPreselectModal() {
+      const m = document.getElementById('modal-gender-preselect');
+      if (m) m.classList.remove('hidden');
+      else navToScreen('setup');
+    }
+
+    function selectPreSetupGender(genderVal) {
+      const m = document.getElementById('modal-gender-preselect');
+      if (m) m.classList.add('hidden');
+      const gSel = document.getElementById('selPlayerGender');
+      if (gSel) gSel.value = genderVal;
+      const tSel = document.getElementById('selTargetGender');
+      if (tSel) {
+        if (genderVal === 'Nam') tSel.value = 'Nữ';
+        else if (genderVal === 'Nữ') tSel.value = 'Nam';
+        else tSel.value = 'Tất cả';
+      }
+      if (typeof renderSetupAvatarPresets === 'function') renderSetupAvatarPresets();
+      navToScreen('setup');
     }
 
     function saveState() {
@@ -3409,21 +3462,21 @@
     // =====================================================================
     const CREATOR_PROFILE_CHAR = {
       id: "char_00_creator",
-      name: "Tạ Minh Khôi (Tác giả Game)",
+      name: "Mike Khôi",
       age: 31,
       gender: "Nam",
       location: "TP. Hồ Chí Minh",
       distance: 2,
-      job: "Trưởng phòng Digital Marketing & Tác giả Game HeartLink",
+      job: "Trưởng phòng Digital Marketing",
       education: "Quản trị Kinh doanh & Sáng tạo Game",
       height: 175,
       relationshipStatus: "Độc thân",
       verified: true,
-      joinedTime: "👑 BOSS CUỐI • Nhà sáng lập HeartLink",
+      joinedTime: "Tham gia 2 tháng trước",
       photoCount: 4,
       completionRate: 100,
-      subtleClue: "Tài khoản chính chủ có tích xanh đặc biệt của Nhà phát triển tạo nên chính trò chơi HeartLink này!",
-      bio: "Xin chào! Mình là Minh Khôi — người đã viết nên từng dòng code và kịch bản cho HeartLink 🎮✨. Ban ngày làm Digital Marketing ngành nội thất, tối về thích chăm bể cá thủy sinh, săn Pokémon GO và chơi Board Game chiến thuật. Nếu bạn là cô gái tinh tế, chân thành và đủ tỉnh táo vượt qua các bẫy ảo — biết đâu tụi mình sẽ có một buổi hẹn ngoài đời thật!",
+      subtleClue: "Tài khoản có tích xanh, ảnh đời thường rất chỉn chu với hồ cá thủy sinh và bộ Board Game.",
+      bio: "Ban ngày chạy chiến dịch Digital Marketing ngành nội thất, tối về thích chăm bể cá thủy sinh, săn Pokémon GO và chơi Board Game chiến thuật 🐟🎲. Nếu bạn là cô gái tinh tế, chân thành và đủ bản lĩnh — biết đâu tụi mình sẽ có một buổi hẹn thú vị ngoài đời!",
       hobbies: ["Sáng tạo Game", "Cá cảnh & Thủy sinh", "Board Games", "Digital Marketing", "Pokémon GO"],
       lifestyle: "Thực tế, thẳng thắn, thích sáng tạo những dự án công nghệ và trân trọng sự chân thành.",
       loveView: "Tình yêu đẹp nhất là khi cả hai đều thông minh, tôn trọng ranh giới và cùng nhau phát triển.",
@@ -3438,14 +3491,14 @@
       trueMotive: "Nhà làm game HeartLink tìm kiếm một cô gái tinh tế và chân thành để hẹn hò ngoài đời.",
       avatarStyle: { skin: "#f2caa8", hair: "short_modern", outfit: "suit_navy", bg: "aquarium", acc: "glasses_thin", gender: "male" },
       album: [
-        { title: "Chân dung Nhà sáng lập HeartLink", scene: "portrait", caption: "Cảm ơn bạn đã trải nghiệm tựa game do chính mình tạo ra 🎮❤️" },
+        { title: "Chân dung đời thường", scene: "portrait", caption: "Một ngày làm việc hiệu quả và bình yên ✨" },
         { title: "Góc hồ cá thủy sinh thư giãn", scene: "aquarium", caption: "Thú vui nuôi cá cảnh sau những giờ code game và chạy Marketing 🐟🌿" },
         { title: "Đêm đấu trí Board Game", scene: "boardgame", caption: "Rising Sun & các tựa game chiến thuật luôn là chân ái 🎲" },
         { title: "Bàn làm việc lập trình & Ý tưởng", scene: "office_modern", caption: "Mỗi nhân vật trong game đều là một lát cắt tâm lý thực tế 💻" }
       ],
       hiddenStats: { sincerity: 99, interest: 88, compatibility: 96, danger: 0, manipulation: 0, financialMotive: 0, patience: 95 },
-      videoCallBehavior: "Bật Video Call cười tươi ngay từ bàn làm việc bên bể cá thủy sinh, gửi lời cảm ơn bạn đã chơi HeartLink!",
-      investigationClue: "Xác nhận 100% chính chủ: Tạ Minh Khôi — Tác giả & Nhà phát triển của trò chơi HeartLink!",
+      videoCallBehavior: "Bật Video Call cười tươi ngay từ bàn làm việc bên bể cá thủy sinh, nói chuyện cực kỳ điềm đạm và sâu sắc!",
+      investigationClue: "Tài khoản tích xanh chính chủ tại TP.HCM, mọi thông tin nghề nghiệp và sở thích đều khớp 100%.",
       scamOffer: null,
       redFlagsList: []
     };
@@ -5002,13 +5055,7 @@
         bubbles.push(`🔥 Đề nghị từ ${char.name}: ${cs.scamStage1Done ? char.scamOffer.stage2Desc : char.scamOffer.stage1Desc}${exploitNote}`);
       }
 
-      // Check Late-Night Sleep condition
-      const maxTurns = cs.maxTurnsBeforeSleep || 5;
-      if (cs.turnsToday >= maxTurns && !cs.isSleeping) {
-        cs.isSleeping = true;
-        cs.pendingPartnerQuestion = null;
-        bubbles.push(`🌙 Ôi nhìn đồng hồ đã hơn 23h30 đêm rồi! Hôm nay nhắn tin với ${nick} vui quá mà mắt mình díp lại rồi nè. Mình đi ngủ trước nha, chúc ${nick} ngủ thật ngon, sáng mai tụi mình nói chuyện tiếp nhé 💤!`);
-      }
+      // Unlimited messaging per day — day never ends automatically unless player skips or partner pauses/is busy.
 
       // Push additional bubbles sequentially into cs.messages so multi-bubble & media cards work seamlessly!
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday || 0)}`;
@@ -5581,11 +5628,7 @@
             cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
           }
 
-          const maxTurns = cs.maxTurnsBeforeSleep || 5;
-          if (cs.turnsToday >= maxTurns && !cs.isSleeping) {
-            cs.isSleeping = true;
-            finalReply += ` 🌙 Ôi đã hơn 23h30 khuya rồi! Mình đi ngủ trước nha, chúc ${state.player.name} ngủ ngon, sáng mai nói chuyện tiếp nhé 💤!`;
-          }
+          // Unlimited messaging per day
 
           cs.messages.push({ sender: 'them', text: finalReply, time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday)}` });
 
@@ -8000,10 +8043,10 @@
         desc: "Bạn đã báo cáo nhầm những người dùng chân thành quá 3 lần quy định. Để bảo vệ trải nghiệm cộng đồng khỏi các báo cáo sai sự thật, hệ thống HeartLink đã khóa tài khoản của bạn. Hãy bấm Chơi lại từ đầu và quan sát kỹ hơn trước khi gửi báo cáo nhé!"
       },
       good_creator_date: {
-        category: "KẾT THÚC BÍ MẬT • NHÀ LÀM GAME",
+        category: "KẾT THÚC BÍ MẬT • PLOT TWIST NHÀ LÀM GAME",
         catClass: "bg-gradient-to-r from-pink-500/30 to-purple-500/30 text-pink-200 border border-pink-400/60",
-        title: "🎮✨ Hẹn Hò Cùng Chính Nhà Sáng Lập & Tác Giả Game HeartLink!",
-        desc: "Giữa hàng loạt hồ sơ trên ứng dụng, bạn đã chinh phục thành công Tạ Minh Khôi — chính là tác giả đứng sau thế giới HeartLink! Từ những cuộc trò chuyện về Marketing nội thất, cá cảnh thủy sinh đến Board Game chiến thuật, hai bạn đã biến kịch bản trong game thành một buổi hẹn hò ngọt ngào ngoài đời thực!"
+        title: "🎮😂 Hẹn Hò Với Nhà Làm Game Mike Khôi — Plot Twist Cực Mạnh!",
+        desc: "Sau bao thử thách khó nhằn, bạn đã chinh phục thành công Mike Khôi — chính là tác giả đứng sau thế giới HeartLink! Nhưng ngay giữa buổi hẹn hò ngoài đời, Mike Khôi bật cười thú nhận: “Tui vô test game thôi chứ tui đã có vợ rồi :)))!” Dù vậy, bạn vẫn xứng đáng nhận danh hiệu huyền thoại vì đã phá đảo được Boss Cuối khó nhất game!"
       },
       bad_paternity_trap: {
         category: "KẾT THÚC XẤU • BẪY ĐỔ VỎ",
@@ -8954,11 +8997,7 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       cs.affection = Math.max(0, Math.min(100, cs.affection + applyBossDifficulty(char, aiAffDelta)));
       cs.trust = Math.max(0, Math.min(100, cs.trust + applyBossDifficulty(char, aiTrustDelta)));
       cs.goodwill = Math.max(0, Math.min(100, (cs.goodwill || 55) + aiGoodwillDelta));
-      const maxTurns = cs.maxTurnsBeforeSleep || 5;
-      if (cs.turnsToday >= maxTurns && !cs.isSleeping) {
-        cs.isSleeping = true;
-        finalReply += ` 🌙 Ôi đã hơn 23h30 khuya rồi! Mình buồn ngủ quá nên đi ngủ trước nhé, chúc ${state.player.name} ngủ ngon, sáng mai nói chuyện tiếp nha 💤!`;
-      }
+      // Unlimited messaging per day
       cs.messages.push({ sender: 'them', text: finalReply, time: `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday)}` });
       computeAndAdvanceRelPhase(char, cs);
 
