@@ -2714,6 +2714,13 @@
       if (m) m.classList.add('hidden');
       const gSel = document.getElementById('selPlayerGender');
       if (gSel) gSel.value = genderVal;
+      const nameInp = document.getElementById('inpPlayerName');
+      if (nameInp) {
+        const curName = (nameInp.value || '').trim();
+        if (!curName || curName === 'Minh Khôi' || curName === 'Ánh Mai') {
+          nameInp.value = genderVal === 'Nữ' ? 'Ánh Mai' : 'Minh Khôi';
+        }
+      }
       const tSel = document.getElementById('selTargetGender');
       if (tSel) {
         if (genderVal === 'Nam') tSel.value = 'Nữ';
