@@ -762,7 +762,7 @@
               </div>
 
               <!-- Branching Dialogue Choices (Scrollable, expanded room) -->
-              <div class="px-2.5 pt-2 pb-1.5 sm:px-3.5 sm:pt-2.5 bg-slate-950 border-t border-slate-800 space-y-1.5 shrink-0">
+              <div id="dialogueChoicesWrapper" class="px-2.5 pt-2 pb-1.5 sm:px-3.5 sm:pt-2.5 bg-slate-950 border-t border-slate-800 space-y-1.5 shrink-0">
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
                   <span id="chatStageLabel" class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300">💬 Gợi ý câu trả lời:</span>
                   <div class="flex items-center gap-2">
@@ -4967,7 +4967,7 @@
         if (char.isScammer) {
           cs.partnerMood = 'angry';
           bubbles.push(`Thật sự thất vọng về ${state.player.name}! Mình mở hết lòng trao cả cơ hội tương lai cho bạn mà bạn lại tính toán rạch ròi lạnh lùng như người dưng vậy sao?!`);
-          bubbles.push(`(Gợi ý: Kẻ lừa đảo đang dùng chiêu thao túng tâm lý để ép bạn cảm thấy có lỗi vì không chịu đưa tiền!)`);
+          // Removed hint spoiler
         } else {
           bubbles.push(`Ơ bạn yên tâm tuyệt đối đi ${state.player.name} ơi 😊! Mình chưa bao giờ và sẽ không bao giờ hỏi vay tiền hay rủ bạn đầu tư cái gì đâu, tụi mình yêu nhau văn minh và độc lập mà!`);
         }
@@ -4976,7 +4976,7 @@
       else if (topic === 'p5_confront_truth') {
         if (char.isScammer) {
           bubbles.push(`[Đã xem] ... Không ngờ ${state.player.name} lại điều tra kỹ đến mức đấy!`);
-          bubbles.push(`Được lắm, coi như bạn tỉnh táo hơn những con mồi khác! (Đối phương đã lộ nguyên hình — hãy bấm nút 🚨 Báo Cáo trên thanh công cụ để khóa tài khoản này và nhận điểm thưởng!)`);
+          bubbles.push(`Được lắm, coi như bạn tỉnh táo hơn những người khác đấy! Nếu không tin thì thôi, chào nhé.`);
         } else {
           bubbles.push(`Sao ${state.player.name} lại nói những lời tổn thương mình như vậy 😢?! Từ đầu tới cuối mình luôn chân thành và minh bạch với bạn mà! Nếu bạn vẫn nghi ngờ thì tụi mình gọi Video Call hoặc gặp mặt đối chứng ngay bây giờ đi!`);
         }
@@ -5180,7 +5180,7 @@
         });
         cs.messages.push({
           sender: 'them',
-          text: `Hừ, không ngờ bạn lại thiếu niềm tin như vậy! (Gợi ý: Bạn đã tỉnh táo tránh được bẫy! Hãy bấm 🚨 Báo Cáo để vạch trần tài khoản này).`,
+          text: `Hừ, không ngờ bạn lại thiếu niềm tin với mình như vậy!`,
           time: 'Vừa xong'
         });
         showToast('Bạn đã tỉnh táo từ chối cái bẫy của đối phương!', 'success');
@@ -8724,7 +8724,7 @@
       else if (lower.includes("lừa đảo") || lower.includes("bịp") || lower.includes("scam") || lower.includes("báo cáo") || lower.includes("giả mạo") || lower.includes("ảnh mạng")) {
         if (char.isScammer) {
           affDelta = -20; trustDelta = -25;
-          reply = `Này ${state.player.name}! Sao bạn lại nghi ngờ và xúc phạm mình như vậy?! Nếu không tin nhau thì thôi! (Đối phương lộ rõ sự chột dạ — bạn có thể bấm 🚨 Báo Cáo ngay!)`;
+          reply = `Này ${state.player.name}! Sao bạn lại nghi ngờ và nói những lời như vậy?! Nếu không tin nhau thì thôi vậy!`;
         } else {
           affDelta = -6; trustDelta = 4;
           reply = `Ủa sao bạn lại nói thế 😅? Mình là người thật 100% đã xác minh tích xanh mà! Bạn có thể bấm nút 📹 Video Call hoặc 🔍 Soi Hồ Sơ để kiểm tra thoải mái nha.`;
