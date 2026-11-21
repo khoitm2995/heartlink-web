@@ -74,6 +74,26 @@
       100% { transform: translateY(0); opacity: 1; }
     }
     .msg-bubble { animation: floatUp 0.22s ease-out forwards; }
+    #activeChatWrapper.adult-mode-active {
+      background: #000000 !important;
+      border-color: rgba(225, 29, 72, 0.6) !important;
+    }
+    #activeChatWrapper.adult-mode-active #chatTopBar,
+    #activeChatWrapper.adult-mode-active #chatIntuitionBar,
+    #activeChatWrapper.adult-mode-active #chatRelationshipStageBar,
+    #activeChatWrapper.adult-mode-active #dialogueChoicesWrapper,
+    #activeChatWrapper.adult-mode-active #chatInputBar,
+    #activeChatWrapper.adult-mode-active #aiTypingIndicator {
+      background: #050507 !important;
+      border-color: rgba(225, 29, 72, 0.32) !important;
+    }
+    #activeChatWrapper.adult-mode-active #chatMessagesStream {
+      background: #000000 !important;
+    }
+    #activeChatWrapper.adult-mode-active #inpFreeChatMessage {
+      background: #0d0d12 !important;
+      border-color: rgba(225, 29, 72, 0.45) !important;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden max-w-full">
@@ -643,7 +663,7 @@
             <div id="activeChatWrapper" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden">
 
               <!-- Chat Top Bar -->
-              <div class="p-2.5 sm:px-5 sm:py-3 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 shrink-0">
+              <div id="chatTopBar" class="p-2.5 sm:px-5 sm:py-3 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 shrink-0">
                 <div class="flex items-center gap-3">
                   <div id="chatHeaderAvatar" class="w-11 h-11 rounded-full overflow-hidden border border-pink-500/50 shrink-0 bg-slate-800"></div>
                   <div>
@@ -702,6 +722,7 @@
               <div id="chatRelationshipStageBar" class="px-3 sm:px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] shrink-0">
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="font-bold text-pink-300 truncate" id="relPhaseBadge">Giai đoạn: Chào hỏi</span>
+                  <span id="badge18PlusMode" class="hidden px-2 py-0.5 rounded-full bg-rose-600/30 border border-rose-500/60 text-rose-300 text-[10px] font-extrabold shrink-0">🔞 18+</span>
                   <span id="chatSubtleSignalPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/80 truncate">💬 Trò chuyện bình thường</span>
                 </div>
                 <span id="relMemorySummaryPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 shrink-0">Đã nhớ 0 chi tiết</span>
@@ -719,6 +740,11 @@
                 <div class="flex flex-wrap items-center gap-1.5 shrink-0">
                   <button onclick="performDatingPhysicalAction('hug')" class="px-2.5 py-1.5 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/40 text-pink-100 text-[11px] font-bold transition">🤗 Ôm</button>
                   <button onclick="performDatingPhysicalAction('kiss')" class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/40 text-rose-100 text-[11px] font-bold transition">💋 Hôn</button>
+                  <span id="dating18PlusActions" class="hidden flex flex-wrap items-center gap-1.5">
+                    <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold transition">🔥 Vuốt ve 18+</button>
+                    <button onclick="performDatingPhysicalAction('deep_kiss_18')" class="px-2.5 py-1.5 rounded-xl bg-fuchsia-700/45 hover:bg-fuchsia-600/65 border border-fuchsia-500/60 text-fuchsia-100 text-[11px] font-bold transition">💋 Hôn sâu 18+</button>
+                    <button onclick="performDatingPhysicalAction('hotel_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold transition">🏨 Khách sạn 18+</button>
+                  </span>
                   <button id="btnFinishDatingTime" onclick="finishDatingTimeToBill()" class="px-3 py-1.5 rounded-xl gradient-brand text-white text-[11px] font-bold shadow-lg hover:opacity-95 transition shrink-0">
                     🧾 Tính Tiền & Kết Thúc
                   </button>
@@ -799,7 +825,7 @@
               </div>
 
               <!-- Pinned Real-Time Free-Text AI Chat Input (Always visible at bottom, never hidden!) -->
-              <div class="p-2 sm:px-3.5 sm:py-2.5 bg-slate-950 border-t border-slate-800/90 flex items-center gap-2 shrink-0 sticky bottom-0 z-20">
+              <div id="chatInputBar" class="p-2 sm:px-3.5 sm:py-2.5 bg-slate-950 border-t border-slate-800/90 flex items-center gap-2 shrink-0 sticky bottom-0 z-20">
                 <input id="inpFreeChatMessage" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();sendFreeTextAIChat();}" class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-[13px] sm:text-sm text-white placeholder-slate-400 focus:border-pink-500 focus:outline-none" placeholder="Tự nhập tin nhắn hoặc câu hỏi của bạn..." />
                 <button id="btnSendFreeChat" onclick="sendFreeTextAIChat()" class="px-4 py-2.5 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm shadow-lg hover:opacity-95 transition shrink-0">
                   Gửi ➤
@@ -1191,6 +1217,13 @@
           </button>
         </div>
         <div id="irlPendingGiftsBanner" class="hidden p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200 flex items-center justify-between gap-2"></div>
+        <div class="p-3 rounded-2xl bg-slate-950 border border-pink-500/30 space-y-2">
+          <label class="block text-[11px] font-bold text-pink-300">✨ Hoặc tự nhập địa điểm bất kỳ (AI tự động định giá buổi hẹn):</label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input id="inpCustomDateVenue" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCustomDateVenue();}" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-400 focus:border-pink-500 focus:outline-none" placeholder="VD: Đà Lạt, Du thuyền sông Sài Gòn, Rooftop Quận 1, Homestay..." />
+            <button id="btnSubmitCustomVenue" type="button" onclick="submitCustomDateVenue()" class="px-4 py-2 rounded-xl gradient-brand text-white font-bold text-xs shadow hover:opacity-95 transition shrink-0">🤖 AI Định Giá &amp; Hẹn</button>
+          </div>
+        </div>
         <div id="irlVenuesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto custom-scroll pr-1">
           <!-- Populated by JS -->
         </div>
@@ -1304,9 +1337,10 @@
         <p id="instInviteMessage" class="text-slate-100 leading-relaxed italic">“Tối nay mình gặp nhau nhé!”</p>
         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px]">
           <div><span class="text-slate-400">📍 Địa điểm:</span> <strong id="instInviteVenue" class="text-emerald-300">Quán Cà Phê</strong></div>
-          <div><span class="text-slate-400">🕒 Thời gian:</span> <strong id="instInviteTime" class="text-sky-300">Hôm nay • 19:30</strong></div>
+          <div><span class="text-slate-400">🕒 Thời gian:</span> <strong id="instInviteTime" class="text-sky-300">Hôm nay • Buổi Tối</strong></div>
+          <div><span class="text-slate-400">💰 Giá trị dự kiến:</span> <strong id="instInviteCost" class="text-amber-300">~160.000đ</strong></div>
           <div><span class="text-slate-400">🎯 Lý do:</span> <strong id="instInvitePurpose" class="text-pink-300">Gặp mặt trò chuyện</strong></div>
-          <div><span class="text-slate-400">⏳ Thời hạn:</span> <strong id="instInviteCountdown" class="text-amber-300">Còn 4 giờ</strong></div>
+          <div class="col-span-2"><span class="text-slate-400">⏳ Thời hạn:</span> <strong id="instInviteCountdown" class="text-amber-300">Còn 4 giờ</strong></div>
         </div>
       </div>
 
@@ -1340,6 +1374,7 @@
               <option value="12:00">Buổi Trưa</option>
               <option value="15:00">Buổi Chiều</option>
               <option value="19:00" selected>Buổi Tối</option>
+              <option value="23:00">Buổi Khuya</option>
             </select>
           </div>
           <div>
@@ -2088,7 +2123,12 @@
 
     function detectPlayerAdultTopic(text) {
       const lower = (text || '').toLowerCase();
-      const kw = ['18+', 'chuyện ấy', 'làm tình', 'ngủ cùng', 'qua đêm', 'ôm ấp', 'nóng bỏng', 'quyến rũ', 'thân mật', 'lên giường', 'hôn sâu', 'chạm vào', 'cởi', 'sext'];
+      const kw = [
+        '18+', 'chuyện ấy', 'làm tình', 'làm chuyện đó', 'quan hệ', 'ngủ cùng', 'qua đêm',
+        'ôm ấp', 'nóng bỏng', 'quyến rũ', 'thân mật', 'lên giường', 'hôn sâu', 'chạm vào',
+        'cởi', 'sext', 'nhạy cảm', 'kích thích', 'mơn trớn', 'vuốt ve', 'cơ thể',
+        'dâm', 'nứng', 'sướng', 'địt', 'chịch', 'xoạc', 'làm nháy', 'mút', 'liếm', 'sờ'
+      ];
       return kw.some(k => lower.includes(k));
     }
 
@@ -2099,26 +2139,57 @@
       ensureCharExtendedState(char, cs);
       const tInfo = getSimTimeInfo();
 
+      if (actionType === 'hotel_18') {
+        const _hotelReq = cs.adultChatUnlocked ? 35 : 50;
+        if (!char.isScammer && char.archetype !== 'casual_short' && char.archetype !== 'rebound_ex' && cs.affection < _hotelReq) {
+          cs.affection = Math.max(0, cs.affection - 18);
+          cs.respect = Math.max(0, cs.respect - 20);
+          cs.messages.push({ sender: 'me', text: `[Hành động 18+] Bạn ghé sát tai ${char.name} thì thầm rủ vào khách sạn riêng tư ngay lúc này... 🏨`, time: tInfo.fullLabel });
+          cs.messages.push({ sender: 'them', text: `Khoan đã ${state.player.name}, dù có chút rung động nhưng mình chưa sẵn sàng đi khách sạn ngay đâu!`, time: tInfo.fullLabel });
+          checkDatingTimeAbort(char, cs);
+          saveState(); renderMessagesView();
+          return;
+        }
+        cs.messages.push({ sender: 'me', text: `[Hành động 18+] Bạn nắm tay ${char.name} đầy khao khát và rủ rời điểm hẹn để vào khách sạn riêng tư ngay... 🏨🔥`, time: tInfo.fullLabel });
+        cs.inDatingTime = false;
+        saveState();
+        renderMessagesView();
+        openHotelIntentSelector(char, cs, () => triggerHotelOvernightScenario(char, cs));
+        return;
+      }
+
+      const is18Touch = actionType === 'touch_18';
+      const is18DeepKiss = actionType === 'deep_kiss_18';
       const isKiss = actionType === 'kiss';
-      const requiredAff = isKiss ? 68 : 48;
-      const actionLabel = isKiss ? 'Hôn' : 'Ôm';
+
+      const requiredAff = is18DeepKiss ? 62 : (is18Touch ? 55 : (isKiss ? 68 : 48));
+      const actionLabel = is18DeepKiss ? 'Hôn sâu 18+' : (is18Touch ? 'Vuốt ve táo bạo 18+' : (isKiss ? 'Hôn' : 'Ôm'));
+
+      const actionMsgs = {
+        hug: `[Hành động] Bạn dang tay ôm lấy ${char.name} thật ấm áp... 🤗`,
+        kiss: `[Hành động] Bạn nhẹ nhàng tiến lại gần và đặt một nụ hôn lên má/môi ${char.name}... 💋`,
+        touch_18: `[Hành động 18+] Bạn áp sát vào ${char.name}, bàn tay khẽ vuốt ve dọc eo và đùi đầy táo bạo, hơi thở nóng rực... 🔥`,
+        deep_kiss_18: `[Hành động 18+] Bạn giữ nhẹ gáy ${char.name} và trao một nụ hôn sâu cuồng nhiệt, ướt át đầy khao khát... 💋🔥`
+      };
 
       cs.messages.push({
         sender: 'me',
-        text: isKiss ? `[Hành động] Bạn nhẹ nhàng tiến lại gần và đặt một nụ hôn lên má/môi ${char.name}... 💋` : `[Hành động] Bạn dang tay ôm lấy ${char.name} thật ấm áp... 🤗`,
+        text: actionMsgs[actionType] || actionMsgs.hug,
         time: tInfo.fullLabel
       });
 
       if (cs.affection < requiredAff && !char.isScammer && char.archetype !== 'casual_short') {
-        const penAff = isKiss ? -26 : -18;
-        const penResp = isKiss ? -28 : -18;
+        const penAff = (is18Touch || is18DeepKiss) ? -32 : (isKiss ? -26 : -18);
+        const penResp = (is18Touch || is18DeepKiss) ? -34 : (isKiss ? -28 : -18);
         cs.affection = Math.max(0, cs.affection + penAff);
         cs.respect = Math.max(0, cs.respect + penResp);
         cs.messages.push({
           sender: 'them',
-          text: isKiss
-            ? `Khoan đã ${state.player.name}! Tụi mình chưa thân tới mức hôn nhau đâu, bạn làm mình hơi sốc và khó chịu đấy!`
-            : `Ơ kìa ${state.player.name}, mình chưa thoải mái để ôm ấp thân mật thế này đâu, giữ khoảng cách giúp mình nhé!`,
+          text: (is18Touch || is18DeepKiss)
+            ? `Khoan đã ${state.player.name}! Dù nói chuyện táo bạo nhưng ngoài đời tụi mình chưa đủ thân để đụng chạm quá trớn vậy đâu, dừng lại ngay đi!`
+            : (isKiss
+              ? `Khoan đã ${state.player.name}! Tụi mình chưa thân tới mức hôn nhau đâu, bạn làm mình hơi sốc và khó chịu đấy!`
+              : `Ơ kìa ${state.player.name}, mình chưa thoải mái để ôm ấp thân mật thế này đâu, giữ khoảng cách giúp mình nhé!`),
           time: tInfo.fullLabel
         });
         showDecisionImpactCard({
@@ -2128,21 +2199,25 @@
         });
         checkDatingTimeAbort(char, cs);
       } else {
-        const gainAff = isKiss ? 16 : 12;
-        const gainInt = isKiss ? 18 : 12;
+        const gainAff = is18DeepKiss ? 20 : (is18Touch ? 18 : (isKiss ? 16 : 12));
+        const gainInt = is18DeepKiss ? 26 : (is18Touch ? 24 : (isKiss ? 18 : 12));
         cs.affection = Math.min(100, cs.affection + gainAff);
         cs.intimacy = Math.min(100, (cs.intimacy || 30) + gainInt);
+        const replyMap = {
+          hug: `${char.name} tựa nhẹ vào vai bạn và mỉm cười ấm áp: “Cảm giác bình yên thật đấy...” 🤗💕`,
+          kiss: `${char.name} hơi đỏ mặt rồi mỉm cười đáp lại nụ hôn của bạn đầy ngọt ngào... 💋✨`,
+          touch_18: `${char.name} khẽ rùng mình, áp sát cơ thể vào bạn và thì thầm khàn khàn: “Tay bạn làm mình nóng hết cả người rồi đó... Đừng dừng lại nha 🔥💋”`,
+          deep_kiss_18: `${char.name} hé môi đón nhận nụ hôn sâu cuồng nhiệt của bạn, hai tay ôm chặt lấy cổ bạn đầy đê mê: “Muốn đi đâu đó chỉ có hai đứa mình ngay bây giờ quá...” 🔥🔞`
+        };
         cs.messages.push({
           sender: 'them',
-          text: isKiss
-            ? `${char.name} hơi đỏ mặt rồi mỉm cười đáp lại nụ hôn của bạn đầy ngọt ngào... 💋✨`
-            : `${char.name} tựa nhẹ vào vai bạn và mỉm cười ấm áp: “Cảm giác bình yên thật đấy...” 🤗💕`,
+          text: replyMap[actionType] || replyMap.hug,
           time: tInfo.fullLabel
         });
         showDecisionImpactCard({
-          title: `${actionLabel} ${char.name} trong buổi hẹn`,
+          title: `${actionLabel} với ${char.name}`,
           changes: [{ label: 'Thiện cảm', delta: gainAff }, { label: 'Thân mật', delta: gainInt }],
-          reason: 'Khoảnh khắc gần gũi đúng lúc giúp hai người gắn kết mạnh mẽ hơn!'
+          reason: (is18Touch || is18DeepKiss) ? 'Tương tác 18+ táo bạo khiến bầu không khí trở nên cực kỳ nóng bỏng!' : 'Khoảnh khắc gần gũi đúng lúc giúp hai người gắn kết mạnh mẽ hơn!'
         });
       }
       saveState();
@@ -2761,13 +2836,20 @@
       document.getElementById('instInvitePartnerName').textContent = `${char.name} (${char.age}t • ${char.job})`;
       const stgNames = { 1: 'Giai đoạn 1: Chào hỏi', 2: 'Giai đoạn 2: Thăm dò', 3: 'Giai đoạn 3: Tìm hiểu', 4: 'Giai đoạn 4: Tán tỉnh', 5: 'Giai đoạn 5: Yêu đương' };
       document.getElementById('instInviteRelStage').textContent = stgNames[cs.relPhase || 1] || 'Đang tìm hiểu';
-      document.getElementById('instInviteMessage').textContent = `“${invData.message}”`;
+      document.getElementById('instInviteMessage').textContent = `“${invData.message || invData.bannerDesc || 'Mình hẹn gặp nhau nhé!'}”`;
       document.getElementById('instInviteVenue').textContent = invData.venueName || 'Quán Cà Phê';
       const curInfo = getSimTimeInfo();
-      const meetHour = Math.min(22, Math.max(curInfo.hour + 2, 18));
-      document.getElementById('instInviteTime').textContent = `Hôm nay (Ngày ${curInfo.day}) • Buổi ${curInfo.hour < 18 ? 'Chiều/Tối' : 'Tối'}`;
-      document.getElementById('instInvitePurpose').textContent = invData.motiveType === 'genuine' ? 'Gặp gỡ trò chuyện ngoài đời' : 'Muốn gặp mặt trực tiếp';
-      const remHrs = Math.max(1, Math.round((invData.expiresAtMinutes - state.simTime.totalMinutes) / 60));
+      document.getElementById('instInviteTime').textContent = invData.timeText || `Hôm nay (Ngày ${curInfo.day}) • Buổi ${invData.targetPeriod || (curInfo.hour < 18 ? 'Chiều/Tối' : 'Tối')}`;
+      const estCost = invData.estimatedCost || invData.cost || invData.costHint || 160000;
+      const costEl = document.getElementById('instInviteCost');
+      if (costEl) costEl.textContent = `~${formatVND(estCost)}`;
+      document.getElementById('instInvitePurpose').textContent = invData.purpose || (invData.motiveType === 'genuine' ? 'Gặp gỡ trò chuyện ngoài đời' : 'Muốn gặp mặt trực tiếp');
+      const selSess = document.getElementById('selInstInviteSession');
+      if (selSess && invData.targetPeriod) {
+        const pMap = { 'Sáng': '08:00', 'Trưa': '12:00', 'Chiều': '15:00', 'Tối': '19:00', 'Khuya': '23:00' };
+        if (pMap[invData.targetPeriod]) selSess.value = pMap[invData.targetPeriod];
+      }
+      const remHrs = Math.max(1, Math.round(((invData.expiresAtMinutes || (state.simTime.totalMinutes + 240)) - state.simTime.totalMinutes) / 60));
       document.getElementById('instInviteCountdown').textContent = `Còn khoảng ${remHrs} giờ`;
       document.getElementById('instInviteRescheduleBox').classList.add('hidden');
       document.getElementById('inpRescheduleDay').value = curInfo.day + 1;
@@ -2794,25 +2876,18 @@
         const sessVal = (document.getElementById('selInstInviteSession') && document.getElementById('selInstInviteSession').value) || '19:00';
         const pickupVal = (document.getElementById('selInstInvitePickup') && document.getElementById('selInstInvitePickup').value) || 'Tự túc gặp tại điểm hẹn';
         const sh = parseInt(sessVal.split(':')[0] || '19', 10);
-        const curInfo = getSimTimeInfo();
-        if ((state.day - 1) * 1440 + sh * 60 < curInfo.totalMinutes - 60) {
-          showToast('⏰ Buổi này đã qua trong ngày rồi! Vui lòng chọn buổi muộn hơn hoặc Hẹn dịp khác sang ngày mai.', 'warn');
-          return;
-        }
-        const inv = cs.activePartnerInvite;
-        cs.confirmedTodayDate = {
-          venueId: (inv && inv.venueId) || 'cafe',
-          venueName: (inv && inv.venueName) || 'Quán Cà Phê Acoustic & Sách',
-          sessionHour: sh,
-          sessionLabel: sh < 11 ? 'Buổi Sáng' : (sh < 14 ? 'Buổi Trưa' : (sh < 18 ? 'Buổi Chiều' : 'Buổi Tối')),
-          pickup: pickupVal
-        };
+        const periodLabel = sh < 11 ? 'Sáng' : (sh < 14 ? 'Trưa' : (sh < 18 ? 'Chiều' : (sh < 22 ? 'Tối' : 'Khuya')));
+        const inv = cs.activePartnerInvite || {};
+        const dayOff = inv.dayOffset || 0;
+        const venueObj = buildVenueFromNameAndCost(inv.venueName || 'Quán Cà Phê Acoustic & Sách', inv.estimatedCost || inv.cost || 0, inv.venueId);
+        cs.activePartnerInvite = null;
+        cs.confirmedTodayDate = null;
         cs.messages.push({
-          sender: 'system',
-          text: `✅ Đã chốt hẹn hôm nay: ${cs.confirmedTodayDate.sessionLabel} tại ${cs.confirmedTodayDate.venueName} (${pickupVal}). Nhắn "bye / hẹn lúc đó gặp" hoặc đi ngay để tới điểm hẹn!`,
-          time: curInfo.fullLabel
+          sender: 'me',
+          text: `Ok chốt kèo ${dayOff > 0 ? 'ngày mai ' : ''}Buổi ${periodLabel} tại ${venueObj.name} (${pickupVal}) nhé ${char.name}!`,
+          time: getSimTimeInfo().fullLabel
         });
-        respondToPartnerDateInvite('accept_direct');
+        jumpToPeriodAndStartDate(char, cs, venueObj, periodLabel, dayOff);
         return;
       }
 
@@ -5896,13 +5971,19 @@
       if (sigEl) sigEl.textContent = cs.evalMetrics.lastSignalText || '💬 Trò chuyện bình thường';
       const activeWrap = document.getElementById('activeChatWrapper');
       const dtBanner = document.getElementById('chatDatingTimeBanner');
+      const badge18 = document.getElementById('badge18PlusMode');
+      const dt18Box = document.getElementById('dating18PlusActions');
+      if (badge18) badge18.classList.toggle('hidden', !cs.adultChatUnlocked);
+      if (dt18Box) dt18Box.classList.toggle('hidden', !(cs.inDatingTime && cs.adultChatUnlocked));
       if (activeWrap) {
-        activeWrap.classList.toggle('ring-2', !!cs.inDatingTime);
-        activeWrap.classList.toggle('ring-pink-500/70', !!cs.inDatingTime);
-        activeWrap.classList.toggle('bg-gradient-to-b', !!cs.inDatingTime);
-        activeWrap.classList.toggle('from-rose-950/35', !!cs.inDatingTime);
-        activeWrap.classList.toggle('via-slate-900', !!cs.inDatingTime);
-        activeWrap.classList.toggle('to-purple-950/35', !!cs.inDatingTime);
+        activeWrap.classList.toggle('adult-mode-active', !!cs.adultChatUnlocked);
+        activeWrap.classList.toggle('ring-2', !!(cs.inDatingTime || cs.adultChatUnlocked));
+        activeWrap.classList.toggle('ring-rose-500/80', !!cs.adultChatUnlocked);
+        activeWrap.classList.toggle('ring-pink-500/70', !!(cs.inDatingTime && !cs.adultChatUnlocked));
+        activeWrap.classList.toggle('bg-gradient-to-b', !!(cs.inDatingTime && !cs.adultChatUnlocked));
+        activeWrap.classList.toggle('from-rose-950/35', !!(cs.inDatingTime && !cs.adultChatUnlocked));
+        activeWrap.classList.toggle('via-slate-900', !!(cs.inDatingTime && !cs.adultChatUnlocked));
+        activeWrap.classList.toggle('to-purple-950/35', !!(cs.inDatingTime && !cs.adultChatUnlocked));
       }
       if (dtBanner) {
         dtBanner.classList.toggle('hidden', !cs.inDatingTime);
@@ -5910,7 +5991,7 @@
           const dtTitle = document.getElementById('datingTimeVenueTitle');
           const dtSub = document.getElementById('datingTimeSubInfo');
           if (dtTitle) dtTitle.textContent = `DATING TIME • ${cs.datingTimeVenue.icon} ${cs.datingTimeVenue.name}`;
-          if (dtSub) dtSub.textContent = `Đã trò chuyện ${cs.datingTimeTurns || 0} lượt tại điểm hẹn (Tác động chỉ số x2)`;
+          if (dtSub) dtSub.textContent = `Đã trò chuyện ${cs.datingTimeTurns || 0} lượt tại điểm hẹn (Tác động chỉ số x2${cs.adultChatUnlocked ? ' • 🔞 18+ Đang bật' : ''})`;
         }
       }
       const isWithdrawnDone = (cs.evalMetrics.status === 'withdrawn' && cs.evalMetrics.finalReplyUsed);
@@ -6026,6 +6107,11 @@
 
       const _bMsgId = 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       cs.messages.push({ id: _bMsgId, sender: 'me', text: playerMsgText, time: getSimTimeInfo().fullLabel });
+      if (detectPlayerAdultTopic(playerMsgText) && !cs.adultChatUnlocked) {
+        cs.adultChatUnlocked = true;
+        cs.intimacy = Math.min(100, (cs.intimacy || 30) + 12);
+        showToast('🔞 Đã bật Chế độ 18+ (Giao diện đen & Mở khóa hành động táo bạo)!', 'info');
+      }
       const _bEval = evaluatePlayerMessageEngine(char, cs, playerMsgText, _bMsgId);
       if (_bEval && _bEval.triggerAutonomous) {
         executeAutonomousBehavior(char, cs, _bEval.triggerAutonomous);
@@ -6133,6 +6219,11 @@
       saveState();
       updateTopBarStats();
       renderMessagesView();
+
+      const resolvedProposal = aiDateProposal || detectDialogueDateProposal(text, finalReply, char, cs);
+      if (resolvedProposal && resolvedProposal.detected && !cs.inDatingTime) {
+        handleDialogueDateProposal(resolvedProposal, char, cs);
+      }
     }
 
     // VIDEO CALL CHECK & PROFILE INVESTIGATION
@@ -7115,6 +7206,185 @@
     function applyDatingMultiplier(cs, delta) {
       if (!delta || !cs || !cs.inDatingTime) return delta;
       return Math.round(delta * 2);
+    }
+
+    function estimateCustomVenueCost(venueName) {
+      const low = (venueName || '').toLowerCase();
+      if (low.includes('đà lạt') || low.includes('phú quốc') || low.includes('nha trang') || low.includes('sa pa') || low.includes('du lịch') || low.includes('resort') || low.includes('vũng tàu')) return 3800000;
+      if (low.includes('du thuyền') || low.includes('fine dining') || low.includes('omakase') || low.includes('5 sao')) return 2400000;
+      if (low.includes('bar') || low.includes('lounge') || low.includes('pub') || low.includes('club') || low.includes('rooftop')) return 1500000;
+      if (low.includes('khách sạn') || low.includes('homestay') || low.includes('nhà nghỉ') || low.includes('villa')) return 1200000;
+      if (low.includes('karaoke')) return 850000;
+      if (low.includes('nhà hàng') || low.includes('steak') || low.includes('buffet') || low.includes('hải sản')) return 950000;
+      if (low.includes('lẩu') || low.includes('nướng') || low.includes('bbq') || low.includes('ăn tối')) return 480000;
+      if (low.includes('trung tâm thương mại') || low.includes('mall') || low.includes('shopping')) return 650000;
+      if (low.includes('xem phim') || low.includes('rạp') || low.includes('cgv')) return 360000;
+      if (low.includes('công viên') || low.includes('phố đi bộ') || low.includes('bờ hồ') || low.includes('dạo')) return 90000;
+      if (low.includes('cà phê') || low.includes('cafe') || low.includes('trà sữa')) return 160000;
+      return 450000;
+    }
+
+    function buildVenueFromNameAndCost(venueName, costHint, preferredId) {
+      const cleanName = (venueName || 'Quán Cà Phê Acoustic & Sách').trim();
+      const low = cleanName.toLowerCase();
+      if (preferredId) {
+        const byId = IRL_VENUES.find(v => v.id === preferredId);
+        if (byId && cleanName === byId.name) return byId;
+      }
+      const matched = IRL_VENUES.find(v => v.id !== 'partner_choice' && (low.includes(v.name.toLowerCase().split(' ')[0]) && v.name.toLowerCase().includes(low)));
+      if (matched) return matched;
+      if (low.includes('khách sạn') || low.includes('nhà nghỉ')) return IRL_VENUES.find(v => v.id === 'hotel');
+      if (low.includes('nhà riêng') || low.includes('căn hộ')) return IRL_VENUES.find(v => v.id === 'private_home');
+      const finalCost = (typeof costHint === 'number' && costHint > 0) ? costHint : estimateCustomVenueCost(cleanName);
+      const isRisky = low.includes('bar') || low.includes('lounge') || low.includes('club') || low.includes('khách sạn') || low.includes('homestay');
+      return {
+        id: 'custom_' + Date.now(),
+        name: cleanName,
+        cost: finalCost,
+        icon: (low.includes('đà lạt') || low.includes('du lịch') || low.includes('biển')) ? '🏔️' : (low.includes('ăn') || low.includes('nhà hàng') ? '🍽️' : '📍'),
+        safety: isRisky ? 'Cần thận trọng không gian riêng' : 'Địa điểm tự chọn',
+        riskLevel: isRisky ? 3 : 1,
+        items: [`Trải nghiệm & Chi phí tại ${cleanName}`],
+        desc: `Địa điểm hẹn hò do hai người tự chọn (${cleanName}) với chi phí ước tính ${formatVND(finalCost)}.`,
+        isCustom: true
+      };
+    }
+
+    async function submitCustomDateVenue() {
+      const inp = document.getElementById('inpCustomDateVenue');
+      const btn = document.getElementById('btnSubmitCustomVenue');
+      const venueName = (inp ? inp.value : '').trim();
+      if (!venueName) {
+        showToast('Hãy nhập tên địa điểm bạn muốn hẹn hò nhé!', 'warn');
+        return;
+      }
+      let estCost = estimateCustomVenueCost(venueName);
+      let estItems = [`Chi phí ăn uống/di chuyển tại ${venueName}`];
+      if (hasLiveGemini()) {
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ AI đang định giá...'; }
+        try {
+          const useDirectKey = !!aiConfig.apiKey;
+          const endpoint = useDirectKey ? `https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent` : '/api/chat';
+          const headers = { 'Content-Type': 'application/json' };
+          if (useDirectKey) headers['x-goog-api-key'] = aiConfig.apiKey;
+          const prompt = `Ước tính chi phí thực tế cho một buổi hẹn hò 2 người tại Việt Nam ở địa điểm: "${venueName}". Trả về DUY NHẤT JSON: {"costVND": 500000, "items": ["Mục 1 (300k)", "Mục 2 (200k)"]}`;
+          const resp = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3 } }) });
+          if (resp.ok) {
+            const d = await resp.json();
+            const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const parsed = JSON.parse(txt.replace(/```json|```/gi, '').trim());
+            if (parsed && typeof parsed.costVND === 'number' && parsed.costVND > 0) estCost = Math.round(parsed.costVND);
+            if (Array.isArray(parsed?.items) && parsed.items.length) estItems = parsed.items;
+          }
+        } catch (e) {}
+        if (btn) { btn.disabled = false; btn.textContent = '🤖 AI Định Giá & Hẹn'; }
+      }
+      const customVenue = buildVenueFromNameAndCost(venueName, estCost);
+      customVenue.items = estItems;
+      if (inp) inp.value = '';
+      showToast(`🤖 AI định giá buổi hẹn tại "${customVenue.name}": ~${formatVND(customVenue.cost)}`, 'info');
+      executeIRLDateAtVenue(customVenue);
+    }
+
+    function jumpToPeriodAndStartDate(char, cs, venueObj, targetPeriod, dayOffset) {
+      ensureTimeAndUpdateState();
+      const curInfo = getSimTimeInfo();
+      const pHours = { 'Sáng': 8, 'Trưa': 12, 'Chiều': 15, 'Tối': 19, 'Khuya': 23 };
+      const targetHour = pHours[targetPeriod] || 19;
+      let targetDay = state.day + Math.max(0, dayOffset || 0);
+      if (targetDay === state.day && targetHour < curInfo.hour) {
+        targetDay += 1;
+      }
+      state.day = targetDay;
+      state.simTime.totalMinutes = (targetDay - 1) * 1440 + targetHour * 60;
+      const newInfo = getSimTimeInfo();
+      cs.messages.push({
+        sender: 'system',
+        text: `⏩ Đã tự động chuyển sang ${newInfo.fullLabel} để bắt đầu buổi hẹn tại ${venueObj.icon} ${venueObj.name} (~${formatVND(venueObj.cost)})!`,
+        time: newInfo.fullLabel
+      });
+      saveState();
+      updateTopBarStats();
+      startDatingTimeSession(char, cs, venueObj);
+    }
+
+    function detectDialogueDateProposal(playerText, replyText, char, cs) {
+      const pLow = (playerText || '').toLowerCase();
+      const rLow = (replyText || '').toLowerCase();
+      const combined = pLow + ' ' + rLow;
+      const dateTriggers = ['hẹn', 'gặp nhau', 'đi chơi', 'đi ăn', 'cà phê', 'cafe', 'xem phim', 'đà lạt', 'vũng tàu', 'phú quốc', 'nha trang', 'khách sạn', 'nhà nghỉ', 'homestay', 'du thuyền', 'rooftop', 'lounge', 'karaoke', 'công viên', 'nhà riêng'];
+      if (!dateTriggers.some(k => combined.includes(k))) return null;
+
+      let period = 'Tối';
+      if (combined.includes('khuya')) period = 'Khuya';
+      else if (combined.includes('sáng')) period = 'Sáng';
+      else if (combined.includes('trưa')) period = 'Trưa';
+      else if (combined.includes('chiều')) period = 'Chiều';
+      else if (combined.includes('tối')) period = 'Tối';
+      else {
+        const curP = getSimTimeInfo().timeStr;
+        period = curP.replace('Buổi ', '') || 'Tối';
+      }
+
+      const dayOffset = (combined.includes('ngày mai') || combined.includes('sáng mai') || combined.includes('chiều mai') || combined.includes('tối mai')) ? 1 : 0;
+
+      let venueName = '';
+      const specialPlaces = [
+        ['đà lạt', 'Du lịch Đà Lạt'], ['vũng tàu', 'Du lịch Vũng Tàu'], ['phú quốc', 'Du lịch Phú Quốc'],
+        ['nha trang', 'Du lịch Nha Trang'], ['sa pa', 'Du lịch Sa Pa'], ['du thuyền', 'Du thuyền Sông Sài Gòn'],
+        ['rooftop', 'Skybar Rooftop'], ['khách sạn', 'Khách Sạn / Homestay Riêng Tư'], ['homestay', 'Homestay Riêng Tư'],
+        ['nhà riêng', 'Nhà Riêng / Căn Hộ Cá Nhân'], ['cà phê', 'Quán Cà Phê Acoustic & Sách'], ['cafe', 'Quán Cà Phê Acoustic & Sách'],
+        ['xem phim', 'Rạp Chiếu Phim CGV / IMAX'], ['bar', 'Bar, Lounge, Pub Đêm'], ['lounge', 'Bar, Lounge, Pub Đêm'],
+        ['karaoke', 'Quán Karaoke Phòng Riêng'], ['công viên', 'Công Viên Bến Bạch Đằng / Phố Đi Bộ'], ['nhà hàng', 'Nhà Hàng Cao Cấp (Fine Dining)'],
+        ['ăn tối', 'Nhà Hàng Bình Dân / Quán Ăn Ấm Cúng'], ['pickleball', 'Sân Pickleball / Cầu Lông Đôi']
+      ];
+      for (const [kw, label] of specialPlaces) {
+        if (combined.includes(kw)) { venueName = label; break; }
+      }
+      if (!venueName) return null;
+
+      const confirmWords = ['ok', 'chốt', 'đồng ý', 'nhất trí', 'đi luôn', 'đi thôi', 'hẹn lúc đó', 'hẹn nhé', 'tuyệt vời', 'rất sẵn lòng', 'okela', 'được luôn'];
+      const pConfirm = confirmWords.some(w => pLow.includes(w));
+      const rConfirm = confirmWords.some(w => rLow.includes(w));
+      const partnerRefused = rLow.includes('chưa đủ thân') || rLow.includes('từ chối') || rLow.includes('bận') || rLow.includes('xin lỗi') || rLow.includes('đừng vội');
+      if (partnerRefused) return null;
+
+      return {
+        detected: true,
+        confirmed: (pConfirm && rConfirm) || (pLow.includes('chốt') && !partnerRefused),
+        venueName,
+        estimatedCostVND: estimateCustomVenueCost(venueName),
+        period,
+        dayOffset,
+        reason: `Hẹn hò tại ${venueName}`
+      };
+    }
+
+    function handleDialogueDateProposal(dp, char, cs) {
+      if (!dp || !dp.detected || cs.inDatingTime) return false;
+      const venueObj = buildVenueFromNameAndCost(dp.venueName || 'Quán Cà Phê Acoustic & Sách', dp.estimatedCostVND || 0);
+      const period = ['Sáng', 'Trưa', 'Chiều', 'Tối', 'Khuya'].includes(dp.period) ? dp.period : 'Tối';
+      const dayOff = typeof dp.dayOffset === 'number' ? dp.dayOffset : 0;
+      if (dp.confirmed) {
+        jumpToPeriodAndStartDate(char, cs, venueObj, period, dayOff);
+        return true;
+      }
+      cs.activePartnerInvite = {
+        motiveType: 'dialogue_detected_date',
+        venueId: venueObj.id,
+        venueName: venueObj.name,
+        estimatedCost: venueObj.cost,
+        targetPeriod: period,
+        dayOffset: dayOff,
+        timeText: `${dayOff > 0 ? 'Ngày mai' : 'Hôm nay'} • Buổi ${period}`,
+        purpose: dp.reason || `Lời mời hẹn hò tại ${venueObj.name}`,
+        bannerTitle: `📅 Chốt lịch hẹn tại ${venueObj.name}!`,
+        message: `Mình hẹn nhau ${dayOff > 0 ? 'ngày mai ' : ''}Buổi ${period} tại ${venueObj.name} (~${formatVND(venueObj.cost)}) nhé!`,
+        bannerDesc: `“Mình hẹn nhau ${dayOff > 0 ? 'ngày mai ' : ''}Buổi ${period} tại ${venueObj.name} (~${formatVND(venueObj.cost)}) nhé!”`,
+        expiresAtMinutes: state.simTime.totalMinutes + 240
+      };
+      openInstantInviteModal(char, cs, cs.activePartnerInvite);
+      return false;
     }
 
     function startDatingTimeSession(char, cs, venue) {
@@ -9436,6 +9706,19 @@
       let trustDelta = 6;
       let triggerOffer = false;
 
+      // 0. 18+ Adult / Sensual Chat Mode (Player-initiated)
+      if (detectPlayerAdultTopic(text) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
+        if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked) {
+          affDelta = 12; trustDelta = 4;
+          reply = `Ưm... nghe ${state.player.name} nói mấy lời táo bạo này làm người mình nóng bừng lên rồi đó 🔥💋... Đừng chỉ nhắn suông nữa, lại gần mình hơn đi, đêm nay tụi mình làm tới bến luôn nha 🔞!`;
+          return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta, triggerOffer };
+        } else {
+          affDelta = -10; trustDelta = -12;
+          reply = `Khoan đã ${state.player.name}, mình chưa quen nói chuyện nhạy cảm 18+ thẳng thừng vậy đâu 😅. Từ từ tìm hiểu thêm chút nữa nhé!`;
+          return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta, triggerOffer };
+        }
+      }
+
       // 1. Hotel / Motel / Overnight / Private room invitation in free-text chat!
       if (lower.includes("khách sạn") || lower.includes("nhà nghỉ") || lower.includes("qua đêm") || lower.includes("về phòng") || lower.includes("ngủ cùng") || lower.includes("lên phòng")) {
         if (char.isScammer && (char.archetype === 'scam_sextortion' || char.archetype === 'scam_sales_booking')) {
@@ -9720,7 +10003,7 @@ TUYỆT ĐỐI KHÔNG BAO GIỜ XƯNG LÀ AI HAY TIẾT LỘ KỊCH BẢN GAME.
 - Số ngày không liên lạc trước tin này: ${((state.simTime.totalMinutes - (cs.lastContactMinutes || state.simTime.totalMinutes)) / 1440).toFixed(1)} ngày.
 - Lịch hẹn đã lên lịch: ${(state.scheduledDates || []).filter(d => d.charId === char.id && d.status === 'pending').map(d => d.venueName + ' (Ngày ' + d.day + ')').join(', ') || 'Chưa có'}.
 - Quà đã nhận: ${(cs.givenGifts || []).map(g => g.name).join(', ') || 'Chưa có'}.
-- Lịch sử hẹn hò ngoài đời: ${dateMemories}.${cs.inDatingTime ? `\n- ĐẶC BIỆT - ĐANG TRONG BUỔI HẸN HÒ TRỰC TIẾP (DATING TIME) TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}: Hai người đang ngồi đối diện nhau ngoài đời thật. Phản ứng tự nhiên theo ngôn ngữ cơ thể, ánh mắt, không gian xung quanh và đánh giá tác động cảm xúc mạnh hơn bình thường.` : ''}
+- Lịch sử hẹn hò ngoài đời: ${dateMemories}.${cs.inDatingTime ? `\n- ĐẶC BIỆT - ĐANG TRONG BUỔI HẸN HÒ TRỰC TIẾP (DATING TIME) TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}: Hai người đang ngồi đối diện nhau ngoài đời thật. Phản ứng tự nhiên theo ngôn ngữ cơ thể, ánh mắt, không gian xung quanh và đánh giá tác động cảm xúc mạnh hơn bình thường.` : ''}${cs.adultChatUnlocked ? `\n- 🔥 CHẾ ĐỘ 18+ ĐANG KÍCH HOẠT: Hai người đã mở khóa không gian trò chuyện 18+ táo bạo. Hãy trả lời quyến rũ, gợi tình, dâm đãng hơn và KHÔNG NGẠI nói những từ ngữ nhạy cảm, miêu tả khao khát thể xác một cách táo bạo (nhưng vẫn giữ đúng tính cách nhân vật).` : ''}
 
 [TOÀN BỘ LỊCH SỬ TRÒ CHUYỆN GẦN ĐÂY (NHỚ NGỮ CẢNH)]
 ${historySnippet}
@@ -9743,12 +10026,25 @@ Trả về DUY NHẤT JSON hợp lệ (không bọc markdown nếu không cần)
   "extractedMemory": null,
   "shouldUnmatch": false,
   "unmatchReason": "",
+  "dateProposal": {
+    "detected": false,
+    "confirmed": false,
+    "venueName": "",
+    "estimatedCostVND": 0,
+    "period": "Tối",
+    "dayOffset": 0,
+    "reason": ""
+  },
   "suggestions": [
     "Câu nói của NGƯỜI CHƠI (${state.player.name}) trả lời lại hoặc hỏi tiếp ${char.name} (tuyệt đối không gọi tên ${state.player.name})",
     "Câu nói thứ 2 của NGƯỜI CHƠI (${state.player.name}) gửi cho ${char.name} (sắc thái khác)",
     "Câu nói thứ 3 của NGƯỜI CHƠI (${state.player.name}) gửi cho ${char.name} (hỏi tiếp hoặc giữ ranh giới)"
   ]
 }
+LƯU Ý VỀ "dateProposal":
+- Nếu 1 trong 2 người nhắc tới hoặc rủ đi một địa điểm cụ thể (VD: "đi Đà Lạt", "đi cà phê chiều nay", "tối nay đi ăn"), đặt "detected": true, ghi rõ "venueName", ước tính chi phí thực tế VNĐ cho 2 người vào "estimatedCostVND", chọn "period" ("Sáng"/"Trưa"/"Chiều"/"Tối"/"Khuya") và "dayOffset" (0=hôm nay, 1=ngày mai).
+- Nếu CẢ HAI ĐÃ ĐỒNG Ý/CHỐT LỊCH HẸN trong cuộc hội thoại (VD đối phương rủ và người chơi đồng ý, hoặc người chơi rủ và bạn đồng ý), đặt "confirmed": true.
+
 LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CHƠI (${state.player.name}) nói VỚI ${char.name}. KHÔNG BAO GIỜ viết theo góc nhìn của ${char.name} hỏi "${state.player.name}"!
 - SAI: "${state.player.name} hôm nay có bận không?"
 - ĐÚNG: "${char.name} hôm nay có bận không?" hoặc "Mình rất thích cách nghĩ của ${char.name} đó!"`;
@@ -9852,6 +10148,7 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       let aiGoodwillDelta = 0;
       let aiShouldUnmatch = false;
       let aiUnmatchReason = "";
+      let aiDateProposal = null;
 
       if (hasLiveGemini()) {
         const llmRes = await callLiveGeminiAPIForChat(text, char, cs);
@@ -9878,6 +10175,9 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
           if (llmRes.shouldUnmatch === true) {
             aiShouldUnmatch = true;
             aiUnmatchReason = llmRes.unmatchReason || "Cảm thấy không phù hợp và thiếu sự tôn trọng trong cuộc trò chuyện.";
+          }
+          if (llmRes.dateProposal && llmRes.dateProposal.detected) {
+            aiDateProposal = llmRes.dateProposal;
           }
           if (Array.isArray(llmRes.suggestions) && llmRes.suggestions.length >= 2) {
             const pNameLower = (state.player.name || '').trim().toLowerCase();
