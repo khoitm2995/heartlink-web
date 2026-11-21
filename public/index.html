@@ -112,10 +112,13 @@
           <span>🛡️</span>
           <span>Phát hiện: <strong id="headerScamDetected">0</strong>/<span id="headerScamTotal">13</span></span>
         </div>
-        <button id="btnOpenTimeSkip" onclick="openTimeSkipModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-xs font-semibold transition shrink-0" title="Đồng hồ trong game & Tua nhanh thời gian">
-          <span>🕒</span>
-          <span id="headerDayText">T2, Ngày 1 • 08:00</span>
+        <button id="btnOpenTimeSkip" onclick="openTimeSkipModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-xs font-semibold transition shrink-0" title="Ngày trong game & Tua nhanh thời gian">
+          <span>📅</span>
+          <span id="headerDayText">T2, Ngày 1 • Sáng</span>
           <span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-[10px] font-bold">⏩ Tua</span>
+        </button>
+        <button id="btnEndDayNow" onclick="endCurrentDayAndAdvance()" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-400/40 text-indigo-200 text-xs font-bold transition shrink-0" title="Kết thúc ngày hôm nay và chuyển sang ngày hôm sau">
+          <span>🌙</span><span class="hidden sm:inline">Kết thúc ngày</span>
         </button>
       </div>
 
@@ -1230,7 +1233,7 @@
       <div class="space-y-2">
         <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Chọn nhanh khoảng thời gian muốn tua:</div>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <button onclick="previewTimeSkipDays(0, true)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">☀️ Sáng ngày mai (08:00)</button>
+          <button onclick="previewTimeSkipDays(0, true)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">☀️ Sáng ngày mai</button>
           <button onclick="previewTimeSkipDays(1)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +1 Ngày</button>
           <button onclick="previewTimeSkipDays(2)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +2 Ngày</button>
           <button onclick="previewTimeSkipDays(3)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-purple-500/20 border border-slate-700 text-xs font-bold text-white transition">⏩ +3 Ngày</button>
@@ -1251,7 +1254,13 @@
           <label class="block text-[11px] font-semibold text-slate-400 mb-1">Hoặc tua tới Ngày & Giờ cụ thể:</label>
           <div class="flex gap-1.5">
             <input id="inpTargetDayNum" type="number" min="1" value="2" oninput="previewTargetDayTime()" class="w-20 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="Ngày" />
-            <input id="inpTargetClockTime" type="time" value="19:30" oninput="previewTargetDayTime()" class="flex-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+            <select id="inpTargetClockTime" onchange="previewTargetDayTime()" class="flex-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+              <option value="08:00">Buổi Sáng</option>
+              <option value="12:00">Buổi Trưa</option>
+              <option value="15:00">Buổi Chiều</option>
+              <option value="19:00" selected>Buổi Tối</option>
+              <option value="23:00">Buổi Khuya</option>
+            </select>
           </div>
         </div>
       </div>
@@ -1306,12 +1315,39 @@
           </div>
           <div>
             <label class="block text-[10px] text-slate-400 mb-1">Giờ hẹn</label>
-            <input id="inpRescheduleTime" type="time" value="19:30" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" />
+            <select id="inpRescheduleTime" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+              <option value="08:00">Buổi Sáng</option>
+              <option value="12:00">Buổi Trưa</option>
+              <option value="15:00">Buổi Chiều</option>
+              <option value="19:00" selected>Buổi Tối</option>
+              <option value="23:00">Buổi Khuya</option>
+            </select>
           </div>
         </div>
         <button onclick="submitInstantInviteReschedule()" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs">📩 Gửi Đề Xuất Lịch Hẹn Mới</button>
       </div>
 
+      <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">🕒 Chốt buổi gặp (Ngày hôm nay):</label>
+            <select id="selInstInviteSession" class="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+              <option value="08:00">Buổi Sáng</option>
+              <option value="12:00">Buổi Trưa</option>
+              <option value="15:00">Buổi Chiều</option>
+              <option value="19:00" selected>Buổi Tối</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">🛵 Ai đưa rước:</label>
+            <select id="selInstInvitePickup" class="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+              <option value="Mình qua đón đối phương">Mình qua đón đối phương</option>
+              <option value="Đối phương qua đón mình">Đối phương qua đón mình</option>
+              <option value="Tự túc gặp tại điểm hẹn">Tự túc gặp tại điểm hẹn</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button onclick="handleInstantInviteChoice('accept')" class="py-3 px-3 rounded-xl gradient-brand text-white font-bold text-xs shadow-lg">✅ ĐỒNG Ý ĐI HẸN</button>
         <button onclick="toggleInstantInviteReschedule()" class="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/40 text-sky-200 font-bold text-xs">📆 HẸN DỊP KHÁC</button>
@@ -1840,17 +1876,19 @@
       const hour = Math.floor(minsInDay / 60);
       const minute = minsInDay % 60;
       const weekday = WEEKDAYS_VN[(day - 1) % 7];
-      const pad = n => String(n).padStart(2, '0');
-      const timeStr = `${pad(hour)}:${pad(minute)}`;
+      const period = hour < 11 ? 'Sáng' : (hour < 14 ? 'Trưa' : (hour < 18 ? 'Chiều' : (hour < 22 ? 'Tối' : 'Khuya')));
+      const periodOrder = hour < 11 ? 1 : (hour < 14 ? 2 : (hour < 18 ? 3 : (hour < 22 ? 4 : 5)));
       return {
         totalMinutes: mins,
         day,
         weekday,
         hour,
         minute,
-        timeStr,
-        shortLabel: `${weekday.replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')}, Ngày ${day} • ${timeStr}`,
-        fullLabel: `${weekday}, Ngày ${day} • ${timeStr}`
+        period,
+        periodOrder,
+        timeStr: `Buổi ${period}`,
+        shortLabel: `${weekday.replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')}, Ngày ${day} • ${period}`,
+        fullLabel: `${weekday}, Ngày ${day} • Buổi ${period}`
       };
     }
 
@@ -1859,6 +1897,47 @@
       state.simTime.totalMinutes += Math.max(1, Math.round(mins));
       state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
       updateTopBarStats();
+    }
+
+    function endCurrentDayAndAdvance() {
+      ensureTimeAndUpdateState();
+      const curDay = state.day;
+      // Check if player has any pending scheduled date OR confirmed today date that hasn't been attended!
+      const missedToday = (state.scheduledDates || []).filter(d => d.status === 'pending' && d.day === curDay);
+      if (missedToday.length > 0) {
+        missedToday.forEach(sd => {
+          sd.status = 'missed';
+          const c = getCharById(sd.charId);
+          const cs = state.charStates[sd.charId];
+          if (c && cs) {
+            ensureCharExtendedState(c, cs);
+            cs.affection = Math.max(0, cs.affection - 15);
+            cs.trust = Math.max(0, cs.trust - 18);
+            cs.respect = Math.max(0, cs.respect - 12);
+            cs.messages.push({
+              sender: 'them',
+              text: `Ủa ${state.player.name}, hôm nay mình đã chốt hẹn ở ${sd.venueName} mà sao bạn lặn mất tiêu không tới vậy?! Mình thất vọng lắm đó...`,
+              time: `Ngày ${curDay} • Buổi Khuya`
+            });
+            cs.messages.push({
+              sender: 'system',
+              text: `⚠️ Bạn đã kết thúc Ngày ${curDay} khi đang có lịch hẹn với ${c.name} — bị trừ điểm do bùng kèo!`,
+              time: `Ngày ${curDay} • Buổi Khuya`
+            });
+            showDecisionImpactCard({
+              title: `Bùng kèo lịch hẹn với ${c.name}`,
+              changes: [
+                { label: 'Thiện cảm', delta: -15 },
+                { label: 'Tin tưởng', delta: -18 },
+                { label: 'Tôn trọng', delta: -12 }
+              ],
+              reason: `Bạn đã kết thúc Ngày ${curDay} mà bỏ lỡ buổi hẹn đã chốt tại ${sd.venueName}.`
+            });
+          }
+        });
+      }
+      const nextMorningMins = curDay * 1440 + 480;
+      executeTimeFastForward(nextMorningMins);
     }
 
     function ensureCharExtendedState(char, cs) {
@@ -2439,7 +2518,7 @@
       document.getElementById('instInviteVenue').textContent = invData.venueName || 'Quán Cà Phê';
       const curInfo = getSimTimeInfo();
       const meetHour = Math.min(22, Math.max(curInfo.hour + 2, 18));
-      document.getElementById('instInviteTime').textContent = `Hôm nay (Ngày ${curInfo.day}) • ${String(meetHour).padStart(2, '0')}:30`;
+      document.getElementById('instInviteTime').textContent = `Hôm nay (Ngày ${curInfo.day}) • Buổi ${curInfo.hour < 18 ? 'Chiều/Tối' : 'Tối'}`;
       document.getElementById('instInvitePurpose').textContent = invData.motiveType === 'genuine' ? 'Gặp gỡ trò chuyện ngoài đời' : 'Muốn gặp mặt trực tiếp';
       const remHrs = Math.max(1, Math.round((invData.expiresAtMinutes - state.simTime.totalMinutes) / 60));
       document.getElementById('instInviteCountdown').textContent = `Còn khoảng ${remHrs} giờ`;
@@ -2465,6 +2544,27 @@
       closeInstantInviteModal();
 
       if (choice === 'accept') {
+        const sessVal = (document.getElementById('selInstInviteSession') && document.getElementById('selInstInviteSession').value) || '19:00';
+        const pickupVal = (document.getElementById('selInstInvitePickup') && document.getElementById('selInstInvitePickup').value) || 'Tự túc gặp tại điểm hẹn';
+        const sh = parseInt(sessVal.split(':')[0] || '19', 10);
+        const curInfo = getSimTimeInfo();
+        if ((state.day - 1) * 1440 + sh * 60 < curInfo.totalMinutes - 60) {
+          showToast('⏰ Buổi này đã qua trong ngày rồi! Vui lòng chọn buổi muộn hơn hoặc Hẹn dịp khác sang ngày mai.', 'warn');
+          return;
+        }
+        const inv = cs.activePartnerInvite;
+        cs.confirmedTodayDate = {
+          venueId: (inv && inv.venueId) || 'cafe',
+          venueName: (inv && inv.venueName) || 'Quán Cà Phê Acoustic & Sách',
+          sessionHour: sh,
+          sessionLabel: sh < 11 ? 'Buổi Sáng' : (sh < 14 ? 'Buổi Trưa' : (sh < 18 ? 'Buổi Chiều' : 'Buổi Tối')),
+          pickup: pickupVal
+        };
+        cs.messages.push({
+          sender: 'system',
+          text: `✅ Đã chốt hẹn hôm nay: ${cs.confirmedTodayDate.sessionLabel} tại ${cs.confirmedTodayDate.venueName} (${pickupVal}). Nhắn "bye / hẹn lúc đó gặp" hoặc đi ngay để tới điểm hẹn!`,
+          time: curInfo.fullLabel
+        });
         respondToPartnerDateInvite('accept_direct');
         return;
       }
@@ -2521,10 +2621,14 @@
       ensureCharExtendedState(char, cs);
 
       const targetDay = Math.max(state.day, parseInt(document.getElementById('inpRescheduleDay').value || (state.day + 1), 10));
-      const timeParts = (document.getElementById('inpRescheduleTime').value || '19:30').split(':');
+      const timeParts = (document.getElementById('inpRescheduleTime').value || '19:00').split(':');
       const hh = parseInt(timeParts[0] || '19', 10);
-      const mm = parseInt(timeParts[1] || '30', 10);
+      const mm = parseInt(timeParts[1] || '0', 10);
       const targetMins = (targetDay - 1) * 1440 + hh * 60 + mm;
+      if (targetDay === state.day && targetMins <= state.simTime.totalMinutes) {
+        showToast('⏰ Buổi này đã qua rồi hoặc đối phương chưa tan ca! Hãy chọn buổi muộn hơn hoặc hẹn sang ngày hôm sau.', 'warn');
+        return;
+      }
       const targetInfo = getSimTimeInfo(targetMins);
 
       const inv = cs.activePartnerInvite || {};
@@ -4360,7 +4464,7 @@
       }
 
       // Morning greeting & continuing yesterday's story (for ALL genders when starting a new day!)
-      if (cs.awaitingMaleFirstMessage || cs.justStartedNewDay) {
+      if ((cs.awaitingMaleFirstMessage || cs.justStartedNewDay) && state.day > 1 && cs.yesterdayTopicSnippet) {
         const nick = cs.relPhase >= 4 ? cs.nicknameForPlayer : char.name;
         const ySnippet = cs.yesterdayTopicSnippet || `chuyện ${char.hobbies && char.hobbies[0] ? char.hobbies[0].toLowerCase() : 'hôm qua'}`;
         return [
@@ -9439,6 +9543,14 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       const timeStr = `Ngày ${state.day} • ${getTimeOfDayString(cs.turnsToday)}`;
       const _msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       cs.messages.push({ id: _msgId, sender: 'me', text: text, time: getSimTimeInfo().fullLabel });
+      const _lowerTxt = (text || '').toLowerCase();
+      if (cs.confirmedTodayDate && (_lowerTxt.includes('bye') || _lowerTxt.includes('hẹn lúc đó') || _lowerTxt.includes('lát gặp') || _lowerTxt.includes('tối gặp') || _lowerTxt.includes('đi thôi'))) {
+        const vObj = IRL_VENUES.find(v => v.id === cs.confirmedTodayDate.venueId) || IRL_VENUES[0];
+        cs.confirmedTodayDate = null;
+        if (typingEl) typingEl.classList.add('hidden');
+        startDatingTimeSession(char, cs, vObj);
+        return;
+      }
       const _evalRes = evaluatePlayerMessageEngine(char, cs, text, _msgId);
       if (_evalRes && _evalRes.triggerAutonomous) {
         if (typingEl) typingEl.classList.add('hidden');
