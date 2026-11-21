@@ -5186,20 +5186,48 @@
       const reward = isStage1 ? (char.scamOffer.stage1Reward || 0) : 0;
 
       if (!accepted) {
-        cs.activeScamOfferStage = 0;
+        ensureCharExtendedState(char, cs);
+        cs.scamRejectCount = (cs.scamRejectCount || 0) + 1;
+        cs.affection = Math.max(0, cs.affection - 18);
+        cs.trust = Math.max(0, cs.trust - 22);
+        if (cs.scammerMetrics) {
+          cs.scammerMetrics.suspicionRisk = Math.min(100, cs.scammerMetrics.suspicionRisk + 28);
+          cs.scammerMetrics.playerGullibility = Math.max(0, cs.scammerMetrics.playerGullibility - 20);
+        }
+        const tInfo = getSimTimeInfo();
         cs.messages.push({
           sender: 'me',
-          text: `Mình từ chối "${title}". Mình không tham gia các giao dịch tiền bạc hay bấm link lạ trên ứng dụng hẹn hò.`,
-          time: 'Vừa xong'
+          text: `Mình từ chối "${title}". Mình không tham gia chuyển tiền hay giao dịch tài chính qua ứng dụng hẹn hò.`,
+          time: tInfo.fullLabel
         });
-        cs.messages.push({
-          sender: 'them',
-          text: `Hừ, không ngờ bạn lại thiếu niềm tin với mình như vậy!`,
-          time: 'Vừa xong'
-        });
-        showToast('Bạn đã tỉnh táo từ chối cái bẫy của đối phương!', 'success');
+
+        if (cs.scamRejectCount === 1 && cs.affection > 15) {
+          // First refusal: Scammer tries harder to persuade!
+          cs.messages.push({
+            sender: 'them',
+            text: `Sao ${state.player.name} lại nghi ngờ mình thế... Thật ra mình chỉ muốn tốt cho hai đứa thôi mà. Bạn suy nghĩ kỹ lại giúp mình lần này được không?`,
+            time: tInfo.fullLabel
+          });
+          showToast('⚠️ Đối phương giảm thiện cảm và đang cố gắng thuyết phục bạn thêm lần nữa!', 'warn');
+        } else {
+          // Repeated refusal or low stats: Scammer withdraws or blocks player (player can still report!)
+          cs.activeScamOfferStage = 0;
+          const actionType = Math.random() < 0.6 ? 'block' : 'withdraw';
+          executeAutonomousBehavior(
+            char,
+            cs,
+            actionType,
+            `Thôi khỏi nói nhiều nữa! Không tin tưởng nhau thì đừng phí thời gian của nhau làm gì. Tạm biệt!`
+          );
+          showToast(
+            actionType === 'block'
+              ? `🚫 ${char.name} đã chặn bạn vì không thuyết phục được chuyển tiền (Bạn vẫn có thể bấm Báo Cáo!).`
+              : `🚪 ${char.name} đã ngưng trò chuyện vì bạn kiên quyết từ chối chuyển tiền!`,
+            'info'
+          );
+        }
         saveState();
-        renderActiveChatRoom();
+        renderMessagesView();
         return;
       }
 
@@ -6987,13 +7015,40 @@
       }
 
       if (billAction === 'refuse_inperson_loan') {
+        cs.affection = Math.max(0, cs.affection - 15);
+        cs.trust = Math.max(0, cs.trust - 18);
+        const badge = document.getElementById('irlOutcomeBadge');
+        const heading = document.getElementById('irlOutcomeHeading');
+        const story = document.getElementById('irlOutcomeStory');
+        const choices = document.getElementById('irlOutcomeChoices');
+        if (badge && heading && story && choices) {
+          badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40';
+          badge.textContent = '🥺 ĐỐI PHƯƠNG ĐANG CỐ THUYẾT PHỤC THÊM';
+          heading.textContent = `${char.name} vẫn cố gắng nài nỉ lần cuối: “Chỉ 5.000.000đ thôi mà, mai mình trả liền!”`;
+          story.textContent = `Dù bạn đã từ chối, ${char.name} vẫn nắm tay khẩn khoản thuyết phục và đánh vào lòng thương hại của bạn. Nếu bạn tiếp tục từ chối, buổi hẹn sẽ kết thúc ngay lập tức.`;
+          const halfCost = playerPaidAmount || 150000;
+          choices.innerHTML = `
+            <button onclick="resolveBillPaymentStep('refuse_inperson_loan_final', ${halfCost})" class="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-left">
+              🛡️ 1. Kiên quyết từ chối lần cuối & Kết thúc buổi hẹn ngay lập tức
+            </button>
+            <button onclick="resolveBillPaymentStep('lend_inperson_scam', ${5000000 + halfCost * 2})" class="p-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs text-left">
+              💸 2. Mủi lòng đồng ý chuyển 5.000.000đ
+            </button>
+          `;
+          saveState();
+          return;
+        }
+      }
+
+      if (billAction === 'refuse_inperson_loan_final') {
         cs.respect = Math.min(100, cs.respect + 12);
         cs.suspicion = Math.min(100, cs.suspicion + 25);
+        cs.affection = Math.max(0, cs.affection - 20);
         cs.messages.push({
           sender: 'system',
-          text: `🛡️ Tại ${venueName}: Bạn đã từ chối cho ${char.name} vay nóng 5.000.000đ tại bàn. Đối phương lập tức tỏ thái độ lạnh nhạt và viện cớ về sớm!`
+          text: `🛡️ Tại ${venueName}: Sau khi ${char.name} cố thuyết phục thêm nhưng bạn vẫn kiên quyết từ chối cho vay 5.000.000đ, đối phương lộ vẻ bực bội và buổi hẹn kết thúc ngay lập tức!`
         });
-        showToast('🛡️ Tỉnh táo lắm! Đối phương lập tức đổi thái độ khi không vay được tiền của bạn!', 'success');
+        showToast('🛡️ Bạn đã kiên quyết từ chối và kết thúc buổi hẹn an toàn!', 'success');
         saveState();
         updateTopBarStats();
         closeIRLDateModal();
