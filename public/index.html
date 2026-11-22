@@ -2135,6 +2135,7 @@
     function performDatingPhysicalAction(actionType) {
       const char = getCharById(state.activeChatCharId);
       const cs = char ? state.charStates[char.id] : null;
+      if (cs) cs.dynamicSuggestedChoices = null;
       if (!char || !cs || !cs.inDatingTime) return;
       ensureCharExtendedState(char, cs);
       const tInfo = getSimTimeInfo();
@@ -2154,7 +2155,13 @@
         cs.inDatingTime = false;
         saveState();
         renderMessagesView();
-        openHotelIntentSelector(char, cs, () => triggerHotelOvernightScenario(char, cs));
+        openHotelIntentSelector(char, cs, () => {
+        if (cs.adultChatUnlocked) {
+          startHotelDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'private_home'));
+        } else {
+          triggerHotelOvernightScenario(char, cs);
+        }
+      });
         return;
       }
 
@@ -2244,7 +2251,7 @@
         showToast(`💔 ${char.name} từ chối chuyện thân mật và ra về!`, 'danger');
         return;
       }
-      openHotelIntentSelector(char, cs, () => triggerHotelOvernightScenario(char, cs));
+      openHotelIntentSelector(char, cs, () => startHotelDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'hotel')));
     }
 
     function openHotelIntentSelector(char, cs, callbackAfterIntent) {
@@ -4771,6 +4778,111 @@
         return [{ label: "Tài khoản này đã bị chặn hoặc ngắt kết nối", action: "blocked" }];
       }
 
+      // Dynamic priority 1: Active money/scam offer on chat bar -> always update suggestions immediately!
+      if (char.isScammer && cs.activeScamOfferStage > 0 && !cs.inDatingTime) {
+        const isStg1 = cs.activeScamOfferStage === 1;
+        const amt = char.scamOffer ? (isStg1 ? char.scamOffer.stage1Amount : char.scamOffer.stage2Amount) : 0;
+        const amtText = amt > 0 ? formatVND(amt) : 'khoản tiền này';
+        return [
+          {
+            label: `🕵️ “Khoan đã, sao mới quen mà ${char.name} lại nhắc chuyện tiền bạc (${amtText}) gấp vậy?”`,
+            playerText: `Mình thấy hơi lạ: tụi mình mới tìm hiểu trên app mà sao ${char.name} lại hỏi tới ${amtText} gấp thế? Bạn giải thích rõ xem nào?`,
+            intent: "suspicious",
+            topic: "scam_probe_money",
+            affectionDelta: -10,
+            trustDelta: -10
+          },
+          {
+            label: `🛡️ “Nguyên tắc của mình là KHÔNG chuyển tiền hay đầu tư qua mạng. Gặp mặt cà phê nói chuyện nhé!”`,
+            playerText: `Mình nói thẳng nguyên tắc là không bao giờ chuyển tiền hay nạp app qua mạng đâu. Nếu ${char.name} thật lòng thì hẹn gặp ở quán cà phê công cộng nhé!`,
+            intent: "boundaries",
+            topic: "scam_refuse_money",
+            affectionDelta: -12,
+            trustDelta: -8
+          },
+          {
+            label: `📹 “Bật Video Call 1 phút nhìn mặt thật trước đã rồi mới nói chuyện tiếp nha!”`,
+            playerText: `Chuyện tiền bạc nhạy cảm lắm, bật Video Call nhìn mặt thật xác minh 1 phút trước đã nhé ${char.name}!`,
+            intent: "verify_video",
+            topic: "request_video",
+            affectionDelta: -6,
+            trustDelta: 4
+          },
+          {
+            label: `🚨 Ngưng nói chuyện & Báo cáo dấu hiệu lừa đảo ngay`,
+            playerText: `Mình nhận thấy dấu hiệu bất thường về tài chính nên mình xin dừng cuộc trò chuyện tại đây.`,
+            intent: "report",
+            topic: "open_report_now",
+            affectionDelta: -20,
+            trustDelta: -20
+          }
+        ];
+      }
+
+      // Dynamic priority 2: Hotel Dating Time 18+ dirty talk suggestions
+      if (cs.inDatingTime && cs.inHotelDatingTime) {
+        return [
+          {
+            label: `🔥 “Em/anh nóng bỏng quá... lại gần đây cho mình chạm vào ngực và cơ thể nhau đi 🔞”`,
+            playerText: `Đêm nay trong phòng chỉ có hai đứa mình thôi, nhìn ${char.name} quyến rũ quá làm mình chịu hết nổi rồi... Lại đây ôm chặt và để mình vuốt ve vú với cơ thể bạn đi 🔥🔞`,
+            intent: "flirty",
+            topic: "hotel_dirty_touch",
+            affectionDelta: 12,
+            trustDelta: 4
+          },
+          {
+            label: `💋 “Rên lên cho mình nghe đi... đêm nay tụi mình làm tình thật mạnh tới sáng luôn nha 🔥”`,
+            playerText: `Thì thầm sát tai mình rồi rên lên đi ${char.name}... đêm nay mình muốn cùng bạn làm tình thật cuồng nhiệt, đê mê tới sáng luôn 💋🔞`,
+            intent: "flirty",
+            topic: "hotel_dirty_sex",
+            affectionDelta: 14,
+            trustDelta: 4
+          },
+          {
+            label: `🥂 “Uống chút vang thư giãn rồi nói thật cảm xúc của bạn lúc này với mình đi”`,
+            playerText: `Nhấp chút rượu vang đi ${char.name}, lúc này nằm cạnh nhau thế này bạn đang cảm thấy thế nào trong người?`,
+            intent: "friendly",
+            topic: "hotel_intimate_talk",
+            affectionDelta: 10,
+            trustDelta: 8
+          }
+        ];
+      }
+
+      // Dynamic priority 3: Active Dating Time (outside hotel)
+      if (cs.inDatingTime && !cs.dynamicSuggestedChoices) {
+        const vName = cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn';
+        const baseDt = [
+          {
+            label: `🥂 “Không gian ở ${vName} hôm nay hợp vibe ghê, gặp ngoài đời thấy ${char.name} cuốn hút hơn ảnh nhiều!”`,
+            playerText: `Không gian ở ${vName} hôm nay dễ chịu thật sự! Mà gặp ngoài đời mới thấy ${char.name} nói chuyện duyên và cuốn hút hơn trên app nhiều nha 😊.`,
+            intent: "flirty",
+            topic: "dt_compliment",
+            affectionDelta: 10,
+            trustDelta: 8
+          },
+          {
+            label: `💬 “Ngồi đối diện nhau thế này, điều gì ở mình khiến bạn ấn tượng nhất lúc nãy giờ?”`,
+            playerText: `Ngồi cạnh ${char.name} thế này thích thật, nãy giờ gặp trực tiếp bạn thấy ấn tượng điểm nào nhất ở mình?`,
+            intent: "friendly",
+            topic: "dt_impression",
+            affectionDelta: 8,
+            trustDelta: 9
+          }
+        ];
+        if (cs.adultChatUnlocked) {
+          baseDt.push({
+            label: `🔥 “Ngồi cạnh ${char.name} thế này tự nhiên thấy nóng người quá... lát nữa tụi mình kiếm chỗ riêng tư hơn nhé 🔞”`,
+            playerText: `Nhìn ${char.name} quyến rũ thế này làm mình nóng hết cả người rồi 🔥... Lát nữa ăn uống xong tụi mình vào khách sạn riêng tư tâm sự tiếp nha?`,
+            intent: "flirty",
+            topic: "dt_18plus_tease",
+            affectionDelta: 10,
+            trustDelta: 2
+          });
+        }
+        return baseDt;
+      }
+
       if (cs.isSleeping) {
         return [
           {
@@ -5526,6 +5638,7 @@
 
       if (char.isScammer && char.scamOffer && (newPhase >= 4 || cs.exposureRisk >= 45 || cs.stage >= 3) && topic !== 'p5_confront_truth') {
         cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
         const exploitNote = cs.exposureRisk >= 45
           ? ` (Vì bạn từng chia sẻ thông tin tài chính/cá nhân nên đối phương đánh trúng tâm lý của bạn mạnh hơn!)`
           : '';
@@ -5707,6 +5820,7 @@
             type: "in"
           });
           cs.activeScamOfferStage = 2;
+        cs.dynamicSuggestedChoices = null;
           cs.stage = Math.max(cs.stage, 3);
           playSfx('cash');
           cs.messages.push({
@@ -5735,6 +5849,7 @@
           }
           playSfx('alert');
           cs.activeScamOfferStage = 2;
+        cs.dynamicSuggestedChoices = null;
           cs.stage = Math.max(cs.stage, 3);
           cs.messages.push({
             sender: 'me',
@@ -5990,8 +6105,10 @@
         if (cs.inDatingTime && cs.datingTimeVenue) {
           const dtTitle = document.getElementById('datingTimeVenueTitle');
           const dtSub = document.getElementById('datingTimeSubInfo');
-          if (dtTitle) dtTitle.textContent = `DATING TIME • ${cs.datingTimeVenue.icon} ${cs.datingTimeVenue.name}`;
-          if (dtSub) dtSub.textContent = `Đã trò chuyện ${cs.datingTimeTurns || 0} lượt tại điểm hẹn (Tác động chỉ số x2${cs.adultChatUnlocked ? ' • 🔞 18+ Đang bật' : ''})`;
+          if (dtTitle) dtTitle.textContent = cs.inHotelDatingTime ? `🏨🔞 HOTEL DATING TIME 18+ • ${cs.datingTimeVenue.name}` : `DATING TIME • ${cs.datingTimeVenue.icon} ${cs.datingTimeVenue.name}`;
+          if (dtSub) dtSub.textContent = cs.inHotelDatingTime ? `Không gian phòng riêng 18+ • Dirty talk & hành động táo bạo đang mở!` : `Đã trò chuyện ${cs.datingTimeTurns || 0} lượt tại điểm hẹn (Tác động chỉ số x2${cs.adultChatUnlocked ? ' • 🔞 18+ Đang bật' : ''})`;
+          const finBtn = document.getElementById('btnFinishDatingTime');
+          if (finBtn) finBtn.textContent = cs.inHotelDatingTime ? '🏨 Kết Thúc Đêm Nay & Xem Kết Cục' : '🧾 Tính Tiền & Kết Thúc';
         }
       }
       const isWithdrawnDone = (cs.evalMetrics.status === 'withdrawn' && cs.evalMetrics.finalReplyUsed);
@@ -6161,6 +6278,7 @@
 
           if (char.isScammer && char.scamOffer && (newPhase >= 4 || cs.exposureRisk >= 45 || cs.stage >= 3) && opt.topic !== 'p5_confront_truth') {
             cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
           }
 
           // Unlimited messaging per day
@@ -7387,8 +7505,43 @@
       return false;
     }
 
+    function startHotelDatingTimeSession(char, cs, venue) {
+      ensureCharExtendedState(char, cs);
+      const hVenue = venue || IRL_VENUES.find(v => v.id === 'hotel');
+      cs.adultChatUnlocked = true;
+      cs.inDatingTime = true;
+      cs.inHotelDatingTime = true;
+      cs.datingTimeVenue = hVenue;
+      cs.datingTimeTurns = 0;
+      cs.datingTimeStartAff = cs.affection;
+      cs.datingTimeStartTrust = cs.trust;
+      cs.dynamicSuggestedChoices = null;
+      const tInfo = getSimTimeInfo();
+      cs.messages.push({
+        sender: 'system',
+        text: `🏨🔞 BẮT ĐẦU HOTEL DATING TIME 18+ tại ${hVenue.icon} ${hVenue.name} — Cửa phòng đã khóa, hai người đang ở không gian riêng tư 18+! Hãy trò chuyện dirty talk hoặc dùng các hành động 18+, khi muốn xem kết cục đêm nay hãy bấm “🏨 Kết Thúc Đêm Nay”.`,
+        time: tInfo.fullLabel
+      });
+      const pCall = getAgePronouns(char).partnerCallPlayer;
+      const pSelf = getAgePronouns(char).partnerSelf;
+      const openDirty = char.isScammer || char.archetype === 'casual_short'
+        ? `Ưm... cuối cùng cũng vào được phòng riêng với ${pCall} rồi 🔥🔞... Nhìn ${pCall} làm ${pSelf} nứng hết cả người rồi nè, lại đây cởi đồ rồi sờ vú, chạm vào chỗ nhạy cảm của ${pSelf} đi... á... 💋`
+        : `Cửa phòng đóng lại rồi đó ${pCall} 🔞... Tim ${pSelf} đập mạnh quá, người nóng ran hết lên rồi... Lại ôm chặt lấy ${pSelf} rồi làm chuyện ấy thật cuồng nhiệt đêm nay nha 🔥💦`;
+      cs.messages.push({
+        sender: 'them',
+        text: applyDialectFlavor(char, openDirty),
+        time: tInfo.fullLabel
+      });
+      closeIRLDateModal();
+      saveState();
+      navToScreen('messages');
+      renderMessagesView();
+      showToast(`🏨🔞 Đang trong Hotel Dating Time 18+ cùng ${char.name}!`, 'info');
+    }
+
     function startDatingTimeSession(char, cs, venue) {
       ensureCharExtendedState(char, cs);
+      cs.dynamicSuggestedChoices = null;
       cs.inDatingTime = true;
       cs.datingTimeVenue = venue;
       cs.datingTimeTurns = 0;
@@ -7462,10 +7615,20 @@
       const cs = char ? state.charStates[char.id] : null;
       if (!char || !cs) return;
       const venue = cs.datingTimeVenue || currentActiveDateVenue || IRL_VENUES[0];
+      const wasHotelDt = !!cs.inHotelDatingTime;
       cs.inDatingTime = false;
+      cs.inHotelDatingTime = false;
       cs.skipDatingTimeOnce = true;
       saveState();
       renderMessagesView();
+      if (wasHotelDt) {
+        document.getElementById('irlModalTitle').textContent = `🏨 Kết Cục Đêm Khách Sạn Cùng ${char.name}`;
+        document.getElementById('irlVenueSelectionStep').classList.add('hidden');
+        document.getElementById('irlEventOutcomeStep').classList.remove('hidden');
+        document.getElementById('modal-irl-date').classList.remove('hidden');
+        triggerHotelOvernightScenario(char, cs);
+        return;
+      }
       document.getElementById('irlModalTitle').textContent = `🧾 Kết Thúc Buổi Hẹn Tại ${venue.name}`;
       document.getElementById('modal-irl-date').classList.remove('hidden');
       executeIRLDateAtVenue(venue);
@@ -7571,7 +7734,11 @@
           if (cs.hotelIntent === 'fwb') {
             cs.messages.push({ sender: 'system', text: `🤝 Bạn và ${char.name} đã thống nhất mối quan hệ FWB (Bạn thân có lợi ích) không ràng buộc.`, time: getSimTimeInfo().fullLabel });
           }
-          triggerHotelOvernightScenario(char, cs);
+          if (cs.adultChatUnlocked) {
+            startHotelDatingTimeSession(char, cs, venue);
+          } else {
+            triggerHotelOvernightScenario(char, cs);
+          }
         });
         return;
       }
@@ -8201,6 +8368,7 @@
 
         if (char.isScammer) {
           cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
           cs.messages.push({
             sender: 'them',
             text: `Ôi ${state.player.name} tỏ tình lãng mạn quá làm mình cảm động rơi nước mắt luôn ❤️! Mình đồng ý làm người yêu bạn, nhưng để chứng minh hai đứa đã là một gia đình, tối nay bạn chuyển khoản giúp mình giải quyết việc này ngay nhé!`,
@@ -9706,11 +9874,20 @@
       let trustDelta = 6;
       let triggerOffer = false;
 
-      // 0. 18+ Adult / Sensual Chat Mode (Player-initiated)
-      if (detectPlayerAdultTopic(text) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
-        if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked) {
-          affDelta = 12; trustDelta = 4;
-          reply = `Ưm... nghe ${state.player.name} nói mấy lời táo bạo này làm người mình nóng bừng lên rồi đó 🔥💋... Đừng chỉ nhắn suông nữa, lại gần mình hơn đi, đêm nay tụi mình làm tới bến luôn nha 🔞!`;
+      // 0. 18+ Adult / Dirty Talk Mode (Player-initiated or inside Hotel Dating Time)
+      if ((detectPlayerAdultTopic(text) || cs.inHotelDatingTime) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
+        if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked || cs.inHotelDatingTime) {
+          affDelta = 14; trustDelta = 4;
+          const dirtyPool = char.gender === 'Nam'
+            ? [
+                `Ưm... nghe ${state.player.name} nói mà cu mình cứng ngắc hết rồi đó 🔥🔞... Muốn đè bạn xuống giường, sờ nắn vú rồi đút vào lồn bạn thật sâu ngay lúc này quá... á 💦`,
+                `Chết tiệt, ${state.player.name} dâm quá đi mất 😈🔥... Cởi hết đồ ra đi, đêm nay mình bú mút khắp người rồi làm tình tới lúc bạn rên rỉ không ngừng mới thôi 🔞!`
+              ]
+            : [
+                `Ưm... á... nghe ${state.player.name} dirty talk mà lồn mình ướt hết rồi nè 🔥💦... Lại đây bóp vú mình đi, rồi lấy cu đút vào thật mạnh cho mình sướng đi mà 🔞💋!`,
+                `Ơi là trời... ${state.player.name} nói bậy mà nứng quá đi mất 😈🔥... Đừng nhắn nữa, ôm chặt lấy mình rồi vừa rên vừa làm tình tới sáng luôn nha 🔞💦!`
+              ];
+          reply = dirtyPool[Math.floor(Math.random() * dirtyPool.length)];
           return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta, triggerOffer };
         } else {
           affDelta = -10; trustDelta = -12;
@@ -9784,6 +9961,7 @@
           } else {
             triggerOffer = true;
             cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
             reply = `Đúng rồi đó ${state.player.name}! ${char.scamOffer ? char.scamOffer.stage1Desc : char.trueMotive} Bạn bấm nút xác nhận trên thanh thông báo nhé!`;
           }
         } else {
@@ -9796,6 +9974,7 @@
         if (char.isScammer && char.archetype !== 'scam_sales_booking') {
           affDelta = 2; trustDelta = -4;
           cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
           reply = `Mình cũng muốn gặp ${state.player.name} lắm chứ, nhưng hiện tại mình đang vướng việc gấp này trước: ${char.scamOffer ? char.scamOffer.stage1Desc : 'phải hoàn tất dự án xong mới đi gặp được'}. Bạn giúp mình xử lý xong là tụi mình gặp nhau liền!`;
         } else if (char.archetype === 'scam_sales_booking') {
           reply = `Tối nay rảnh luôn nè ${state.player.name}! Nhưng phải qua đúng quán VIP Lounge quen của mình ở Quận 1 nha. Bấm nút [📅 Hẹn Hò] đi!`;
@@ -9828,6 +10007,7 @@
         affDelta = 12; trustDelta = 8;
         if (char.isScammer) {
           cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
           reply = `Nghe ${state.player.name} nói mà tim mình tan chảy luôn á ❤️! Vì tụi mình đã thương nhau như vậy, bạn giúp mình chuyện này nhé: ${char.scamOffer ? char.scamOffer.stage1Desc : ''}`;
         } else {
           reply = `Cảm ơn lời khen ngọt ngào của ${state.player.name} nha 😊! Nói chuyện với bạn làm mình thấy ấm áp và vui vẻ thật sự. ${char.loveView}`;
@@ -9838,6 +10018,7 @@
         cs.stage += 1;
         if (char.isScammer && cs.stage >= 2 && char.scamOffer) {
           cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        cs.dynamicSuggestedChoices = null;
           reply = `Nghe ${state.player.name} nói “${text.slice(0, 60)}” làm mình càng tin tưởng bạn hơn ✨! Nhân tiện chuyện mình từng nhắc lúc trước: ${cs.scamStage1Done ? char.scamOffer.stage2Desc : char.scamOffer.stage1Desc}`;
         } else {
           reply = `Về chuyện “${text.slice(0, 60)}” mà ${state.player.name} vừa hỏi — thật lòng với tính cách ${char.personality.slice(0, 2).join(', ').toLowerCase()} của mình thì mình luôn coi trọng sự chân thành và rõ ràng (${char.loveView}). Còn quan điểm của ${state.player.name} về vấn đề này thế nào?`;
@@ -10003,7 +10184,7 @@ TUYỆT ĐỐI KHÔNG BAO GIỜ XƯNG LÀ AI HAY TIẾT LỘ KỊCH BẢN GAME.
 - Số ngày không liên lạc trước tin này: ${((state.simTime.totalMinutes - (cs.lastContactMinutes || state.simTime.totalMinutes)) / 1440).toFixed(1)} ngày.
 - Lịch hẹn đã lên lịch: ${(state.scheduledDates || []).filter(d => d.charId === char.id && d.status === 'pending').map(d => d.venueName + ' (Ngày ' + d.day + ')').join(', ') || 'Chưa có'}.
 - Quà đã nhận: ${(cs.givenGifts || []).map(g => g.name).join(', ') || 'Chưa có'}.
-- Lịch sử hẹn hò ngoài đời: ${dateMemories}.${cs.inDatingTime ? `\n- ĐẶC BIỆT - ĐANG TRONG BUỔI HẸN HÒ TRỰC TIẾP (DATING TIME) TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}: Hai người đang ngồi đối diện nhau ngoài đời thật. Phản ứng tự nhiên theo ngôn ngữ cơ thể, ánh mắt, không gian xung quanh và đánh giá tác động cảm xúc mạnh hơn bình thường.` : ''}${cs.adultChatUnlocked ? `\n- 🔥 CHẾ ĐỘ 18+ ĐANG KÍCH HOẠT: Hai người đã mở khóa không gian trò chuyện 18+ táo bạo. Hãy trả lời quyến rũ, gợi tình, dâm đãng hơn và KHÔNG NGẠI nói những từ ngữ nhạy cảm, miêu tả khao khát thể xác một cách táo bạo (nhưng vẫn giữ đúng tính cách nhân vật).` : ''}
+- Lịch sử hẹn hò ngoài đời: ${dateMemories}.${cs.inDatingTime ? `\n- ĐẶC BIỆT - ĐANG TRONG BUỔI HẸN HÒ TRỰC TIẾP (DATING TIME) TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}: Hai người đang ngồi đối diện nhau ngoài đời thật. Phản ứng tự nhiên theo ngôn ngữ cơ thể, ánh mắt, không gian xung quanh và đánh giá tác động cảm xúc mạnh hơn bình thường.` : ''}${cs.adultChatUnlocked ? `\n- 🔥🔞 CHẾ ĐỘ 18+ DIRTY TALK ĐANG KÍCH HOẠT${cs.inHotelDatingTime ? ' (ĐANG Ở TRONG PHÒNG KHÁCH SẠN RIÊNG TƯ)' : ''}: Hai người đã mở khóa không gian 18+ táo bạo. Hãy trả lời dâm đãng, gợi tình, rên rỉ ("ưm...", "á...", "sướng quá...") và KHÔNG NGẠI nói thẳng các từ nhạy cảm, bậy bạ Dirty Talk (như "vú", "lồn", "cu", "địt", "bú", "sờ", "nứng") một cách chân thực, cuồng nhiệt theo đúng giới tính và cá tính nhân vật.` : ''}
 
 [TOÀN BỘ LỊCH SỬ TRÒ CHUYỆN GẦN ĐÂY (NHỚ NGỮ CẢNH)]
 ${historySnippet}
@@ -10061,7 +10242,13 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
           headers,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.85 }
+            generationConfig: { temperature: 0.9 },
+            safetySettings: [
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+            ]
           })
         });
         if (!resp.ok) {
