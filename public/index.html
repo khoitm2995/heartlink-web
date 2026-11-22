@@ -742,7 +742,9 @@
                   <span id="dating18PlusActions" class="hidden inline-flex items-center gap-1.5 shrink-0">
                     <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold transition shrink-0">🔥 Vuốt ve 18+</button>
                     <button onclick="performDatingPhysicalAction('deep_kiss_18')" class="px-2.5 py-1.5 rounded-xl bg-fuchsia-700/45 hover:bg-fuchsia-600/65 border border-fuchsia-500/60 text-fuchsia-100 text-[11px] font-bold transition shrink-0">💋 Hôn sâu 18+</button>
-                    <button onclick="performDatingPhysicalAction('hotel_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold transition shrink-0">🏨 Khách sạn 18+</button>
+                    <button id="btnPublicTease18" onclick="performDatingPhysicalAction('public_tease_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold transition shrink-0">🤫 Đụng chạm lén (Public 18+)</button>
+                    <button id="btnSecretCorner18" onclick="performDatingPhysicalAction('secret_corner_18')" class="px-2.5 py-1.5 rounded-xl bg-amber-700/55 hover:bg-amber-600/75 border border-amber-400/70 text-amber-50 text-[11px] font-bold transition shrink-0">🔥 Kéo vào góc khuất 18+</button>
+                    <button id="btnHotelClimax18" onclick="performDatingPhysicalAction('hotel_climax_18')" class="hidden px-2.5 py-1.5 rounded-xl bg-red-700/65 hover:bg-red-600/85 border border-red-400/80 text-white text-[11px] font-bold transition shrink-0">🔞 Làm tình cuồng nhiệt</button>
                   </span>
                   <button id="btnFinishDatingTime" onclick="finishDatingTimeToBill()" class="px-3 py-1.5 rounded-xl gradient-brand text-white text-[11px] font-bold shadow-lg hover:opacity-95 transition shrink-0">
                     🧾 Tính Tiền & Kết Thúc
@@ -2139,43 +2141,26 @@
       ensureCharExtendedState(char, cs);
       const tInfo = getSimTimeInfo();
 
-      if (actionType === 'hotel_18') {
-        const _hotelReq = cs.adultChatUnlocked ? 35 : 50;
-        if (!char.isScammer && char.archetype !== 'casual_short' && char.archetype !== 'rebound_ex' && cs.affection < _hotelReq) {
-          cs.affection = Math.max(0, cs.affection - 18);
-          cs.respect = Math.max(0, cs.respect - 20);
-          cs.messages.push({ sender: 'me', text: `[Hành động 18+] Bạn ghé sát tai ${char.name} thì thầm rủ vào khách sạn riêng tư ngay lúc này... 🏨`, time: tInfo.fullLabel });
-          cs.messages.push({ sender: 'them', text: `Khoan đã ${state.player.name}, dù có chút rung động nhưng mình chưa sẵn sàng đi khách sạn ngay đâu!`, time: tInfo.fullLabel });
-          checkDatingTimeAbort(char, cs);
-          saveState(); renderMessagesView();
-          return;
-        }
-        cs.messages.push({ sender: 'me', text: `[Hành động 18+] Bạn nắm tay ${char.name} đầy khao khát và rủ rời điểm hẹn để vào khách sạn riêng tư ngay... 🏨🔥`, time: tInfo.fullLabel });
-        cs.inDatingTime = false;
-        saveState();
-        renderMessagesView();
-        openHotelIntentSelector(char, cs, () => {
-        if (cs.adultChatUnlocked) {
-          startHotelDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'private_home'));
-        } else {
-          triggerHotelOvernightScenario(char, cs);
-        }
-      });
-        return;
-      }
-
       const is18Touch = actionType === 'touch_18';
       const is18DeepKiss = actionType === 'deep_kiss_18';
+      const is18Public = actionType === 'public_tease_18';
+      const is18Corner = actionType === 'secret_corner_18';
+      const is18Climax = actionType === 'hotel_climax_18';
+      const is18Any = is18Touch || is18DeepKiss || is18Public || is18Corner || is18Climax;
       const isKiss = actionType === 'kiss';
+      const venueName = (cs.datingTimeVenue && cs.datingTimeVenue.name) ? cs.datingTimeVenue.name : 'chỗ hẹn';
 
-      const requiredAff = is18DeepKiss ? 62 : (is18Touch ? 55 : (isKiss ? 68 : 48));
-      const actionLabel = is18DeepKiss ? 'Hôn sâu 18+' : (is18Touch ? 'Vuốt ve táo bạo 18+' : (isKiss ? 'Hôn' : 'Ôm'));
+      const requiredAff = is18Corner ? 66 : (is18Public ? 60 : (is18DeepKiss ? 62 : (is18Touch ? 55 : (isKiss ? 68 : 48))));
+      const actionLabel = is18Corner ? 'Kéo vào góc khuất 18+' : (is18Public ? 'Đụng chạm lén Public 18+' : (is18DeepKiss ? 'Hôn sâu 18+' : (is18Touch ? 'Vuốt ve táo bạo 18+' : (isKiss ? 'Hôn' : 'Ôm'))));
 
       const actionMsgs = {
         hug: `[Hành động] Bạn dang tay ôm lấy ${char.name} thật ấm áp... 🤗`,
         kiss: `[Hành động] Bạn nhẹ nhàng tiến lại gần và đặt một nụ hôn lên má/môi ${char.name}... 💋`,
         touch_18: `[Hành động 18+] Bạn áp sát vào ${char.name}, bàn tay khẽ vuốt ve dọc eo và đùi đầy táo bạo, hơi thở nóng rực... 🔥`,
-        deep_kiss_18: `[Hành động 18+] Bạn giữ nhẹ gáy ${char.name} và trao một nụ hôn sâu cuồng nhiệt, ướt át đầy khao khát... 💋🔥`
+        deep_kiss_18: `[Hành động 18+] Bạn giữ nhẹ gáy ${char.name} và trao một nụ hôn sâu cuồng nhiệt, ướt át đầy khao khát... 💋🔥`,
+        public_tease_18: `[Hành động Public 18+] Ngay giữa ${venueName} có người qua lại, bạn lén luồn tay dưới bàn/áo khoác chạm thẳng vào đùi non và chỗ nhạy cảm của ${char.name}, vừa nhìn xung quanh vừa thì thầm đầy kích thích... 🤫🔥`,
+        secret_corner_18: `[Hành động Lén lút 18+] Bạn kéo ${char.name} vào góc tối khuất người tại ${venueName}, ép sát vào tường, hôn ngấu nghiến và sờ nắn cơ thể đầy liều lĩnh... 🔥🔞`,
+        hotel_climax_18: `[Hành động 18+] Bạn đè ${char.name} xuống giường khách sạn, hôn khắp cơ thể rồi làm tình thật mạnh bạo và cuồng nhiệt... 🔥🔞💦`
       };
 
       cs.messages.push({
@@ -2185,13 +2170,13 @@
       });
 
       if (cs.affection < requiredAff && !char.isScammer && char.archetype !== 'casual_short') {
-        const penAff = (is18Touch || is18DeepKiss) ? -32 : (isKiss ? -26 : -18);
-        const penResp = (is18Touch || is18DeepKiss) ? -34 : (isKiss ? -28 : -18);
+        const penAff = is18Any ? -32 : (isKiss ? -26 : -18);
+        const penResp = is18Any ? -34 : (isKiss ? -28 : -18);
         cs.affection = Math.max(0, cs.affection + penAff);
         cs.respect = Math.max(0, cs.respect + penResp);
         cs.messages.push({
           sender: 'them',
-          text: (is18Touch || is18DeepKiss)
+          text: is18Any
             ? `Khoan đã ${state.player.name}! Dù nói chuyện táo bạo nhưng ngoài đời tụi mình chưa đủ thân để đụng chạm quá trớn vậy đâu, dừng lại ngay đi!`
             : (isKiss
               ? `Khoan đã ${state.player.name}! Tụi mình chưa thân tới mức hôn nhau đâu, bạn làm mình hơi sốc và khó chịu đấy!`
@@ -2205,25 +2190,28 @@
         });
         checkDatingTimeAbort(char, cs);
       } else {
-        const gainAff = is18DeepKiss ? 20 : (is18Touch ? 18 : (isKiss ? 16 : 12));
-        const gainInt = is18DeepKiss ? 26 : (is18Touch ? 24 : (isKiss ? 18 : 12));
+        const gainAff = is18Corner ? 24 : (is18Public ? 22 : (is18DeepKiss ? 20 : (is18Touch ? 18 : (isKiss ? 16 : 12))));
+        const gainInt = is18Corner ? 30 : (is18Public ? 28 : (is18DeepKiss ? 26 : (is18Touch ? 24 : (isKiss ? 18 : 12))));
         cs.affection = Math.min(100, cs.affection + gainAff);
         cs.intimacy = Math.min(100, (cs.intimacy || 30) + gainInt);
         const replyMap = {
           hug: `${char.name} tựa nhẹ vào vai bạn và mỉm cười ấm áp: “Cảm giác bình yên thật đấy...” 🤗💕`,
           kiss: `${char.name} hơi đỏ mặt rồi mỉm cười đáp lại nụ hôn của bạn đầy ngọt ngào... 💋✨`,
           touch_18: `${char.name} khẽ rùng mình, áp sát cơ thể vào bạn và thì thầm khàn khàn: “Tay bạn làm mình nóng hết cả người rồi đó... Đừng dừng lại nha 🔥💋”`,
-          deep_kiss_18: `${char.name} hé môi đón nhận nụ hôn sâu cuồng nhiệt của bạn, hai tay ôm chặt lấy cổ bạn đầy đê mê: “Muốn đi đâu đó chỉ có hai đứa mình ngay bây giờ quá...” 🔥🔞`
+          deep_kiss_18: `${char.name} hé môi đón nhận nụ hôn sâu cuồng nhiệt của bạn, hai tay ôm chặt lấy cổ bạn đầy đê mê: “Muốn đi đâu đó chỉ có hai đứa mình ngay bây giờ quá...” 🔥🔞`,
+          public_tease_18: `${char.name} cắn chặt môi kìm tiếng rên, hai chân khẽ khép lại trước bàn tay hư hỏng của bạn ngay giữa ${venueName}: “Ưm... điên à, ở đây có người nhìn thấy đó... nhưng mà nứng quá đi mất, sờ tiếp đi 🤫🔥💦”`,
+          secret_corner_18: `${char.name} thở hổn hển dựa lưng vào góc tường khuất, vòng tay kéo sát hông bạn vào người mình: “Á... liều thật sự luôn á 🔥🔞... Làm lẹ không người ta đi ngang qua thấy bây giờ... ưm... 💋💦”`,
+          hotel_climax_18: `${char.name} cong người rên rỉ không ngừng, hai tay bấu chặt lấy ga giường: “Á... ưm... mạnh nữa đi... sướng chết mất rồi 🔥🔞💦... Đừng dừng lại nha!”`
         };
         cs.messages.push({
           sender: 'them',
-          text: replyMap[actionType] || replyMap.hug,
+          text: applyDialectFlavor(char, replyMap[actionType] || replyMap.hug),
           time: tInfo.fullLabel
         });
         showDecisionImpactCard({
           title: `${actionLabel} với ${char.name}`,
           changes: [{ label: 'Thiện cảm', delta: gainAff }, { label: 'Thân mật', delta: gainInt }],
-          reason: (is18Touch || is18DeepKiss) ? 'Tương tác 18+ táo bạo khiến bầu không khí trở nên cực kỳ nóng bỏng!' : 'Khoảnh khắc gần gũi đúng lúc giúp hai người gắn kết mạnh mẽ hơn!'
+          reason: is18Any ? 'Cảm giác kích thích lén lút 18+ ngay tại chỗ hẹn đẩy hưng phấn lên cực độ!' : 'Khoảnh khắc gần gũi đúng lúc giúp hai người gắn kết mạnh mẽ hơn!'
         });
       }
       saveState();
@@ -6093,7 +6081,15 @@
       const badge18 = document.getElementById('badge18PlusMode');
       const dt18Box = document.getElementById('dating18PlusActions');
       if (badge18) badge18.classList.toggle('hidden', !cs.adultChatUnlocked);
-      if (dt18Box) dt18Box.classList.toggle('hidden', !(cs.inDatingTime && cs.adultChatUnlocked));
+      if (dt18Box) {
+        dt18Box.classList.toggle('hidden', !(cs.inDatingTime && cs.adultChatUnlocked));
+        const bPub = document.getElementById('btnPublicTease18');
+        const bCor = document.getElementById('btnSecretCorner18');
+        const bClx = document.getElementById('btnHotelClimax18');
+        if (bPub) bPub.classList.toggle('hidden', !!cs.inHotelDatingTime);
+        if (bCor) bCor.classList.toggle('hidden', !!cs.inHotelDatingTime);
+        if (bClx) bClx.classList.toggle('hidden', !cs.inHotelDatingTime);
+      }
       if (activeWrap) {
         activeWrap.classList.toggle('adult-mode-active', !!cs.adultChatUnlocked);
         activeWrap.classList.toggle('ring-2', !!(cs.inDatingTime || cs.adultChatUnlocked));
@@ -6212,6 +6208,7 @@
       const cs = state.charStates[cid];
       if (!char || !cs || cs.blocked || cs.unmatched) return;
 
+      const typingEl = document.getElementById('aiTypingIndicator');
       ensureCharExtendedState(char, cs);
       if (cs.evalMetrics.status === 'blocked_by_partner' || cs.blocked) { showToast('Bạn không thể gửi tin nhắn cho người này.', 'danger'); return; }
       if (cs.evalMetrics.status === 'withdrawn') { if (cs.evalMetrics.finalReplyUsed) { showToast('Đối phương đã dừng tìm hiểu.', 'info'); return; } cs.evalMetrics.finalReplyUsed = true; }
@@ -6299,6 +6296,9 @@
 
           // Parse Gemini player-POV suggestions
           const pNameLower = (state.player.name || '').trim().toLowerCase();
+          if (llmRes.dateProposal && llmRes.dateProposal.detected && !cs.inDatingTime) {
+            setTimeout(() => handleDialogueDateProposal(llmRes.dateProposal, char, cs), 120);
+          }
           if (Array.isArray(llmRes.suggestions) && llmRes.suggestions.length >= 2) {
             const validPov = llmRes.suggestions.filter(s => s && typeof s === 'string' && !(pNameLower.length >= 2 && s.toLowerCase().includes(pNameLower)));
             if (validPov.length >= 2) {
@@ -7390,7 +7390,7 @@
           const headers = { 'Content-Type': 'application/json' };
           if (useDirectKey) headers['x-goog-api-key'] = aiConfig.apiKey;
           const prompt = `Ước tính chi phí thực tế cho một buổi hẹn hò 2 người tại Việt Nam ở địa điểm: "${venueName}". Trả về DUY NHẤT JSON: {"costVND": 500000, "items": ["Mục 1 (300k)", "Mục 2 (200k)"]}`;
-          const resp = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3 } }) });
+          let resp = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3 } }) });
           if (resp.ok) {
             const d = await resp.json();
             const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -9892,8 +9892,9 @@
       let trustDelta = 6;
       let triggerOffer = false;
 
-      // 0. 18+ Adult / Dirty Talk Mode (Player-initiated or inside Hotel Dating Time)
-      if ((detectPlayerAdultTopic(text) || cs.inHotelDatingTime) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
+      // 0. 18+ Adult / Dirty Talk Mode (Player-initiated, active 18+ mode, or inside Hotel Dating Time)
+      const isShort18Followup = cs.adultChatUnlocked && !lower.includes("lừa đảo") && !lower.includes("tiền") && !lower.includes("vay") && !lower.includes("video");
+      if ((detectPlayerAdultTopic(text) || cs.inHotelDatingTime || isShort18Followup) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
         if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked || cs.inHotelDatingTime) {
           affDelta = 14; trustDelta = 4;
           const dirtyPool = char.gender === 'Nam'
@@ -10269,6 +10270,20 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
             ]
           })
         });
+        if (resp.status === 400) {
+          resp = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 1200 },
+              safetySettings: [
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' }
+              ]
+            })
+          });
+        }
         if (!resp.ok) {
           const errJson = await resp.json().catch(() => ({}));
           const errMsg = errJson?.error?.message || `HTTP ${resp.status}`;
@@ -10362,7 +10377,6 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
       renderActiveChatRoom();
 
       // Show typing indicator
-      const typingEl = document.getElementById('aiTypingIndicator');
       if (typingEl) typingEl.classList.remove('hidden');
 
       const nluResult = analyzePlayerFreeTextIntent(text, char, cs);
