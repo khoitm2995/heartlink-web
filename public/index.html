@@ -55,7 +55,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden max-w-full">
 
-  <!-- TOP GLOBAL HEADER (COMPACT 2-ROW MOBILE LAYOUT) -->
+  <!-- TOP GLOBAL HEADER -->
   <header class="w-full border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-2 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-1.5">
       <div class="flex items-center gap-2">
@@ -222,6 +222,10 @@
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-300 mb-1">Sở thích</label>
               <div id="setupHobbiesContainer" class="flex flex-wrap gap-1.5"></div>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tính cách của bạn (Chọn nhiều)</label>
+              <div id="setupTraitsContainer" class="flex flex-wrap gap-1.5"></div>
             </div>
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-300 mb-1">Giới thiệu bản thân</label>
@@ -484,7 +488,7 @@
 
               <!-- Free-Text Input -->
               <div id="chatInputBar" class="p-2 sm:px-3.5 bg-slate-950 border-t border-slate-800/90 flex items-center gap-2 shrink-0">
-                <input id="inpFreeChatMessage" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();sendFreeTextAIChat();}" class="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[13px] text-white placeholder-slate-400 focus:border-pink-500 focus:outline-none" placeholder="Tự nhập tin nhắn (gõ chủ đề 18+ để bật chế độ 18+)..." />
+                <input id="inpFreeChatMessage" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();sendFreeTextAIChat();}" class="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[13px] text-white placeholder-slate-400 focus:border-pink-500 focus:outline-none" placeholder="Tự nhập tin nhắn hoặc câu hỏi của bạn..." />
                 <button id="btnSendFreeChat" onclick="sendFreeTextAIChat()" class="px-4 py-2 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm shrink-0">Gửi ➤</button>
               </div>
             </div>
@@ -1008,6 +1012,11 @@
       "Đọc sách", "Chơi game / Esports", "Thời trang & Mua sắm", "Yoga & Thiền"
     ];
 
+    const ALL_TRAITS = [
+      "Chân thành", "Tinh tế", "Hài hước", "Thận trọng", "Lãng mạn",
+      "Thực tế", "Điềm đạm", "Cởi mở", "Thẳng thắn"
+    ];
+
     const IRL_VENUES = [
       { id: "cafe", name: "Quán Cà Phê Acoustic & Sách", cost: 160000, icon: "☕", safety: "An toàn cao", riskLevel: 1, items: ["2 Cà phê (110k)", "1 Bánh ngọt (50k)"], desc: "Không gian công cộng ấm cúng, phù hợp buổi gặp đầu." },
       { id: "casual_rest", name: "Nhà Hàng Bình Dân / Quán Ăn", cost: 340000, icon: "🍜", safety: "An toàn cao", riskLevel: 1, items: ["Set lẩu/nướng (280k)", "2 Nước ép (60k)"], desc: "Gần gũi, giá hợp lý." },
@@ -1051,7 +1060,7 @@
         gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
         osc.connect(gain);
-        gain.connect(ctxDestination = audioCtx.destination);
+        gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
       } catch (e) {}
@@ -1090,6 +1099,7 @@
         balance: 35000000,
         goal: "Tìm người yêu nghiêm túc",
         hobbies: ["Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert"],
+        traits: ["Chân thành", "Tinh tế", "Hài hước"],
         bio: "Thích du lịch khám phá, cà phê cuối tuần và trò chuyện chân thành!",
         avatarPresetIndex: 0
       },
@@ -1399,9 +1409,10 @@
         hairTop = `<path d="M134 180 C132 110, 268 110, 266 180 C246 138, 216 132, 200 148 C178 132, 150 142, 134 180 Z" fill="${hairColor}"/>`;
       } else {
         hairTop = `
-          <path d="M138 172 C134 106, 266 106, 262 172 C250 136, 222 126, 200 130 C175 126, 148 138, 138 172 Z" fill="${hairColor}"/>
-          <path d="M136 164 Q146 178 148 192 L138 188 Z" fill="${hairColor}"/>
-          <path d="M264 164 Q254 178 252 192 L262 188 Z" fill="${hairColor}"/>
+          <path d="M135 178 C132 104, 268 104, 265 178 C260 156, 246 146, 226 144 C210 142, 192 145, 174 148 C154 152, 140 160, 135 178 Z" fill="${hairColor}"/>
+          <path d="M152 134 C174 114, 228 114, 248 136 C230 144, 172 144, 152 134 Z" fill="${hairColor}"/>
+          <path d="M135 166 L145 166 L146 196 L136 192 Z" fill="${hairColor}"/>
+          <path d="M265 166 L255 166 L254 196 L264 192 Z" fill="${hairColor}"/>
         `;
       }
 
@@ -1637,6 +1648,26 @@
         };
         hContainer.appendChild(btn);
       });
+
+      const tContainer = document.getElementById('setupTraitsContainer');
+      if (tContainer) {
+        if (!Array.isArray(state.player.traits)) state.player.traits = ["Chân thành", "Tinh tế", "Hài hước"];
+        tContainer.innerHTML = '';
+        ALL_TRAITS.forEach(t => {
+          const active = state.player.traits.includes(t);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `px-2.5 py-1 rounded-xl text-xs font-semibold border transition ${active ? 'bg-purple-500/25 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600'}`;
+          btn.textContent = (active ? '✓ ' : '+ ') + t;
+          btn.onclick = () => {
+            if (state.player.traits.includes(t)) {
+              if (state.player.traits.length > 1) state.player.traits = state.player.traits.filter(x => x !== t);
+            } else state.player.traits.push(t);
+            renderSetupChips();
+          };
+          tContainer.appendChild(btn);
+        });
+      }
     }
 
     function selectPlayerAvatarPreset(idx) {
@@ -1671,6 +1702,8 @@
       document.getElementById('inpPlayerAge').value = '30';
       document.getElementById('selPlayerGender').value = 'Nam';
       document.getElementById('selTargetGender').value = 'Tất cả';
+      state.player.hobbies = ["Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert"];
+      state.player.traits = ["Chân thành", "Tinh tế", "Hài hước"];
       renderSetupChips();
       updateSetupAvatarPreview();
       updateSetupIncomePreview();
@@ -1978,7 +2011,7 @@
     }
 
     // =====================================================================
-    // CHAT ENGINE, 18+ MODE, DATE DETECTION & SUGGESTIONS
+    // CHAT ENGINE, 18+ MODE, DATE DETECTION & CONTEXT-AWARE SUGGESTIONS
     // =====================================================================
     let aiConfig = { apiKey: '', useProxy: true, model: 'gemini-3.5-flash-lite' };
     try { const k = localStorage.getItem('heartlink_gemini_api_key'); if (k) aiConfig.apiKey = k; } catch (e) {}
@@ -2103,15 +2136,15 @@
       const isAdultFollowup = cs.adultChatUnlocked && !lower.includes("lừa đảo") && !lower.includes("tiền") && !lower.includes("vay") && !lower.includes("video");
       if ((detectPlayerAdultTopic(text) || cs.inHotelDatingTime || isAdultFollowup) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
         if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked || cs.inHotelDatingTime) {
-          affDelta = 14; trustDelta = 4;
+          affDelta = 13; trustDelta = 5;
           const dirtyPool = char.gender === 'Nam'
             ? [
-                `Ưm... nghe ${state.player.name} nói mà cu mình cứng ngắc hết rồi đó 🔥🔞... Muốn đè bạn xuống giường, sờ nắn vú rồi đút vào lồn bạn thật sâu ngay lúc này quá... á 💦`,
-                `Chết tiệt, ${state.player.name} dâm quá đi mất 😈🔥... Cởi hết đồ ra đi, đêm nay mình bú mút khắp người rồi làm tình tới lúc bạn rên rỉ không ngừng mới thôi 🔞!`
+                `Ưm... nghe ${state.player.name} nói mà anh nóng ran người, cu cũng bắt đầu căng lên rồi đó 🔥🔞... Đêm nay chỉ có hai đứa mình thì anh muốn ôm chặt, sờ nắn vú rồi quấn lấy em tới sáng luôn 💋`,
+                `Chết tiệt, ${state.player.name} hư ghê á 😈🔥... Đừng trêu nữa, lại đây để anh hôn khắp người rồi đút vào thật sâu cho cả hai cùng sướng nhé 🔞!`
               ]
             : [
-                `Ưm... á... nghe ${state.player.name} dirty talk mà lồn mình ướt hết rồi nè 🔥💦... Lại đây bóp vú mình đi, rồi lấy cu đút vào thật mạnh cho mình sướng đi mà 🔞💋!`,
-                `Ơi là trời... ${state.player.name} nói bậy mà nứng quá đi mất 😈🔥... Đừng nhắn nữa, ôm chặt lấy mình rồi vừa rên vừa làm tình tới sáng luôn nha 🔞💦!`
+                `Ưm... nghe ${state.player.name} nói mà người em nóng ran, bên dưới ướt hết rồi nè 🔥💋... Lại đây ôm chặt lấy em, sờ vú rồi chiều em hết đêm nay đi 🔞`,
+                `Trời ơi ${state.player.name} hư quá đi mất 😈🔥... Đừng nhắn kiểu đó nữa làm em nứng không chịu nổi đâu, muốn ở cạnh anh ngay lúc này quá 🔞💦!`
               ];
           reply = dirtyPool[Math.floor(Math.random() * dirtyPool.length)];
           return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
@@ -2157,52 +2190,228 @@
       return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
     }
 
-    function generateDynamicFollowupChoices(lastPartnerMsg, lastPlayerMsg, char, cs) {
+    function detectPartnerScamOrMoneySignal(lastPartnerMsg, char, cs) {
       const pLow = (lastPartnerMsg || '').toLowerCase();
-      if (pLow.includes('tiền') || pLow.includes('nạp') || pLow.includes('sàn') || cs.activeScamOfferStage > 0) {
+      const scamKeywords = [
+        'tiền', 'nạp', 'sàn', 'lợi nhuận', 'usdt', 'crypto', 'chuyển khoản', 'vay', 'mượn',
+        'viện phí', 'cấp cứu', 'hải quan', 'phí thông quan', 'thuế giải ngân', 'link', 'otp',
+        'bình chọn', 'vote', 'đặt cọc', 'phí vip', 'chu cấp', 'thanh toán hộ', 'quỹ chung',
+        'cơ hội đổi đời', 'x2', 'x3', 'hoa hồng', 'cộng tác viên', 'lỗ hổng'
+      ];
+      const hasScamText = scamKeywords.some(k => pLow.includes(k));
+      return (char && char.isScammer && cs && cs.activeScamOfferStage > 0) || hasScamText;
+    }
+
+    function generateDynamicFollowupChoices(lastPartnerMsg, lastPlayerMsg, char, cs) {
+      const pText = (lastPartnerMsg || '').trim();
+      const pLow = pText.toLowerCase();
+      const is18 = !!(cs && cs.adultChatUnlocked);
+      const isScamPitch = detectPartnerScamOrMoneySignal(pText, char, cs);
+      const pr = getAgePronouns(char);
+      const pCall = pr.partnerCallPlayer;
+
+      // 1. PRIORITY: Partner is asking for money, pitching investment, sending suspicious link, or scamming!
+      if (isScamPitch && !(cs && cs.inDatingTime)) {
+        const amt = (char && char.scamOffer)
+          ? (cs.activeScamOfferStage === 2 ? char.scamOffer.stage2Amount : char.scamOffer.stage1Amount)
+          : 0;
+        const amtLabel = amt > 0 ? ` (${formatVND(amt)})` : '';
         return [
-          { label: `🕵️ “Khoan đã, sao mới quen mà ${char.name} lại nhắc tới tiền bạc gấp thế?”`, playerText: `Sao mới tìm hiểu mà ${char.name} đã đề cập chuyện tiền bạc gấp vậy?`, affectionDelta: -10, trustDelta: -10 },
-          { label: `🛡️ “Mình không chuyển tiền qua mạng đâu, hẹn cà phê công cộng nhé!”`, playerText: `Nguyên tắc của mình là không chuyển tiền qua mạng. Gặp mặt ở quán cà phê công cộng nhé!`, affectionDelta: -12, trustDelta: -8 }
+          {
+            label: `🕵️ “Khoan đã, sao mới quen mà ${char.name} lại nhắc chuyện tiền bạc/đầu tư${amtLabel} gấp vậy?”`,
+            playerText: `Mình thấy hơi lạ: tụi mình mới tìm hiểu trên app mà sao ${char.name} lại đề cập chuyện tiền bạc${amtLabel} gấp thế? Bạn giải thích rõ xem nào?`,
+            affectionDelta: -10, trustDelta: -10
+          },
+          {
+            label: `🛡️ “Nguyên tắc của mình là KHÔNG chuyển tiền, cho vay hay bấm link lạ qua mạng. Gặp cà phê nói chuyện nhé!”`,
+            playerText: `Mình nói thẳng nguyên tắc là không bao giờ chuyển tiền, cho vay hay nạp app qua mạng đâu. Nếu ${char.name} thật lòng thì hẹn gặp ở quán cà phê công cộng nhé!`,
+            affectionDelta: -12, trustDelta: -8
+          },
+          {
+            label: `📹 “Chuyện tiền bạc nhạy cảm lắm, bật Video Call nhìn mặt thật xác minh 1 phút trước đã nha!”`,
+            playerText: `Chuyện tiền bạc nhạy cảm lắm, bật Video Call nhìn mặt thật xác minh 1 phút trước đã nhé ${char.name}!`,
+            topic: "request_video", affectionDelta: -6, trustDelta: 4
+          },
+          {
+            label: `🚨 Ngưng nói chuyện & Báo cáo dấu hiệu lừa đảo ngay`,
+            playerText: `Mình nhận thấy dấu hiệu bất thường về tài chính nên xin dừng tại đây.`,
+            topic: "open_report_now", affectionDelta: -20, trustDelta: -20
+          }
         ];
       }
+
+      // 2. PRIORITY: 18+ Mode Active (Balanced provocative + dirty talk suggestions)
+      if (is18) {
+        if (pLow.includes('?') || pLow.includes('muốn') || pLow.includes('thích') || pLow.includes('làm gì')) {
+          return [
+            {
+              label: `🔥 “Muốn ôm chặt lấy ${pCall}, vuốt ve khắp người rồi chiều nhau hết đêm nay chứ sao nữa 🔞”`,
+              playerText: `Hỏi gì mà khéo thế... Mình chỉ muốn ôm chặt lấy ${char.name}, sờ nắn vú và vuốt ve khắp cơ thể bạn cho cả hai cùng sướng đêm nay thôi 🔥🔞`,
+              affectionDelta: 12, trustDelta: 4
+            },
+            {
+              label: `💋 “Nghe giọng ${char.name} nũng nịu dâm đãng vậy làm mình nóng hết cả người rồi nè 😈”`,
+              playerText: `Nghe ${char.name} nói chuyện gợi tình vậy làm mình cứng hết cả người rồi nè 😈... Cứ thì thầm rên nhẹ vậy tiếp đi 💋`,
+              affectionDelta: 13, trustDelta: 4
+            },
+            {
+              label: `🏨 “Đừng nhắn nữa, tối nay tụi mình hẹn gặp riêng tư để thực hành luôn đi 🔥”`,
+              playerText: `Nhắn tin kiểu này chịu sao nổi, tối nay tụi mình gặp riêng tư để chiều nhau tới bến luôn nhé ${char.name} 🔥🔞!`,
+              topic: "trigger_irl_modal", affectionDelta: 14, trustDelta: 5
+            }
+          ];
+        }
+        return [
+          {
+            label: `🔥 “Lại gần đây cho mình ôm chặt, chạm vào ngực và thì thầm sát tai nhau đi 🔞”`,
+            playerText: `Lại gần đây cho mình ôm chặt lấy ${char.name}, vuốt ve vú và thì thầm sát tai nhau cho đã nào 🔥🔞`,
+            affectionDelta: 12, trustDelta: 4
+          },
+          {
+            label: `💋 “Hôm nay ${char.name} hư ghê á, nói chuyện làm mình nứng hết cả người rồi 😈”`,
+            playerText: `Hôm nay ${char.name} hư quá đi mất 😈, nói mấy câu nhạy cảm làm mình nứng không chịu nổi rồi nè 💋`,
+            affectionDelta: 13, trustDelta: 4
+          },
+          {
+            label: `🥂 “Ngoài những phút táo bạo này, mình cũng rất thích cảm giác ở cạnh ${char.name} nữa 💕”`,
+            playerText: `Không chỉ chuyện 18+ đâu, lúc bình thường ở cạnh ${char.name} mình cũng thấy cuốn và thoải mái thật sự 💕.`,
+            affectionDelta: 10, trustDelta: 8
+          }
+        ];
+      }
+
+      // 3. NORMAL MODE: Directly adapt suggestions to Partner's latest question / statement!
+      if (pLow.includes('công việc') || pLow.includes('làm gì') || pLow.includes('bận không') || pLow.includes('nghề')) {
+        return [
+          {
+            label: `💼 “Công việc ${state.player.job} của mình dạo này cũng cuốn lắm, nhưng vẫn luôn có thời gian cho ${char.name} 😊”`,
+            playerText: `Công việc ${state.player.job} của mình dạo này khá bận nhưng vui lắm. Dù bận thế nào mình vẫn luôn dành thời gian trò chuyện với ${char.name} 😊. Còn hôm nay của bạn thế nào?`,
+            affectionDelta: 10, trustDelta: 9
+          },
+          {
+            label: `☕ “Làm việc cả ngày cũng hơi căng thẳng, cuối tuần ${char.name} hay xả stress bằng cách nào?”`,
+            playerText: `Làm việc cả ngày cũng hơi áp lực thật, cuối tuần rảnh ${char.name} thường làm gì để thư giãn nhất?`,
+            affectionDelta: 9, trustDelta: 8
+          },
+          {
+            label: `📅 “Nếu tuần này rảnh buổi tối, tụi mình hẹn đi cà phê đổi gió một bữa nhé!”`,
+            playerText: `Nếu tuần này rảnh buổi tối, tụi mình hẹn ra quán cà phê ngồi chill đổi gió một bữa nhé ${char.name}!`,
+            topic: "trigger_irl_modal", affectionDelta: 11, trustDelta: 10
+          }
+        ];
+      }
+
+      if (pLow.includes('sở thích') || pLow.includes('thích gì') || pLow.includes('cuối tuần') || pLow.includes('rảnh')) {
+        return [
+          {
+            label: `🎯 “Mình mê nhất là ${state.player.hobbies[0].toLowerCase()}, thấy ${char.name} cũng thích ${char.hobbies[0].toLowerCase()} đúng gu ghê!”`,
+            playerText: `Mình mê nhất là ${state.player.hobbies[0].toLowerCase()} đó! Thấy trên hồ sơ ${char.name} cũng thích ${char.hobbies[0].toLowerCase()} là biết hợp tần số rồi 😊.`,
+            affectionDelta: 11, trustDelta: 9
+          },
+          {
+            label: `🌟 “Hay cuối tuần này hai đứa mình lập kèo trải nghiệm ${char.hobbies[0].toLowerCase()} cùng nhau đi!”`,
+            playerText: `Hay cuối tuần này hai đứa mình hẹn gặp ngoài đời cùng trải nghiệm ${char.hobbies[0].toLowerCase()} hoặc đi uống nước nhé ${char.name}!`,
+            topic: "trigger_irl_modal", affectionDelta: 12, trustDelta: 10
+          },
+          {
+            label: `💬 “Ngoài ${char.hobbies[0].toLowerCase()} ra, ${char.name} còn đam mê bí mật nào chưa ghi trên hồ sơ không?”`,
+            playerText: `Ngoài ${char.hobbies[0].toLowerCase()} ra thì ${char.name} còn có sở thích bí mật nào chưa bật mí trên hồ sơ không nè?`,
+            affectionDelta: 9, trustDelta: 8
+          }
+        ];
+      }
+
+      if (pLow.includes('tình yêu') || pLow.includes('quan điểm') || pLow.includes('nghiêm túc') || pLow.includes('nghĩ sao') || pLow.includes('tình cũ') || pLow.includes('chia tay')) {
+        return [
+          {
+            label: `💖 “Mình hoàn toàn đồng ý! Trong tình cảm mình luôn đề cao sự chân thành, rõ ràng và tôn trọng nhau.”`,
+            playerText: `Mình rất đồng cảm với suy nghĩ của ${char.name}. Với mình, sự chân thành, minh bạch và tôn trọng lẫn nhau luôn là nền tảng quan trọng nhất.`,
+            affectionDelta: 11, trustDelta: 12
+          },
+          {
+            label: `🤝 “Nghe ${char.name} chia sẻ thấy bạn là người sống rất sâu sắc. Điều gì ở một người khiến bạn tin tưởng nhất?”`,
+            playerText: `Nghe ${char.name} tâm sự thấy bạn sống sâu sắc thật sự. Vậy điều gì ở đối phương khiến bạn cảm thấy an tâm và tin tưởng nhất?`,
+            affectionDelta: 10, trustDelta: 11
+          },
+          {
+            label: `📹 “Tụi mình bật Video Call trò chuyện trực tiếp vài phút cho hiểu nhau hơn nhé ${char.name}!”`,
+            playerText: `Nói chuyện qua tin nhắn hợp quá, tụi mình gọi Video Call vài phút chào nhau cho hiểu nhau hơn nhé ${char.name}!`,
+            topic: "request_video", affectionDelta: 10, trustDelta: 12
+          }
+        ];
+      }
+
+      if (pLow.includes('gặp') || pLow.includes('hẹn') || pLow.includes('cà phê') || pLow.includes('đi chơi') || pLow.includes('đi ăn')) {
+        return [
+          {
+            label: `📅 “Ok chốt luôn! Để mình mở lịch chọn địa điểm hẹn hò phù hợp cho hai đứa nhé!”`,
+            playerText: `Nhất trí luôn ${char.name} ơi! Để mình chọn quán và thời gian hẹn hò ngoài đời cho tụi mình nhé!`,
+            topic: "trigger_irl_modal", affectionDelta: 12, trustDelta: 10
+          },
+          {
+            label: `☕ “Mình ưu tiên hẹn ở quán cà phê công cộng ấm cúng cho cả hai thoải mái nhé 😊.”`,
+            playerText: `Mình rất muốn gặp ${char.name}, buổi đầu tụi mình hẹn ở quán cà phê công cộng ấm cúng cho thoải mái nha 😊.`,
+            topic: "trigger_irl_modal", affectionDelta: 10, trustDelta: 12
+          },
+          {
+            label: `📹 “Trước khi gặp nhau trực tiếp, mình gọi Video Call 1 phút nhìn mặt nhau trước nha!”`,
+            playerText: `Hẹn gặp ngoài đời thì thích quá rồi, trước đó mình gọi Video Call 1 phút chào nhau trước cho đỡ bỡ ngỡ nha ${char.name}!`,
+            topic: "request_video", affectionDelta: 9, trustDelta: 12
+          }
+        ];
+      }
+
+      // General contextual reply directly reacting to partner's last message
+      const snippet = pText.length > 36 ? pText.slice(0, 36).trim() + '...' : pText;
       return [
-        { label: `😊 “Nghe ${char.name} chia sẻ thấy hợp gu ghê! Cuối tuần bạn hay làm gì nhất?”`, playerText: `Nghe ${char.name} chia sẻ thấy hợp gu thật sự! Cuối tuần rảnh bạn hay làm gì nhất?`, affectionDelta: 9, trustDelta: 8 },
-        { label: `📅 “Tụi mình nói chuyện hợp thế này, lên lịch hẹn gặp ngoài đời nhé!”`, playerText: `Nói chuyện hợp quá rồi, cuối tuần mình hẹn gặp nhau ngoài đời đi uống nước nhé ${char.name}!`, topic: "trigger_irl_modal", affectionDelta: 12, trustDelta: 10 },
-        { label: `📹 “Bật Video Call 1 phút nhìn mặt nhau cho tự nhiên nha ${char.name}!”`, playerText: `Bật Video Call 1 phút chào nhau cho tự nhiên nha ${char.name}!`, topic: "request_video", affectionDelta: 10, trustDelta: 12 }
+        {
+          label: `😊 “Nghe ${char.name} nói${snippet ? ` (“${snippet}”)` : ''} thấy cuốn ghê! Kể thêm cho mình nghe đi.”`,
+          playerText: `Nghe ${char.name} chia sẻ thấy cuốn thật sự! Bạn kể thêm cho mình nghe về điều đó đi 😊.`,
+          affectionDelta: 9, trustDelta: 8
+        },
+        {
+          label: `📅 “Nói chuyện hợp tần số thế này, cuối tuần mình hẹn gặp ngoài đời uống nước nhé!”`,
+          playerText: `Nói chuyện hợp quá rồi, cuối tuần này tụi mình hẹn gặp nhau ngoài đời đi uống nước nhé ${char.name}!`,
+          topic: "trigger_irl_modal", affectionDelta: 12, trustDelta: 10
+        },
+        {
+          label: `📹 “Bật Video Call 1 phút nhìn mặt nhau cho tự nhiên nha ${char.name}!”`,
+          playerText: `Bật Video Call 1 phút chào nhau cho tự nhiên nha ${char.name}!`,
+          topic: "request_video", affectionDelta: 10, trustDelta: 12
+        }
       ];
     }
 
     function getDialogueOptionsForStage(char, cs) {
       if (cs.blocked || cs.unmatched) return [{ label: "Cuộc trò chuyện đã kết thúc", action: "blocked" }];
 
-      // Priority 1: Money / Scam Offer Active
-      if (char.isScammer && cs.activeScamOfferStage > 0 && !cs.inDatingTime) {
-        const isStg1 = cs.activeScamOfferStage === 1;
-        const amt = char.scamOffer ? (isStg1 ? char.scamOffer.stage1Amount : char.scamOffer.stage2Amount) : 0;
-        const amtText = amt > 0 ? formatVND(amt) : 'khoản tiền này';
-        return [
-          { label: `🕵️ “Khoan đã, sao mới quen mà ${char.name} lại nhắc chuyện tiền bạc (${amtText}) gấp vậy?”`, playerText: `Mình thấy hơi lạ: tụi mình mới tìm hiểu trên app mà sao ${char.name} lại hỏi tới ${amtText} gấp thế?`, affectionDelta: -10, trustDelta: -10 },
-          { label: `🛡️ “Nguyên tắc của mình là KHÔNG chuyển tiền hay đầu tư qua mạng. Gặp mặt cà phê nói chuyện nhé!”`, playerText: `Mình nói thẳng nguyên tắc là không bao giờ chuyển tiền hay nạp app qua mạng đâu. Nếu ${char.name} thật lòng thì hẹn gặp ở quán cà phê công cộng nhé!`, affectionDelta: -12, trustDelta: -8 },
-          { label: `📹 “Bật Video Call 1 phút nhìn mặt thật trước đã rồi mới nói chuyện tiếp nha!”`, playerText: `Chuyện tiền bạc nhạy cảm lắm, bật Video Call nhìn mặt thật xác minh 1 phút trước đã nhé ${char.name}!`, topic: "request_video", affectionDelta: -6, trustDelta: 4 },
-          { label: `🚨 Ngưng nói chuyện & Báo cáo dấu hiệu lừa đảo ngay`, playerText: `Mình nhận thấy dấu hiệu bất thường về tài chính nên xin dừng tại đây.`, topic: "open_report_now", affectionDelta: -20, trustDelta: -20 }
-        ];
+      const partnerMsgs = (cs.messages || []).filter(m => m.sender === 'them');
+      const lastPartnerText = partnerMsgs.length > 0 ? partnerMsgs[partnerMsgs.length - 1].text : '';
+
+      // Priority 1: Money / Scam Offer Active OR Partner just pitched money/scam in chat
+      if (detectPartnerScamOrMoneySignal(lastPartnerText, char, cs) && !cs.inDatingTime) {
+        return generateDynamicFollowupChoices(lastPartnerText, '', char, cs);
       }
 
-      // Priority 2: Adult 18+ Mode Active
+      // Priority 2: Adult 18+ Mode Active (Balanced candid & dirty talk choices)
       if (cs.adultChatUnlocked) {
-        return [
-          { label: `🔥 “Em/anh nóng bỏng quá... lại gần đây cho mình chạm vào ngực và cơ thể nhau đi 🔞”`, playerText: `Nhìn ${char.name} quyến rũ quá làm mình chịu hết nổi rồi... Lại đây ôm chặt và để mình vuốt ve vú với cơ thể bạn đi 🔥🔞`, affectionDelta: 12, trustDelta: 4 },
-          { label: `💋 “Rên lên cho mình nghe đi... đêm nay tụi mình làm tình thật mạnh tới sáng luôn nha 🔥”`, playerText: `Thì thầm sát tai mình rồi rên lên đi ${char.name}... đêm nay mình muốn cùng bạn làm tình thật cuồng nhiệt, đê mê tới sáng luôn 💋🔞`, affectionDelta: 14, trustDelta: 4 },
-          { label: `🥂 “Ở bên ${char.name} lúc này cuốn thật sự, bạn đang cảm thấy thế nào?”`, playerText: `Ở bên ${char.name} lúc này cảm xúc dâng trào quá, bạn đang thấy thế nào trong người?`, affectionDelta: 10, trustDelta: 8 }
-        ];
+        if (cs.dynamicSuggestedChoices && cs.dynamicSuggestedChoices.length >= 2) {
+          return cs.dynamicSuggestedChoices;
+        }
+        return generateDynamicFollowupChoices(lastPartnerText, '', char, cs);
       }
 
-      // Priority 3: Dynamic context suggestions
+      // Priority 3: Dynamic context suggestions (filtered so 18+ choices never leak into normal mode)
       if (cs.dynamicSuggestedChoices && cs.dynamicSuggestedChoices.length >= 2) {
-        return cs.dynamicSuggestedChoices;
+        const cleanNormal = cs.dynamicSuggestedChoices.filter(opt => !detectPlayerAdultTopic(opt.playerText || opt.label || ''));
+        if (cleanNormal.length >= 2) return cleanNormal;
       }
 
-      // Default stage-based natural suggestions
+      // Default context-aware suggestions based on partner's opening/latest message
+      if (lastPartnerText) {
+        return generateDynamicFollowupChoices(lastPartnerText, '', char, cs);
+      }
+
       return [
         { label: `👋 “Mình là ${state.player.name}, làm ${state.player.job}. Rất vui được quen ${char.name}!”`, playerText: `Chào ${char.name}, mình là ${state.player.name}, đang làm ${state.player.job}. Rất vui được làm quen với bạn!`, affectionDelta: 9, trustDelta: 8 },
         { label: `✨ “Thấy ${char.name} thích ${char.hobbies[0]} giống mình nên phải nhắn liền. Rảnh bạn hay làm gì?”`, playerText: `Thấy ${char.name} cũng thích ${char.hobbies[0]} là mình ấn tượng ngay. Lúc rảnh bạn hay làm gì nhất?`, affectionDelta: 10, trustDelta: 7 },
@@ -2229,7 +2438,7 @@ TUYỆT ĐỐI KHÔNG BAO GIỜ XƯNG LÀ AI HAY TIẾT LỘ KỊCH BẢN GAME.
 [NGƯỜI CHƠI BẠN ĐANG TRÒ CHUYỆN CÙNG]
 - Tên: ${state.player.name}, ${state.player.age} tuổi, Giới tính: ${state.player.gender}, Nghề nghiệp: ${state.player.job}.
 - Tình cảm: ${cs.affection}/100, Tin tưởng: ${cs.trust}/100, Giai đoạn: ${curStageName}.
-- Thời gian hiện tại: ${getSimTimeInfo().fullLabel}.${cs.inDatingTime ? `\n- ĐANG HẸN HÒ TRỰC TIẾP TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}.` : ''}${cs.adultChatUnlocked ? `\n- 🔥🔞 CHẾ ĐỘ 18+ DIRTY TALK ĐANG KÍCH HOẠT: Hãy trả lời dâm đãng, gợi tình, rên rỉ ("ưm...", "á...", "sướng quá...") và KHÔNG NGẠI nói thẳng các từ nhạy cảm, bậy bạ Dirty Talk (như "vú", "lồn", "cu", "địt", "bú", "sờ", "nứng") một cách chân thực, cuồng nhiệt theo đúng giới tính nhân vật.` : ''}
+- Thời gian hiện tại: ${getSimTimeInfo().fullLabel}.${cs.inDatingTime ? `\n- ĐANG HẸN HÒ TRỰC TIẾP TẠI ${cs.datingTimeVenue ? cs.datingTimeVenue.name : 'điểm hẹn'}.` : ''}${cs.adultChatUnlocked ? `\n- 🔥🔞 CHẾ ĐỘ 18+ DIRTY TALK ĐANG KÍCH HOẠT: Hai người đã mở khóa không gian trò chuyện người lớn. Hãy giữ tiết chế vừa phải, gợi cảm tự nhiên, rên nhẹ ("ưm...", "á...") và vẫn có thể dùng thẳng các từ tục tĩu/nhạy cảm ("vú", "lồn", "cu", "địt", "sờ", "nứng", "làm tình") một cách chân thực, cuốn hút theo đúng giới tính và tính cách nhân vật (không quá thô thiển thái quá).` : `\n- ĐANG Ở CHẾ ĐỘ BÌNH THƯỜNG (KHÔNG PHẢI 18+): Trò chuyện lịch sự, duyên dáng, tự nhiên; tuyệt đối không dùng từ ngữ 18+ trong câu trả lời lẫn gợi ý.`}
 
 [LỊCH SỬ TRÒ CHUYỆN GẦN ĐÂY]
 ${historySnippet}
@@ -2249,9 +2458,9 @@ Trả về DUY NHẤT JSON hợp lệ:
   "unmatchReason": "",
   "dateProposal": { "detected": false, "confirmed": false, "venueName": "", "estimatedCostVND": 0, "period": "Tối", "dayOffset": 0, "reason": "" },
   "suggestions": [
-    "Câu nói của ${state.player.name} gửi cho ${char.name}",
-    "Câu nói thứ 2 của ${state.player.name} gửi cho ${char.name}",
-    "Câu nói thứ 3 của ${state.player.name} gửi cho ${char.name}"
+    "Câu trả lời gợi ý 1 của ${state.player.name} phản hồi trực tiếp ý/câu hỏi trong 'reply' của ${char.name}",
+    "Câu trả lời gợi ý 2 của ${state.player.name} phản hồi trực tiếp 'reply' của ${char.name} (sắc thái khác)",
+    "Câu trả lời gợi ý 3 của ${state.player.name} phản hồi trực tiếp 'reply' của ${char.name} (nếu ${char.name} xin tiền/dụ đầu tư/gửi link thì gợi ý từ chối/vặn hỏi)"
   ]
 }`;
 
@@ -2502,7 +2711,7 @@ Trả về DUY NHẤT JSON hợp lệ:
         return;
       }
 
-      if (llmSuggestions) {
+      if (llmSuggestions && !detectPartnerScamOrMoneySignal(finalReply, char, cs)) {
         cs.dynamicSuggestedChoices = llmSuggestions;
       } else {
         const dynOpts = generateDynamicFollowupChoices(finalReply, text, char, cs);
@@ -2522,8 +2731,14 @@ Trả về DUY NHẤT JSON hợp lệ:
     }
 
     function regenerateAIChoicesForActiveChat() {
-      const cs = state.charStates[state.activeChatCharId];
-      if (cs) { cs.dynamicSuggestedChoices = null; renderActiveChatRoom(); }
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      const partnerMsgs = (cs.messages || []).filter(m => m.sender === 'them');
+      const lastPartnerText = partnerMsgs.length > 0 ? partnerMsgs[partnerMsgs.length - 1].text : '';
+      cs.dynamicSuggestedChoices = generateDynamicFollowupChoices(lastPartnerText, '', char, cs);
+      renderActiveChatRoom();
+      showToast(cs.adultChatUnlocked ? '🔄 Đã làm mới gợi ý Chế độ 18+!' : '🔄 Đã làm mới gợi ý theo ngữ cảnh!', 'info');
     }
 
     // =====================================================================
@@ -2732,7 +2947,7 @@ Trả về DUY NHẤT JSON hợp lệ:
         const replies = {
           hug: `${char.name} tựa nhẹ vào vai bạn mỉm cười ấm áp 🤗💕`,
           kiss: `${char.name} đỏ mặt đón nhận nụ hôn ngọt ngào của bạn 💋✨`,
-          touch_18: `${char.name} rùng mình áp sát: “Tay bạn làm mình nứng hết cả người rồi... ưm 🔥🔞”`,
+          touch_18: `${char.name} rùng mình áp sát: “Tay bạn làm mình nóng hết cả người rồi... ưm 🔥🔞”`,
           deep_kiss_18: `${char.name} hé môi hôn sâu cuồng nhiệt đầy đê mê 💋🔥`,
           public_tease_18: `${char.name} cắn môi kìm tiếng rên ngay giữa chỗ hẹn: “Ưm... ở đây có người nhìn thấy đó... nhưng mà sướng quá, sờ tiếp đi 🤫🔥💦”`,
           secret_corner_18: `${char.name} thở hổn hển trong góc khuất: “Á... liều thật sự luôn á 🔥🔞... làm lẹ kẻo người ta thấy bây giờ 💋💦”`,
