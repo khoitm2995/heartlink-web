@@ -181,7 +181,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Giới tính của bạn</label>
-              <select id="selPlayerGender" onchange="updateSetupAvatarPreview()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
+              <select id="selPlayerGender" onchange="onPlayerGenderChange()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
                 <option value="Nam">Nam</option>
                 <option value="Nữ">Nữ</option>
                 <option value="Phi nhị nguyên">Phi nhị nguyên</option>
@@ -191,8 +191,8 @@
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Giới tính muốn tìm hiểu</label>
               <select id="selTargetGender" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
-                <option value="Tất cả" selected>Tất cả (150 hồ sơ)</option>
-                <option value="Nữ">Nữ</option>
+                <option value="Tất cả">Tất cả (150 hồ sơ)</option>
+                <option value="Nữ" selected>Nữ</option>
                 <option value="Nam">Nam</option>
                 <option value="Phi nhị nguyên">Phi nhị nguyên</option>
               </select>
@@ -1623,6 +1623,12 @@
     function selectPreSetupGender(genderVal) {
       document.getElementById('modal-gender-preselect').classList.add('hidden');
       document.getElementById('selPlayerGender').value = genderVal;
+      const targetSel = document.getElementById('selTargetGender');
+      if (targetSel) {
+        if (genderVal === 'Nam') targetSel.value = 'Nữ';
+        else if (genderVal === 'Nữ') targetSel.value = 'Nam';
+        else targetSel.value = 'Tất cả';
+      }
       const nameInp = document.getElementById('inpPlayerName');
       if (nameInp && (nameInp.value === 'Minh Khôi' || nameInp.value === 'Ánh Mai')) {
         nameInp.value = genderVal === 'Nữ' ? 'Ánh Mai' : 'Minh Khôi';
@@ -1630,51 +1636,14 @@
       navToScreen('setup');
     }
 
-    function renderSetupChips() {
-      const hContainer = document.getElementById('setupHobbiesContainer');
-      if (!hContainer) return;
-      hContainer.innerHTML = '';
-      ALL_HOBBIES.forEach(h => {
-        const active = state.player.hobbies.includes(h);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `px-2.5 py-1 rounded-xl text-xs font-semibold border ${active ? 'bg-pink-500/25 border-pink-500 text-pink-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
-        btn.textContent = (active ? '✓ ' : '+ ') + h;
-        btn.onclick = () => {
-          if (state.player.hobbies.includes(h)) {
-            if (state.player.hobbies.length > 1) state.player.hobbies = state.player.hobbies.filter(x => x !== h);
-          } else state.player.hobbies.push(h);
-          renderSetupChips();
-        };
-        hContainer.appendChild(btn);
-      });
-
-      const tContainer = document.getElementById('setupTraitsContainer');
-      if (tContainer) {
-        if (!Array.isArray(state.player.traits)) state.player.traits = ["Chân thành", "Tinh tế", "Hài hước"];
-        tContainer.innerHTML = '';
-        ALL_TRAITS.forEach(t => {
-          const active = state.player.traits.includes(t);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = `px-2.5 py-1 rounded-xl text-xs font-semibold border transition ${active ? 'bg-purple-500/25 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600'}`;
-          btn.textContent = (active ? '✓ ' : '+ ') + t;
-          btn.onclick = () => {
-            if (state.player.traits.includes(t)) {
-              if (state.player.traits.length > 1) state.player.traits = state.player.traits.filter(x => x !== t);
-            } else state.player.traits.push(t);
-            renderSetupChips();
-          };
-          tContainer.appendChild(btn);
-        });
+    function onPlayerGenderChange() {
+      const g = document.getElementById('selPlayerGender').value;
+      const targetSel = document.getElementById('selTargetGender');
+      if (targetSel) {
+        if (g === 'Nam') targetSel.value = 'Nữ';
+        else if (g === 'Nữ') targetSel.value = 'Nam';
+        else targetSel.value = 'Tất cả';
       }
-    }
-
-    function selectPlayerAvatarPreset(idx) {
-      state.player.avatarPresetIndex = idx;
-      document.querySelectorAll('.avatar-preset-btn').forEach((b, i) => {
-        b.className = i === idx ? 'p-1.5 rounded-xl bg-pink-500/20 border border-pink-500 text-[11px] font-bold text-pink-200 avatar-preset-btn' : 'p-1.5 rounded-xl bg-slate-800 border border-slate-700 text-[11px] avatar-preset-btn';
-      });
       updateSetupAvatarPreview();
     }
 
@@ -1701,7 +1670,7 @@
       document.getElementById('inpPlayerName').value = 'Minh Khôi';
       document.getElementById('inpPlayerAge').value = '30';
       document.getElementById('selPlayerGender').value = 'Nam';
-      document.getElementById('selTargetGender').value = 'Tất cả';
+      document.getElementById('selTargetGender').value = 'Nữ';
       state.player.hobbies = ["Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert"];
       state.player.traits = ["Chân thành", "Tinh tế", "Hài hước"];
       renderSetupChips();
@@ -2097,6 +2066,21 @@
       return kw.some(k => lower.includes(k));
     }
 
+    function canUnlockAdultChatMode(char, cs) {
+      if (!char || !cs) return false;
+      if (cs.inHotelDatingTime) return true;
+      // Scammers & sextortion/catfish traps accept immediately to lure the player
+      if (char.isScammer || ['scam_sextortion', 'same_sex_catfish_trap'].includes(char.archetype)) {
+        return true;
+      }
+      // Casual / playful / rebound characters require moderate affection (>= 45%)
+      if (['casual_short', 'casual_materialistic', 'rebound_ex', 'fun_dating'].includes(char.archetype)) {
+        return cs.affection >= 45;
+      }
+      // Serious / genuine / strict / creator characters require strong bond (Affection >= 70% & Trust >= 60%)
+      return cs.affection >= 70 && cs.trust >= 60;
+    }
+
     function exitAdultChatMode() {
       const char = getCharById(state.activeChatCharId);
       const cs = char ? state.charStates[char.id] : null;
@@ -2135,7 +2119,7 @@
 
       const isAdultFollowup = cs.adultChatUnlocked && !lower.includes("lừa đảo") && !lower.includes("tiền") && !lower.includes("vay") && !lower.includes("video");
       if ((detectPlayerAdultTopic(text) || cs.inHotelDatingTime || isAdultFollowup) && !lower.includes("khách sạn") && !lower.includes("nhà nghỉ")) {
-        if (char.isScammer || char.archetype === 'casual_short' || cs.affection >= 45 || cs.adultChatUnlocked || cs.inHotelDatingTime) {
+        if (cs.adultChatUnlocked || canUnlockAdultChatMode(char, cs)) {
           affDelta = 13; trustDelta = 5;
           const dirtyPool = char.gender === 'Nam'
             ? [
@@ -2149,8 +2133,13 @@
           reply = dirtyPool[Math.floor(Math.random() * dirtyPool.length)];
           return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
         } else {
-          affDelta = -10; trustDelta = -12;
-          return { reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}, mình chưa quen nói chuyện nhạy cảm 18+ thẳng thừng vậy đâu 😅. Từ từ tìm hiểu thêm chút nữa nhé!`), affDelta, trustDelta };
+          affDelta = -12; trustDelta = -14;
+          const pr = getAgePronouns(char);
+          return {
+            reply: applyDialectFlavor(char, `Khoan đã ${pr.partnerCallPlayer}, tụi mình chưa đủ thân và tin tưởng để nói chuyện 18+ nhạy cảm thẳng thừng vậy đâu 😅. Hãy tôn trọng ranh giới và tìm hiểu thêm chút nữa nhé!`),
+            affDelta,
+            trustDelta
+          };
         }
       }
 
@@ -2628,9 +2617,15 @@ Trả về DUY NHẤT JSON hợp lệ:
       }
 
       if (detectPlayerAdultTopic(text) && !cs.adultChatUnlocked) {
-        cs.adultChatUnlocked = true;
-        cs.intimacy = Math.min(100, (cs.intimacy || 30) + 12);
-        showToast('🔞 Đã bật Chế độ 18+ (Giao diện đen & Dirty Talk táo bạo)!', 'info');
+        if (canUnlockAdultChatMode(char, cs)) {
+          cs.adultChatUnlocked = true;
+          cs.intimacy = Math.min(100, (cs.intimacy || 30) + 12);
+          showToast('🔞 Đã đủ điều kiện thân mật — Mở khóa Chế độ 18+!', 'info');
+        } else {
+          const isSerious = !['casual_short', 'casual_materialistic', 'rebound_ex', 'fun_dating'].includes(char.archetype) && !char.isScammer;
+          const reqNote = isSerious ? 'Tình cảm ≥ 70% & Tin tưởng ≥ 60%' : 'Tình cảm ≥ 45%';
+          showToast(`🔒 Chưa đủ điều kiện mở Chế độ 18+ (${reqNote}) — Đối phương giữ ranh giới!`, 'warn');
+        }
       }
 
       const _evalRes = evaluatePlayerMessageEngine(char, cs, text, _msgId);
