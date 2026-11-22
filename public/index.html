@@ -118,27 +118,26 @@
       </div>
 
       <!-- Live Status Pills (Day, Wallet, Alert Score, Remaining Profiles) -->
-      <div id="topStatsBar" class="hidden flex-wrap items-center gap-1.5 sm:gap-2.5 py-0.5 max-w-full">
-        <button id="btnHeaderWallet" onclick="navToScreen('finance')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition" title="Quản lý tài chính">
+      <div id="topStatsBar" class="hidden flex-nowrap sm:flex-wrap items-center gap-1 sm:gap-2 py-0.5 max-w-full w-full sm:w-auto overflow-x-auto custom-scroll">
+        <button id="btnHeaderWallet" onclick="navToScreen('finance')" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-semibold hover:bg-emerald-500/25 transition shrink-0 whitespace-nowrap" title="Quản lý tài chính">
           <span>💳</span>
           <span id="headerBalanceText">25.000.000đ</span>
         </button>
-        <button id="btnHeaderMatches" onclick="navToScreen('messages')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300 text-xs font-semibold hover:bg-pink-500/25 transition" title="Danh sách MATCH & Tin nhắn">
+        <button id="btnHeaderMatches" onclick="navToScreen('messages')" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300 text-[11px] sm:text-xs font-semibold hover:bg-pink-500/25 transition shrink-0 whitespace-nowrap" title="Danh sách MATCH & Tin nhắn">
           <span>💬</span>
-          <span>Match: <strong id="headerMatchCount">0</strong></span>
+          <span><span class="hidden sm:inline">Match: </span><strong id="headerMatchCount">0</strong></span>
           <span id="headerUnreadBadge" class="hidden w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
         </button>
-        <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold" title="Số kẻ lừa đảo đã vạch trần">
+        <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold shrink-0" title="Số kẻ lừa đảo đã vạch trần">
           <span>🛡️</span>
           <span>Phát hiện: <strong id="headerScamDetected">0</strong>/<span id="headerScamTotal">13</span></span>
         </div>
-        <button id="btnOpenTimeSkip" onclick="openTimeSkipModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-xs font-semibold transition shrink-0" title="Ngày trong game & Tua nhanh thời gian">
+        <div id="headerDateBadge" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/35 text-purple-200 text-[11px] sm:text-xs font-semibold shrink-0 whitespace-nowrap" title="Ngày & Buổi hiện tại">
           <span>📅</span>
           <span id="headerDayText">T2, Ngày 1 • Sáng</span>
-          <span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-[10px] font-bold">⏩ Tua</span>
-        </button>
-        <button id="btnEndDayNow" onclick="advanceToNextPeriod()" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-400/40 text-indigo-200 text-xs font-bold transition shrink-0" title="Chuyển sang buổi tiếp theo (Skip Khuya sẽ sang ngày mới)">
-          <span>⏩</span><span class="hidden sm:inline">Skip Buổi</span>
+        </div>
+        <button id="btnEndDayNow" onclick="advanceToNextPeriod()" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-indigo-500/25 hover:bg-indigo-500/40 border border-indigo-400/50 text-indigo-100 text-[11px] sm:text-xs font-bold transition shrink-0 whitespace-nowrap" title="Chuyển sang buổi tiếp theo (Skip Khuya sẽ sang ngày mới)">
+          <span>⏩</span><span class="hidden sm:inline">Sang Buổi</span>
         </button>
       </div>
 
@@ -695,7 +694,7 @@
                   <button id="btnChatInviteDate" onclick="openIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition flex items-center gap-1" title="Mời hẹn hò ngoài đời (15 địa điểm)">
                     <span>📅</span><span class="hidden sm:inline">Hẹn Hò IRL</span>
                   </button>
-                  <button id="btnChatTimeSkip" onclick="openTimeSkipModal()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-200 text-xs font-semibold transition flex items-center gap-1" title="Tua nhanh thời gian trong game">
+                  <button id="btnChatTimeSkip" onclick="advanceToNextPeriod()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-200 text-xs font-semibold transition flex items-center gap-1" title="Chuyển sang buổi tiếp theo">
                     <span>⏩</span><span class="hidden sm:inline">Tua Thời Gian</span>
                   </button>
                   <button id="btnChatReportScam" onclick="openReportForActiveChar()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center gap-1" title="Báo cáo lừa đảo hoặc Chặn">
@@ -737,13 +736,13 @@
                     <div class="text-[10px] text-rose-200/90" id="datingTimeSubInfo">Trò chuyện trực tiếp lúc hẹn hò (Tác động chỉ số x2)</div>
                   </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5 shrink-0">
-                  <button onclick="performDatingPhysicalAction('hug')" class="px-2.5 py-1.5 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/40 text-pink-100 text-[11px] font-bold transition">🤗 Ôm</button>
-                  <button onclick="performDatingPhysicalAction('kiss')" class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/40 text-rose-100 text-[11px] font-bold transition">💋 Hôn</button>
-                  <span id="dating18PlusActions" class="hidden flex flex-wrap items-center gap-1.5">
-                    <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold transition">🔥 Vuốt ve 18+</button>
-                    <button onclick="performDatingPhysicalAction('deep_kiss_18')" class="px-2.5 py-1.5 rounded-xl bg-fuchsia-700/45 hover:bg-fuchsia-600/65 border border-fuchsia-500/60 text-fuchsia-100 text-[11px] font-bold transition">💋 Hôn sâu 18+</button>
-                    <button onclick="performDatingPhysicalAction('hotel_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold transition">🏨 Khách sạn 18+</button>
+                <div class="flex flex-nowrap items-center gap-1.5 w-full overflow-x-auto custom-scroll whitespace-nowrap pb-1">
+                  <button onclick="performDatingPhysicalAction('hug')" class="px-2.5 py-1.5 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/40 text-pink-100 text-[11px] font-bold transition shrink-0">🤗 Ôm</button>
+                  <button onclick="performDatingPhysicalAction('kiss')" class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/40 text-rose-100 text-[11px] font-bold transition shrink-0">💋 Hôn</button>
+                  <span id="dating18PlusActions" class="hidden inline-flex items-center gap-1.5 shrink-0">
+                    <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold transition shrink-0">🔥 Vuốt ve 18+</button>
+                    <button onclick="performDatingPhysicalAction('deep_kiss_18')" class="px-2.5 py-1.5 rounded-xl bg-fuchsia-700/45 hover:bg-fuchsia-600/65 border border-fuchsia-500/60 text-fuchsia-100 text-[11px] font-bold transition shrink-0">💋 Hôn sâu 18+</button>
+                    <button onclick="performDatingPhysicalAction('hotel_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold transition shrink-0">🏨 Khách sạn 18+</button>
                   </span>
                   <button id="btnFinishDatingTime" onclick="finishDatingTimeToBill()" class="px-3 py-1.5 rounded-xl gradient-brand text-white text-[11px] font-bold shadow-lg hover:opacity-95 transition shrink-0">
                     🧾 Tính Tiền & Kết Thúc
@@ -7553,9 +7552,23 @@
         text: `🕯️ BẮT ĐẦU DATING TIME tại ${venue.icon} ${venue.name} — Giao diện đã chuyển sang chế độ hẹn hò trực tiếp (tác động cảm xúc mạnh x2)!`,
         time: tInfo.fullLabel
       });
-      const greetingText = char.isScammer
-        ? `Cuối cùng cũng được gặp ${state.player.name} ngoài đời tại ${venue.name} rồi 🥰! Ngoài đời nhìn bạn cuốn hút thật đấy. Tụi mình gọi đồ rồi trò chuyện nha!`
-        : `Ngoài đời nhìn ${state.player.name} còn dễ thương và gần gũi hơn trong ảnh nữa đó 🥰! Không gian ở ${venue.name} hôm nay dễ chịu quá, bạn muốn gọi món gì trước nè?`;
+      const isFirstDate = (cs.datesCount || 0) === 0;
+      const pr = getAgePronouns(char);
+      const pCall = pr.partnerCallPlayer;
+      const pSelf = pr.partnerSelf;
+      let greetingText = '';
+      if (isFirstDate) {
+        greetingText = char.isScammer
+          ? `Cuối cùng cũng được gặp ${pCall} ngoài đời tại ${venue.name} rồi 🥰! Ngoài đời nhìn ${pCall} còn dễ thương và cuốn hút hơn trong ảnh nhiều đấy. Tụi mình gọi đồ rồi trò chuyện nha!`
+          : `Ngoài đời nhìn ${pCall} còn dễ thương và gần gũi hơn trong ảnh nữa đó 🥰! Không gian ở ${venue.name} hôm nay dễ chịu quá, ${pCall} muốn gọi món gì trước nè?`;
+      } else if (cs.affection >= 80) {
+        greetingText = `Lại được hẹn gặp ${pCall} ở ${venue.name} rồi nè 💕! Hôm nay nhìn ${pCall} rạng rỡ quá, ngồi sát vào đây với ${pSelf} đi!`;
+      } else if (cs.affection >= 55) {
+        greetingText = `Chào ${pCall}, hôm nay tụi mình lại gặp nhau ở ${venue.name} nha 😊! Dạo này mọi thứ ổn chứ, ${pCall} muốn gọi món gì trước nè?`;
+      } else {
+        greetingText = `Chào ${pCall}, tụi mình tới ${venue.name} rồi ha. Ngồi xuống gọi nước rồi nói chuyện nha.`;
+      }
+      greetingText = applyDialectFlavor(char, greetingText);
       cs.messages.push({
         sender: 'them',
         text: greetingText,
