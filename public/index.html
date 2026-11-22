@@ -6035,7 +6035,12 @@
           `;
         } else {
           wrap.className = 'flex justify-start items-end gap-2 msg-bubble';
-          let innerMediaHtml = `<div>${m.text}</div>`;
+          let safeMsgText = m.text || '';
+          if (typeof safeMsgText === 'string' && safeMsgText.trim().startsWith('{') && safeMsgText.includes('"reply"')) {
+            const rm = safeMsgText.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+            if (rm && rm[1]) safeMsgText = rm[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+          }
+          let innerMediaHtml = `<div>${safeMsgText}</div>`;
           if (m.mediaType === 'voice_note') {
             innerMediaHtml = `
               <div class="space-y-1.5">
@@ -10255,7 +10260,7 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
           headers,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.9 },
+            generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 1200 },
             safetySettings: [
               { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
               { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -10272,14 +10277,35 @@ LƯU Ý BẮT BUỘC VỀ "suggestions": Đây là 3 câu thoại do NGƯỜI CH
         const data = await resp.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!rawText) return null;
+        const cleaned = rawText.replace(/```json|```/gi, '').trim();
         try {
-          const cleaned = rawText.replace(/```json|```/gi, '').trim();
-          const parsed = JSON.parse(cleaned);
+          const firstBrace = cleaned.indexOf('{');
+          const lastBrace = cleaned.lastIndexOf('}');
+          const jsonSlice = (firstBrace !== -1 && lastBrace > firstBrace) ? cleaned.slice(firstBrace, lastBrace + 1) : cleaned;
+          const parsed = JSON.parse(jsonSlice);
           if (parsed && parsed.reply) return parsed;
         } catch (parseErr) {
-          return { reply: rawText.trim(), suggestions: null };
+          // Fallback: extract "reply" cleanly from truncated JSON instead of ever showing raw JSON code
+          const replyMatch = cleaned.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+          if (replyMatch && replyMatch[1]) {
+            const unescapedReply = replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+            const affM = cleaned.match(/"affectionDelta"\s*:\s*(-?\d+)/);
+            const truM = cleaned.match(/"trustDelta"\s*:\s*(-?\d+)/);
+            const gwM = cleaned.match(/"goodwillDelta"\s*:\s*(-?\d+)/);
+            const moodM = cleaned.match(/"mood"\s*:\s*"([^"]+)"/);
+            return {
+              reply: unescapedReply,
+              affectionDelta: affM ? parseInt(affM[1], 10) : 0,
+              trustDelta: truM ? parseInt(truM[1], 10) : 0,
+              goodwillDelta: gwM ? parseInt(gwM[1], 10) : 0,
+              mood: moodM ? moodM[1] : 'warm',
+              suggestions: null
+            };
+          }
+          if (cleaned.startsWith('{')) return null;
         }
-        return { reply: rawText.trim(), suggestions: null };
+        if (cleaned.startsWith('{')) return null;
+        return { reply: cleaned, suggestions: null };
       } catch (e) {
         return { apiError: true, status: 'NET', message: 'Lỗi kết nối mạng' };
       }
