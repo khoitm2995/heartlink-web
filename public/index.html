@@ -494,6 +494,18 @@
                 </div>
               </div>
 
+              <!-- SCHEDULED DATE BANNER -->
+              <div id="chatScheduledDateBanner" class="hidden px-3 py-2 bg-emerald-950/75 border-b border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <div class="text-xs text-emerald-200 min-w-0">
+                  <div id="schedDateBannerTitle" class="font-bold truncate">📅 Lịch hẹn sắp tới</div>
+                  <div id="schedDateBannerSub" class="text-[11px] text-emerald-300/85 truncate"></div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button id="btnGoScheduledDateNow" type="button" onclick="startScheduledDateNow()" class="hidden px-3 py-1.5 rounded-xl gradient-brand text-white text-[11px] font-bold shadow">🚀 Tới điểm hẹn ngay</button>
+                  <button type="button" onclick="cancelScheduledDateForActive()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold border border-slate-700">✕ Hủy lịch</button>
+                </div>
+              </div>
+
               <div id="chatMessagesStream" class="flex-1 min-h-[120px] px-3 py-2.5 overflow-y-auto custom-scroll space-y-2.5 bg-slate-950/40"></div>
 
               <!-- Scam Offer Banner -->
@@ -685,6 +697,17 @@
         <button onclick="closeIRLDateModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white">✕</button>
       </div>
       <div id="irlVenueSelectionStep" class="space-y-3">
+        <div class="p-3 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-[11px] font-bold text-emerald-300">🕒 Chọn ngày & buổi hẹn hò:</label>
+            <span id="irlCurrentTimeHint" class="text-[10px] text-slate-400">Hiện tại: Ngày 1 • Sáng</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="selDateDayOffset" onchange="updateIRLPeriodOptions()" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-semibold"></select>
+            <select id="selDatePeriodIdx" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-semibold"></select>
+          </div>
+          <p class="text-[10px] text-slate-400">• Hẹn trong hôm nay: thời gian tự động chuyển sang buổi đó và bắt đầu ngay. • Hẹn ngày khác: đối phương sẽ nhắc bạn trước 1 buổi.</p>
+        </div>
         <div class="p-3 rounded-2xl bg-slate-950 border border-pink-500/30 space-y-2">
           <label class="block text-[11px] font-bold text-pink-300">✨ Nhập địa điểm bất kỳ (AI tự động định giá buổi hẹn):</label>
           <div class="flex gap-2">
@@ -1766,13 +1789,106 @@
     }
     function closeUniversalModal() { document.getElementById('modal-universal').classList.add('hidden'); }
 
+    const SIM_PERIODS = [
+      { idx: 0, name: 'Sáng', minuteOfDay: 480 },
+      { idx: 1, name: 'Trưa', minuteOfDay: 720 },
+      { idx: 2, name: 'Chiều', minuteOfDay: 900 },
+      { idx: 3, name: 'Tối', minuteOfDay: 1140 },
+      { idx: 4, name: 'Khuya', minuteOfDay: 1350 }
+    ];
+    const MSGS_PER_PERIOD = 30;
+
     function getSimTimeInfo() {
       const mins = state.simTime ? state.simTime.totalMinutes : 480;
       const day = Math.floor(mins / 1440) + 1;
       const h = Math.floor((mins % 1440) / 60);
       const wd = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][(day - 1) % 7];
-      const period = h < 11 ? 'Sáng' : (h < 14 ? 'Trưa' : (h < 18 ? 'Chiều' : (h < 22 ? 'Tối' : 'Khuya')));
-      return { day, hour: h, period, timeStr: `Buổi ${period}`, shortLabel: `${wd}, Ngày ${day} • ${period}`, fullLabel: `Ngày ${day} • Buổi ${period}` };
+      const periodIdx = h < 11 ? 0 : (h < 14 ? 1 : (h < 18 ? 2 : (h < 22 ? 3 : 4)));
+      const period = SIM_PERIODS[periodIdx].name;
+      const slotIndex = (day - 1) * 5 + periodIdx;
+      return { day, hour: h, period, periodIdx, slotIndex, timeStr: `Buổi ${period}`, shortLabel: `${wd}, Ngày ${day} • ${period}`, fullLabel: `Ngày ${day} • Buổi ${period}` };
+    }
+
+    function setSimTimeToSlot(targetDay, targetPeriodIdx) {
+      const d = Math.max(1, Number(targetDay) || 1);
+      const pIdx = Math.max(0, Math.min(4, Number(targetPeriodIdx) || 0));
+      state.simTime.totalMinutes = (d - 1) * 1440 + SIM_PERIODS[pIdx].minuteOfDay;
+      state.day = d;
+      return getSimTimeInfo();
+    }
+
+    function stepToNextSimPeriod() {
+      const cur = getSimTimeInfo();
+      const nextSlot = cur.slotIndex + 1;
+      const nextDay = Math.floor(nextSlot / 5) + 1;
+      const nextPeriodIdx = nextSlot % 5;
+      return setSimTimeToSlot(nextDay, nextPeriodIdx);
+    }
+
+    function parseInviteTimeToSlot(timeText) {
+      const cur = getSimTimeInfo();
+      const low = (timeText || '').toLowerCase();
+      let dayOffset = 0;
+      if (/ngày kia|mốt/.test(low)) dayOffset = 2;
+      else if (/mai|hôm sau/.test(low)) dayOffset = 1;
+
+      let periodIdx = cur.periodIdx;
+      if (/sáng/.test(low)) periodIdx = 0;
+      else if (/trưa/.test(low)) periodIdx = 1;
+      else if (/chiều/.test(low)) periodIdx = 2;
+      else if (/tối/.test(low)) periodIdx = 3;
+      else if (/khuya|đêm/.test(low)) periodIdx = 4;
+
+      if (dayOffset === 0 && periodIdx < cur.periodIdx) {
+        dayOffset = 1;
+      }
+      const targetDay = cur.day + dayOffset;
+      return {
+        targetDay,
+        targetPeriodIdx: periodIdx,
+        targetPeriodName: SIM_PERIODS[periodIdx].name,
+        targetSlot: (targetDay - 1) * 5 + periodIdx,
+        isToday: dayOffset === 0
+      };
+    }
+
+    function processScheduledDatesOnTimeAdvance(excludeCharId = null) {
+      const ti = getSimTimeInfo();
+      let notified = false;
+      state.matchedIds.forEach(cid => {
+        if (cid === excludeCharId) return;
+        const c = getCharById(cid), cs = state.charStates[cid];
+        if (!c || !cs || cs.blocked || !cs.scheduledDate) return;
+        const sd = cs.scheduledDate;
+        const targetSlot = (sd.targetDay - 1) * 5 + sd.targetPeriodIdx;
+
+        // Nhắc trước đúng 1 buổi (VD: hẹn Tối mai -> Chiều mai nhắc)
+        if (!sd.reminded && ti.slotIndex === targetSlot - 1) {
+          sd.reminded = true;
+          const timeDesc = sd.targetDay === ti.day
+            ? `buổi ${sd.targetPeriodName.toLowerCase()} hôm nay`
+            : `buổi ${sd.targetPeriodName.toLowerCase()} mai`;
+          const reminderText = applyDialectFlavor(
+            c,
+            `Nhắc nhẹ ${state.player.name} nè! ${timeDesc.charAt(0).toUpperCase() + timeDesc.slice(1)} tụi mình có hẹn ở ${sd.venue.name} đó nha, nhớ đến đúng giờ nhé! 😊💕`
+          );
+          cs.messages.push({ sender: 'them', text: reminderText, time: ti.fullLabel });
+          cs.messages.push({ sender: 'system', text: `⏰ ${c.name} vừa nhắc lịch hẹn tại ${sd.venue.name} (${sd.targetPeriodName}, Ngày ${sd.targetDay}).` });
+          showToast(`⏰ ${c.name} nhắc bạn: sắp tới giờ hẹn ở ${sd.venue.name}!`, 'info');
+          notified = true;
+        } else if (!sd.arrived && ti.slotIndex >= targetSlot) {
+          sd.arrived = true;
+          const arriveText = applyDialectFlavor(
+            c,
+            `Tới giờ hẹn rồi nè ${state.player.name} ơi! Mình đang chuẩn bị ra ${sd.venue.name} rồi, bạn sẵn sàng chưa? Bấm [🚀 Tới điểm hẹn ngay] nha 💕`
+          );
+          cs.messages.push({ sender: 'them', text: arriveText, time: ti.fullLabel });
+          cs.messages.push({ sender: 'system', text: `📍 Đã đến giờ hẹn với ${c.name} tại ${sd.venue.name}! Bấm nút [🚀 Tới điểm hẹn ngay] để bắt đầu buổi hẹn.` });
+          showToast(`📍 Đã đến giờ hẹn với ${c.name} tại ${sd.venue.name}!`, 'success');
+          notified = true;
+        }
+      });
+      return notified;
     }
 
     function getAgePronouns(char) {
@@ -1986,7 +2102,7 @@
             datesCount: 0, blocked: false, unmatched: false, reported: false,
             adultChatUnlocked: false, hasEverUnlocked18: false, fwbAccepted: false,
             inDatingTime: false, inHotelDatingTime: false,
-            isWaitingReply: false, msgCountSincePeriodShift: 0, sharedMemories: [], messages: []
+            isWaitingReply: false, msgCountSincePeriodShift: 0, scheduledDate: null, sharedMemories: [], messages: []
           };
         } else {
           state.charStates[c.id].isWaitingReply = false;
@@ -2189,14 +2305,17 @@
     }
 
     function advanceToNextPeriod() {
-      state.simTime.totalMinutes += 300;
-      state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
-      const ti = getSimTimeInfo();
+      const ti = stepToNextSimPeriod();
       state.matchedIds.forEach(cid => {
         const c = getCharById(cid), cs = state.charStates[cid];
         if (!c || !cs || cs.blocked) return;
+        cs.msgCountSincePeriodShift = 0;
         cs.messages.push({ sender: 'system', text: `🕒 Đã sang ${ti.fullLabel}` });
-        if (shouldPartnerGreetProactively(c, cs)) {
+        const hasUpcomingReminderOrArrival = cs.scheduledDate && (
+          (!cs.scheduledDate.reminded && ti.slotIndex === ((cs.scheduledDate.targetDay - 1) * 5 + cs.scheduledDate.targetPeriodIdx - 1)) ||
+          (!cs.scheduledDate.arrived && ti.slotIndex >= ((cs.scheduledDate.targetDay - 1) * 5 + cs.scheduledDate.targetPeriodIdx))
+        );
+        if (!hasUpcomingReminderOrArrival && shouldPartnerGreetProactively(c, cs)) {
           const greets = [
             `Sang ${ti.timeStr.toLowerCase()} rồi nè, hôm nay của bạn thế nào?`,
             `${ti.period === 'Sáng' ? 'Chào buổi sáng' : (ti.period === 'Trưa' ? 'Trưa rồi, bạn ăn gì chưa' : (ti.period === 'Chiều' ? 'Buổi chiều vui vẻ nha' : 'Tối rồi, hôm nay bạn có mệt không'))} ${state.player.name}! 😊`,
@@ -2205,6 +2324,7 @@
           cs.messages.push({ sender: 'them', text: applyDialectFlavor(c, greets[Math.floor(Math.random() * greets.length)]), time: ti.fullLabel });
         }
       });
+      processScheduledDatesOnTimeAdvance();
       saveState(); updateTopBarStats();
       if (state.activeChatCharId) renderMessagesView();
       showToast(`⏩ Đã chuyển sang ${ti.fullLabel}!`, 'info');
@@ -2366,7 +2486,7 @@
       }
       if (!canInviteToDate(cs)) {
         const left = Math.max(1, GREETING_PHASE_MSGS - getPlayerMsgCount(cs));
-        showToast(`💬 Phải qua giai đoạn chào hỏi! Hãy trò chuyện thêm ~${left} tin nhắn nữa rồi hẵng rủ ${char.name} đi hẹn hò nhé.`, 'warn');
+        showToast(`🔒 Cần tới giai đoạn Mở rộng kết nối & Kiểm chứng! Hãy trò chuyện thêm ${left} tin nhắn nữa rồi mới có thể tạo cuộc hẹn với ${char.name}.`, 'warn');
         return;
       }
       openIRLDateModal();
@@ -2677,8 +2797,8 @@ Trả về DUY NHẤT JSON:
 Lưu ý:
 - Đặt "isAdultTrigger": true NẾU tin nhắn mới của người chơi mang ý khơi gợi 18+, gạ gẫm qua đêm, hỏi hành động nhạy cảm/đụng chạm cơ thể (VD: sờ vòng 1, hôn sâu, lên giường...).
 ${canInviteToDate(cs)
-  ? '- CHỈ đặt "dateInvite": {"venue":"tên địa điểm cụ thể bạn rủ đi","estimatedCost":250000,"time":"Buổi tối nay"} NẾU đang nhắn tin qua app (chưa gặp mặt) và trong "reply" bạn THẬT SỰ CHỦ ĐỘNG rủ người chơi đi hẹn hò tới một nơi cụ thể (không tính việc chỉ kể sở thích hay nhắc thoáng qua một địa điểm); còn không thì để "dateInvite": null.'
-  : '- GIAI ĐOẠN HIỆN TẠI: Đang CHÀO HỎI & LÀM QUEN ban đầu. KHÔNG rủ đi hẹn hò ngoài đời và LUÔN ĐẶT "dateInvite": null.'}`;
+  ? '- GIAI ĐOẠN HIỆN TẠI: Mở rộng kết nối & Kiểm chứng. CHỈ đặt "dateInvite": {"venue":"tên địa điểm cụ thể bạn rủ đi","estimatedCost":250000,"time":"Buổi tối nay"} (hoặc "Buổi tối mai", "Buổi chiều mai") NẾU đang nhắn tin qua app (chưa gặp mặt) và trong "reply" bạn THẬT SỰ CHỦ ĐỘNG rủ người chơi đi hẹn hò tới một nơi cụ thể (không tính việc chỉ kể sở thích hay nhắc thoáng qua một địa điểm); còn không thì để "dateInvite": null.'
+  : '- GIAI ĐOẠN HIỆN TẠI: Chưa tới giai đoạn Mở rộng kết nối & Kiểm chứng (đang Chào hỏi / Làm quen ban đầu). TUYỆT ĐỐI KHÔNG chủ động rủ đi chơi hay hẹn hò ngoài đời trong "reply", và LUÔN ĐẶT "dateInvite": null.'}`;
 
       try {
         const useDirectKey = !!aiConfig.apiKey;
@@ -2808,31 +2928,25 @@ ${canInviteToDate(cs)
     function maybeAutoShiftPeriodAfterChat(char, cs) {
       if (!char || !cs || cs.inDatingTime || cs.blocked) return;
       cs.msgCountSincePeriodShift = (cs.msgCountSincePeriodShift || 0) + 2;
-      if (cs.msgCountSincePeriodShift < 20) return;
-      cs.msgCountSincePeriodShift = 0;
+      if (cs.msgCountSincePeriodShift < MSGS_PER_PERIOD) return;
 
       const curTi = getSimTimeInfo();
       const excuses = {
-        'Sáng': `Ôi sắp tới giờ nghỉ trưa rồi, mình có cuộc họp gấp chút nên để trưa rảnh mình nhắn tiếp cho ${state.player.name} nha! 😊`,
+        'Sáng': `Ôi trò chuyện cuốn quá mà sắp tới giờ nghỉ trưa rồi, mình có cuộc họp gấp chút nên để trưa rảnh mình nhắn tiếp cho ${state.player.name} nha! 😊`,
         'Trưa': `Hết giờ nghỉ trưa rồi, mình quay lại làm việc buổi chiều chút nhé, chiều rảnh tụi mình trò chuyện tiếp! 💼`,
         'Chiều': `Chiều nay mình bận xử lý nốt công việc và về nhà nghỉ ngơi chút, tối rảnh mình nhắn lại cho ${state.player.name} nha! 🌇`,
         'Tối': `Trời cũng khuya rồi, mình đi tắm và chuẩn bị nghỉ ngơi chút, lát khuya hoặc mai nhắn tiếp nhé ${state.player.name} 🌙`,
         'Khuya': `Muộn quá rồi, mình đi ngủ lấy sức đây. Chúc ${state.player.name} ngủ ngon, sáng mai nhắn tiếp nha! 😴✨`
       };
-      const curMod = state.simTime.totalMinutes % 1440;
-      let addMins = 240;
-      if (curMod < 660) addMins = 720 - curMod;          // Sáng -> 12:00 Trưa
-      else if (curMod < 840) addMins = 900 - curMod;     // Trưa -> 15:00 Chiều
-      else if (curMod < 1080) addMins = 1140 - curMod;   // Chiều -> 19:00 Tối
-      else if (curMod < 1320) addMins = 1350 - curMod;   // Tối -> 22:30 Khuya
-      else addMins = (1440 - curMod) + 480;              // Khuya -> 08:00 Sáng hôm sau
-
       cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, excuses[curTi.period] || excuses['Sáng']), time: curTi.fullLabel });
-      state.simTime.totalMinutes += addMins;
-      state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
-      const nextTi = getSimTimeInfo();
-      cs.messages.push({ sender: 'system', text: `🕒 Đã chuyển sang ${nextTi.fullLabel}` });
-      showToast(`🕒 ${char.name} tạm bận — chuyển sang ${nextTi.fullLabel}!`, 'info');
+
+      const nextTi = stepToNextSimPeriod();
+      state.matchedIds.forEach(cid => {
+        if (state.charStates[cid]) state.charStates[cid].msgCountSincePeriodShift = 0;
+      });
+      cs.messages.push({ sender: 'system', text: `🕒 Đã hết buổi (30 câu trò chuyện) — tự động chuyển sang ${nextTi.fullLabel}` });
+      processScheduledDatesOnTimeAdvance();
+      showToast(`🕒 Hết buổi trò chuyện — tự động chuyển sang ${nextTi.fullLabel}!`, 'info');
     }
 
     function estimateVenueCost(venueName) {
@@ -2990,7 +3104,34 @@ ${canInviteToDate(cs)
       } else banner.classList.add('hidden');
 
       const phaseBadge = document.getElementById('relPhaseBadge');
-      if (phaseBadge) phaseBadge.textContent = getChatSuggestPhase(cs) === 'open' ? 'Giai đoạn: Làm quen' : 'Giai đoạn: Chào hỏi';
+      const curPhase = getChatSuggestPhase(cs);
+      if (phaseBadge) {
+        phaseBadge.textContent = curPhase === 'open'
+          ? 'Giai đoạn: Mở rộng kết nối & Kiểm chứng'
+          : (curPhase === 'getting_to_know' ? 'Giai đoạn: Làm quen ban đầu' : 'Giai đoạn: Chào hỏi');
+      }
+      const memPill = document.getElementById('relMemorySummaryPill');
+      if (memPill) {
+        const cnt = Math.min(MSGS_PER_PERIOD, cs.msgCountSincePeriodShift || 0);
+        memPill.textContent = cs.inDatingTime ? '🕯️ Đang hẹn hò' : `💬 ${cnt}/${MSGS_PER_PERIOD} câu buổi này`;
+      }
+      const sdBanner = document.getElementById('chatScheduledDateBanner');
+      if (sdBanner) {
+        if (cs.scheduledDate && !cs.inDatingTime && !cs.blocked) {
+          const sd = cs.scheduledDate;
+          const tiNow = getSimTimeInfo();
+          const tSlot = (sd.targetDay - 1) * 5 + sd.targetPeriodIdx;
+          const isReady = tiNow.slotIndex >= tSlot;
+          sdBanner.classList.remove('hidden');
+          document.getElementById('schedDateBannerTitle').textContent = isReady
+            ? `📍 Đã tới giờ hẹn tại ${sd.venue.name}!`
+            : `📅 Lịch hẹn: ${sd.venue.icon || '📍'} ${sd.venue.name}`;
+          document.getElementById('schedDateBannerSub').textContent = `Thời gian: Buổi ${sd.targetPeriodName}, Ngày ${sd.targetDay}${sd.reminded ? ' • Đã nhắc hẹn' : ''}`;
+          document.getElementById('btnGoScheduledDateNow')?.classList.toggle('hidden', !isReady);
+        } else {
+          sdBanner.classList.add('hidden');
+        }
+      }
       renderChoicesBox(char, cs);
     }
 
@@ -3032,10 +3173,58 @@ ${canInviteToDate(cs)
     // =====================================================================
     let currentActiveDateVenue = null;
 
+    function updateIRLPeriodOptions() {
+      const ti = getSimTimeInfo();
+      const dayOff = parseInt(document.getElementById('selDateDayOffset')?.value || '0', 10) || 0;
+      const pSel = document.getElementById('selDatePeriodIdx');
+      if (!pSel) return;
+      const startIdx = dayOff === 0 ? ti.periodIdx : 0;
+      const prev = parseInt(pSel.value, 10);
+      pSel.innerHTML = SIM_PERIODS
+        .filter(p => p.idx >= startIdx)
+        .map(p => `<option value="${p.idx}">Buổi ${p.name}${dayOff === 0 && p.idx === ti.periodIdx ? ' (Hiện tại)' : ''}</option>`)
+        .join('');
+      if (!isNaN(prev) && prev >= startIdx) pSel.value = String(prev);
+      else if (dayOff > 0 && pSel.querySelector('option[value="3"]')) pSel.value = '3';
+    }
+
+    function getSelectedIRLDateSlot() {
+      const ti = getSimTimeInfo();
+      const dayOff = Math.max(0, parseInt(document.getElementById('selDateDayOffset')?.value || '0', 10) || 0);
+      const pIdx = Math.max(dayOff === 0 ? ti.periodIdx : 0, Math.min(4, parseInt(document.getElementById('selDatePeriodIdx')?.value || String(ti.periodIdx), 10) || 0));
+      const targetDay = ti.day + dayOff;
+      return {
+        targetDay,
+        targetPeriodIdx: pIdx,
+        targetPeriodName: SIM_PERIODS[pIdx].name,
+        targetSlot: (targetDay - 1) * 5 + pIdx,
+        isToday: dayOff === 0
+      };
+    }
+
     function openIRLDateModal() {
-      const char = getCharById(state.activeChatCharId), cs = state.charStates[char.id];
-      if (!char || !cs) return;
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || cs.blocked) return;
+      if (!canInviteToDate(cs)) {
+        const left = Math.max(1, GREETING_PHASE_MSGS - getPlayerMsgCount(cs));
+        showToast(`🔒 Cần tới giai đoạn Mở rộng kết nối & Kiểm chứng! Hãy trò chuyện thêm ${left} tin nhắn nữa.`, 'warn');
+        return;
+      }
+      const ti = getSimTimeInfo();
       document.getElementById('irlModalTitle').textContent = `📅 Hẹn Hò Cùng ${char.name}`;
+      const hintEl = document.getElementById('irlCurrentTimeHint');
+      if (hintEl) hintEl.textContent = `Hiện tại: ${ti.fullLabel}`;
+      const daySel = document.getElementById('selDateDayOffset');
+      if (daySel) {
+        daySel.innerHTML = `
+          <option value="0">Hôm nay (Ngày ${ti.day})</option>
+          <option value="1">Ngày mai (Ngày ${ti.day + 1})</option>
+          <option value="2">Ngày kia (Ngày ${ti.day + 2})</option>
+        `;
+        daySel.value = '0';
+      }
+      updateIRLPeriodOptions();
+
       document.getElementById('irlVenueSelectionStep').classList.remove('hidden');
       document.getElementById('irlEventOutcomeStep').classList.add('hidden');
       const grid = document.getElementById('irlVenuesGrid');
@@ -3044,7 +3233,7 @@ ${canInviteToDate(cs)
         const b = document.createElement('button'); b.type = 'button';
         b.className = 'p-3 rounded-2xl bg-slate-950 hover:bg-pink-500/15 border border-slate-800 text-left space-y-1';
         b.innerHTML = `<div class="flex justify-between font-bold text-xs text-white"><span>${v.icon} ${v.name}</span><span class="text-emerald-400">~${formatVND(v.cost)}</span></div><p class="text-[11px] text-slate-400">${v.desc}</p>`;
-        b.onclick = () => startDatingTimeSession(char, cs, v);
+        b.onclick = () => scheduleOrStartIRLDate(char, cs, v, getSelectedIRLDateSlot());
         grid.appendChild(b);
       });
       document.getElementById('modal-irl-date').classList.remove('hidden');
@@ -3062,7 +3251,93 @@ ${canInviteToDate(cs)
       const vObj = { id: vid, name: vName, cost, icon: vid === 'hotel' ? '🏨' : (vid === 'private_home' ? '🏠' : '📍'), desc: 'Địa điểm tự nhập' };
       inp.value = '';
       const char = getCharById(state.activeChatCharId);
-      startDatingTimeSession(char, state.charStates[char.id], vObj);
+      if (!char) return;
+      scheduleOrStartIRLDate(char, state.charStates[char.id], vObj, getSelectedIRLDateSlot());
+    }
+
+    function scheduleOrStartIRLDate(char, cs, venue, slotInfo, extraOpts = null) {
+      closeIRLDateModal();
+      const verdict = evaluateVenueAcceptance(char, cs, venue, extraOpts);
+      if (!verdict.accepted) {
+        if (verdict.affDelta) cs.affection = Math.max(0, Math.min(100, cs.affection + verdict.affDelta));
+        if (verdict.truDelta) cs.trust = Math.max(0, Math.min(100, cs.trust + verdict.truDelta));
+        if (verdict.sysMsg) cs.messages.push({ sender: 'system', text: verdict.sysMsg });
+        if (verdict.reply) cs.messages.push({ sender: 'them', text: verdict.reply, time: getSimTimeInfo().fullLabel });
+        saveState(); updateTopBarStats(); navToScreen('messages');
+        showToast(`❌ ${char.name} đã từ chối đến ${venue.name}!`, 'warn');
+        return;
+      }
+
+      const curTi = getSimTimeInfo();
+      const targetDay = slotInfo ? slotInfo.targetDay : curTi.day;
+      const targetPeriodIdx = slotInfo ? slotInfo.targetPeriodIdx : curTi.periodIdx;
+      const targetPeriodName = SIM_PERIODS[targetPeriodIdx].name;
+
+      // Nếu hẹn trong ngày hôm nay -> tự động chuyển thời gian sang đúng buổi đó và bắt đầu buổi hẹn ngay
+      if (targetDay === curTi.day) {
+        if (targetPeriodIdx > curTi.periodIdx) {
+          const newTi = setSimTimeToSlot(targetDay, targetPeriodIdx);
+          state.matchedIds.forEach(cid => {
+            if (state.charStates[cid]) state.charStates[cid].msgCountSincePeriodShift = 0;
+          });
+          cs.messages.push({ sender: 'system', text: `🕒 Thời gian đã tự động chuyển sang ${newTi.fullLabel} cho buổi hẹn tại ${venue.name}!` });
+          processScheduledDatesOnTimeAdvance(char.id);
+        }
+        cs.scheduledDate = null;
+        startDatingTimeSession(char, cs, venue, Object.assign({}, extraOpts || {}, { preApproved: true }));
+        return;
+      }
+
+      // Nếu hẹn sang ngày khác -> lưu lịch hẹn, tới trước 1 buổi đối phương sẽ nhắc nhở
+      cs.scheduledDate = {
+        targetDay,
+        targetPeriodIdx,
+        targetPeriodName,
+        venue,
+        pickupNote: extraOpts?.pickupNote || null,
+        fromPartnerInvite: !!extraOpts?.fromPartnerInvite,
+        reminded: false,
+        arrived: false
+      };
+      const curSlot = curTi.slotIndex;
+      const targetSlot = (targetDay - 1) * 5 + targetPeriodIdx;
+      const confirmReply = applyDialectFlavor(
+        char,
+        `Chốt lịch nhé ${state.player.name}! Hẹn gặp bạn vào buổi ${targetPeriodName.toLowerCase()}, Ngày ${targetDay} tại ${venue.name} nha 💕`
+      );
+      cs.messages.push({ sender: 'them', text: confirmReply, time: curTi.fullLabel });
+      cs.messages.push({ sender: 'system', text: `📅 Đã đặt lịch hẹn tại ${venue.icon || '📍'} ${venue.name} vào Buổi ${targetPeriodName}, Ngày ${targetDay}. ${char.name} sẽ nhắc bạn trước 1 buổi!` });
+
+      // Nếu đặt lịch ngay trước 1 buổi (VD đang Khuya Ngày 1 mà hẹn Sáng Ngày 2)
+      if (curSlot === targetSlot - 1) {
+        cs.scheduledDate.reminded = true;
+      }
+      saveState(); updateTopBarStats(); navToScreen('messages');
+      showToast(`📅 Đã đặt lịch hẹn ${targetPeriodName} Ngày ${targetDay} tại ${venue.name}!`, 'success');
+    }
+
+    function startScheduledDateNow() {
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || !cs.scheduledDate) return;
+      const sd = cs.scheduledDate;
+      cs.scheduledDate = null;
+      startDatingTimeSession(char, cs, sd.venue, {
+        pickupNote: sd.pickupNote,
+        fromPartnerInvite: sd.fromPartnerInvite,
+        preApproved: true
+      });
+    }
+
+    function cancelScheduledDateForActive() {
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || !cs.scheduledDate) return;
+      const vName = cs.scheduledDate.venue?.name || 'buổi hẹn';
+      cs.scheduledDate = null;
+      cs.affection = Math.max(0, cs.affection - 4);
+      cs.messages.push({ sender: 'system', text: `❌ Bạn đã hủy lịch hẹn tại ${vName} (-4% Tình cảm).` });
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Tiếc quá, vậy để dịp khác rảnh tụi mình hẹn lại sau nha ${state.player.name} 😊`), time: getSimTimeInfo().fullLabel });
+      saveState(); updateTopBarStats(); renderMessagesView();
+      showToast('Đã hủy lịch hẹn sắp tới.', 'info');
     }
 
     function evaluateVenueAcceptance(char, cs, venue, extraOpts = null) {
@@ -3210,7 +3485,7 @@ ${canInviteToDate(cs)
 
     function startDatingTimeSession(char, cs, venue, extraOpts = null) {
       closeIRLDateModal();
-      const verdict = evaluateVenueAcceptance(char, cs, venue, extraOpts);
+      const verdict = (extraOpts && extraOpts.preApproved) ? { accepted: true } : evaluateVenueAcceptance(char, cs, venue, extraOpts);
       if (!verdict.accepted) {
         if (verdict.affDelta) cs.affection = Math.max(0, Math.min(100, cs.affection + verdict.affDelta));
         if (verdict.truDelta) cs.trust = Math.max(0, Math.min(100, cs.trust + verdict.truDelta));
@@ -3942,9 +4217,10 @@ Chỉ trả về JSON: {"estimatedCost":500000,"isSuitable":true,"affectionDelta
           pickupNote = `🚗 ${char.name} hơi bất ngờ khi bạn yêu cầu qua rước sớm nhưng vẫn đồng ý đón bạn (-4% Tình cảm).`;
         }
       }
+      const slotInfo = parseInviteTimeToSlot(inv.time);
       closeInstantInviteModal();
       state.activeChatCharId = char.id;
-      startDatingTimeSession(char, cs, inv.venue, { pickupNote, fromPartnerInvite: true });
+      scheduleOrStartIRLDate(char, cs, inv.venue, slotInfo, { pickupNote, fromPartnerInvite: true });
     }
 
     function confirmRestartFromProfile() { restartAndShuffleGame(); }
