@@ -1109,7 +1109,7 @@
             },
             album: [
               { title: `Chân dung ${rawName}`, scene: "portrait", caption: `${job} ✨` },
-              { title: "Góc cà phê cuối tuần", scene: isScammer ? "crypto_chart" : "cafe_aesthetic", caption: "Thư giãn cuối tuần ☕" }
+              { title: isScammer ? (idx % 2 === 0 ? "Dạo phố cuối tuần" : "Góc thư giãn tại villa") : "Góc cà phê cuối tuần", scene: isScammer ? (idx % 2 === 0 ? "luxury_car" : "luxury_villa") : "cafe_aesthetic", caption: isScammer ? (idx % 2 === 0 ? "Lái xe hóng gió cuối tuần 🚘✨" : "Cuối tuần nghỉ dưỡng nhẹ nhàng 🏡✨") : "Thư giãn cuối tuần ☕" }
             ],
             hiddenStats: {
               sincerity: isScammer ? 12 : (isGenuine ? 93 : 65),
@@ -1146,7 +1146,7 @@
         const defaults = [
           { title: `Chân dung ${c.name}`, scene: 'portrait', caption: `${c.job} • ${c.location} ✨` },
           c.isScammer
-            ? { title: idx % 2 === 0 ? 'Biểu đồ đầu tư & Lợi nhuận' : 'Tiệc đêm sang chảnh', scene: idx % 2 === 0 ? 'crypto_chart' : 'luxury_night', caption: idx % 2 === 0 ? 'Kênh đầu tư sinh lời ổn định mỗi tuần 📈' : 'Tận hưởng không khí VIP cuối tuần 🥂' }
+            ? { title: idx % 2 === 0 ? 'Dạo phố cuối tuần' : 'Góc thư giãn tại villa', scene: idx % 2 === 0 ? 'luxury_car' : 'luxury_villa', caption: idx % 2 === 0 ? 'Lái xe hóng gió cuối tuần 🚘✨' : 'Thư giãn bên hồ bơi biệt thự 🏡🥂' }
             : hasAqua
               ? { title: 'Góc bể cá thủy sinh', scene: 'aquarium', caption: 'Thư giãn ngắm đàn cá bơi sau giờ làm 🐟🌿' }
               : hasStage
@@ -1216,7 +1216,7 @@
     // =====================================================================
     const MALE_HAIRSTYLES = [
       { value: "short_modern", label: "Tóc ngắn gọn gàng (Undercut)" },
-      { value: "slick_black", label: "Vuốt ngược lịch lãm (Slick Back)" },
+      { value: "slick_back", label: "Vuốt ngược lịch lãm (Slick Back)" },
       { value: "side_part", label: "Rẽ ngôi 7/3 Hàn Quốc" },
       { value: "curly_soft", label: "Tóc xoăn nhẹ lãng tử" },
       { value: "buzz_sport", label: "Tóc húi cua thể thao" }
@@ -1296,7 +1296,7 @@
         studio_pink: ['#4a044e', '#be185d', '#f9a8d4'], stage_lights: ['#1e1b4b', '#6d28d9', '#f472b6'],
         law_office: ['#172554', '#1e40af', '#93c5fd'], street_sunset: ['#1c1917', '#9a3412', '#fbbf24'],
         aquarium: ['#042f2e', '#0f766e', '#34d399'], cafe_aesthetic: ['#24170f', '#78350f', '#fdba74'],
-        crypto_chart: ['#020617', '#064e3b', '#10b981'], travel_beach: ['#0c4a6e', '#ea580c', '#fde047'],
+        luxury_car: ['#0f172a', '#1e293b', '#f59e0b'], luxury_villa: ['#0c1426', '#1e3a5f', '#38bdf8'], crypto_chart: ['#0f172a', '#1e293b', '#f59e0b'], travel_beach: ['#0c4a6e', '#ea580c', '#fde047'],
         travel_mountain: ['#0f172a', '#1e3a5f', '#6ee7b7'], workspace: ['#0f172a', '#312e81', '#60a5fa'],
         pet_cozy: ['#3b0764', '#9d174d', '#fbcfe8'], evening_date: ['#09090b', '#4c0519', '#f43f5e']
       };
@@ -1305,18 +1305,24 @@
       const isFemale = st.gender === 'female';
 
       const hairColorMap = { blonde: '#facc15', red: '#be123c', silver: '#e2e8f0', brown: '#6b3e26', chestnut: '#7c2d12', black: '#18181b' };
-      let hairColor = '#18181b';
+      const hairHighlightMap = { blonde: '#fef08a', red: '#fb7185', silver: '#f8fafc', brown: '#9a5b3a', chestnut: '#b45309', black: '#3f3f46' };
+      let hairKey = 'black';
       if (st.hair) {
-        const hit = Object.keys(hairColorMap).find(k => st.hair.includes(k));
-        if (hit) hairColor = hairColorMap[hit];
+        const suffixHit = st.hair.match(/_(blonde|red|silver|brown|chestnut|black)$/);
+        if (suffixHit) hairKey = suffixHit[1];
+        else {
+          const hit = Object.keys(hairColorMap).find(k => st.hair.includes(k));
+          if (hit) hairKey = hit;
+        }
       }
+      const hairColor = hairColorMap[hairKey] || '#18181b';
+      const hairHi = hairHighlightMap[hairKey] || '#3f3f46';
 
-      const outfitMap = {
-        suit_navy: '#1e3a8a', dress_emerald: '#047857', cardigan_pink: '#db2777', turtleneck_black: '#18181b',
-        denim_jacket: '#2563eb', club_dress_black: '#be123c', blazer_beige: '#b45309', polo_navy: '#1e40af', blazer_rose: '#be185d'
-      };
-      const altOutfits = ['#334155', '#0f766e', '#7c2d12', '#6d28d9'];
-      const outfitColor = sceneIndex === 0 ? (outfitMap[st.outfit] || '#4f46e5') : altOutfits[(sceneIndex + (char.age || 0)) % altOutfits.length];
+      const maleAltOutfits = ['polo_navy', 'denim_jacket', 'turtleneck_black', 'suit_navy'];
+      const femaleAltOutfits = ['blazer_beige', 'blazer_rose', 'cardigan_pink', 'dress_emerald', 'club_dress_black'];
+      const nonBinaryAltOutfits = ['denim_jacket', 'turtleneck_black', 'blazer_beige', 'cardigan_pink'];
+      const genderAltPool = st.gender === 'female' ? femaleAltOutfits : (st.gender === 'nonbinary' ? nonBinaryAltOutfits : maleAltOutfits);
+      const effectiveOutfit = sceneIndex === 0 ? (st.outfit || (isFemale ? 'blazer_beige' : 'suit_navy')) : genderAltPool[(sceneIndex + (char.age || 0)) % genderAltPool.length];
       const gradId = `g_${(char.id || 'u').replace(/[^a-zA-Z0-9_]/g, '')}_${sceneIndex}_${sceneType}`;
 
       // Build distinct background & foreground scenery per sceneType
@@ -1349,17 +1355,37 @@
           <path d="M328 322 C340 322, 340 342, 328 342" fill="none" stroke="#fef3c7" stroke-width="4"/>
           <path d="M296 306 Q300 294 296 286 M310 306 Q314 294 310 286" stroke="#fde68a" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.8"/>`;
         charTransform = 'translate(-22, 32) scale(0.9)';
-      } else if (sceneType === 'crypto_chart') {
+      } else if (sceneType === 'luxury_car' || sceneType === 'crypto_chart') {
+        // Xe hơi sang trọng đỗ dưới ánh đèn phố đêm
         bgSceneSvg = `
-          <g stroke="#10b981" stroke-width="1" opacity="0.18">
-            <line x1="0" y1="80" x2="400" y2="80"/><line x1="0" y1="150" x2="400" y2="150"/><line x1="0" y1="220" x2="400" y2="220"/>
-            <line x1="80" y1="0" x2="80" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/><line x1="240" y1="0" x2="240" y2="320"/><line x1="320" y1="0" x2="320" y2="320"/>
-          </g>
-          <polyline points="20,240 75,215 125,228 185,165 245,180 315,92 375,58" fill="none" stroke="#34d399" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect x="304" y="84" width="12" height="44" rx="2" fill="#10b981"/><rect x="334" y="64" width="12" height="52" rx="2" fill="#34d399"/>
-          <rect x="250" y="34" width="130" height="32" rx="8" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
-          <text x="262" y="55" fill="#6ee7b7" font-size="13" font-weight="800">+248.5% BTC</text>`;
-        charTransform = 'translate(-38, 42) scale(0.88)';
+          <rect x="0" y="255" width="400" height="125" fill="#090d16" opacity="0.88"/>
+          <line x1="0" y1="255" x2="400" y2="255" stroke="#475569" stroke-width="2" opacity="0.6"/>
+          <circle cx="326" cy="72" r="46" fill="#fbbf24" opacity="0.18"/>
+          <rect x="28" y="68" width="42" height="187" fill="#1e293b" opacity="0.7"/>
+          <rect x="330" y="48" width="48" height="207" fill="#1e293b" opacity="0.7"/>
+          <g transform="translate(178, 186)">
+            <path d="M12 58 L38 24 C52 14, 124 14, 146 24 L182 46 L198 52 C206 56, 206 72, 198 76 L10 76 C2 72, 2 62, 12 58 Z" fill="#dc2626" stroke="#fca5a5" stroke-width="1.8"/>
+            <path d="M46 26 L138 26 L160 44 L36 44 Z" fill="#0f172a" opacity="0.85"/>
+            <ellipse cx="188" cy="58" rx="10" ry="5" fill="#fef08a"/><ellipse cx="196" cy="58" rx="22" ry="9" fill="#fde047" opacity="0.22"/>
+            <circle cx="48" cy="76" r="18" fill="#090d16" stroke="#cbd5e1" stroke-width="4"/><circle cx="48" cy="76" r="7" fill="#94a3b8"/>
+            <circle cx="162" cy="76" r="18" fill="#090d16" stroke="#cbd5e1" stroke-width="4"/><circle cx="162" cy="76" r="7" fill="#94a3b8"/>
+          </g>`;
+        charTransform = 'translate(-44, 34) scale(0.88)';
+      } else if (sceneType === 'luxury_villa') {
+        // Biệt thự kính hiện đại có hồ bơi vô cực ánh đèn vàng sang chảnh
+        bgSceneSvg = `
+          <circle cx="72" cy="64" r="24" fill="#fef08a" opacity="0.85"/>
+          <rect x="132" y="88" width="246" height="142" rx="6" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+          <rect x="148" y="106" width="96" height="58" rx="4" fill="#fef3c7" opacity="0.88"/>
+          <rect x="260" y="106" width="102" height="58" rx="4" fill="#fde68a" opacity="0.82"/>
+          <rect x="148" y="176" width="214" height="44" rx="4" fill="#fbbf24" opacity="0.65"/>
+          <line x1="196" y1="106" x2="196" y2="164" stroke="#475569" stroke-width="2.5"/>
+          <line x1="311" y1="106" x2="311" y2="164" stroke="#475569" stroke-width="2.5"/>
+          <rect x="118" y="76" width="268" height="14" rx="3" fill="#e2e8f0" opacity="0.9"/>
+          <rect x="0" y="236" width="400" height="96" fill="#0284c7" opacity="0.68"/>
+          <path d="M18 264 Q70 254 122 264 T226 264 T330 264 T400 264" fill="none" stroke="#bae6fd" stroke-width="2.5" opacity="0.65"/>
+          <path d="M0 294 Q55 284 110 294 T220 294 T330 294 T400 294" fill="none" stroke="#fde68a" stroke-width="2" opacity="0.45"/>`;
+        charTransform = 'translate(-40, 38) scale(0.88)';
       } else if (sceneType === 'travel_beach') {
         bgSceneSvg = `
           <circle cx="315" cy="128" r="52" fill="#fde047" opacity="0.9"/><circle cx="315" cy="128" r="78" fill="#fb923c" opacity="0.28"/>
@@ -1431,43 +1457,196 @@
         charTransform = 'translate(16, 26) scale(0.91)';
       }
 
+      // ===== DISTINCT HAIRSTYLE SVG RENDERER =====
       let hairBack = '', hairTop = '';
       const hStyle = st.hair || '';
       if (hStyle.includes('bun')) {
-        hairBack = `<circle cx="200" cy="96" r="34" fill="${hairColor}"/><path d="M138 175 C134 225, 142 260, 156 285 L244 285 C258 260, 266 225, 262 175 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M134 182 C134 114, 266 114, 266 182 C248 144, 216 136, 200 150 C180 134, 150 146, 134 182 Z" fill="${hairColor}"/>`;
+        // Tóc búi cao thanh lịch: búi tròn cao trên đỉnh, kẹp/dây cột vàng, 2 lọn tóc mai mỏng gọn gàng, KHÔNG xõa sau lưng
+        hairBack = `
+          <circle cx="200" cy="86" r="34" fill="${hairColor}"/>
+          <path d="M174 96 Q200 108 226 96" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+          <path d="M180 74 Q200 62 220 74" fill="none" stroke="${hairHi}" stroke-width="3" stroke-linecap="round" opacity="0.6"/>`;
+        hairTop = `
+          <path d="M135 184 C132 114, 268 114, 265 184 C248 144, 218 134, 200 144 C182 134, 152 144, 135 184 Z" fill="${hairColor}"/>
+          <path d="M140 176 Q130 212 138 242" fill="none" stroke="${hairColor}" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M260 176 Q270 212 262 242" fill="none" stroke="${hairColor}" stroke-width="4.5" stroke-linecap="round"/>`;
       } else if (hStyle.includes('ponytail')) {
-        hairBack = `<path d="M242 138 C286 148, 298 232, 272 308 C256 276, 256 212, 238 172 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M134 180 C134 112, 266 112, 266 180 C248 142, 216 134, 200 148 C180 134, 150 144, 134 180 Z" fill="${hairColor}"/>`;
+        // Tóc buộc đuôi ngựa năng động: dây buộc cao bên hông + đuôi ngựa uốn cong dài bay sang phải
+        hairBack = `
+          <path d="M236 118 C298 110, 326 205, 304 316 C284 294, 276 238, 256 196 C248 176, 240 156, 232 142 Z" fill="${hairColor}"/>
+          <path d="M254 148 C288 164, 302 228, 294 292" fill="none" stroke="${hairHi}" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+          <ellipse cx="244" cy="134" rx="12" ry="9" transform="rotate(-24 244 134)" fill="#ec4899" stroke="#fbcfe8" stroke-width="2"/>`;
+        hairTop = `
+          <path d="M135 182 C132 112, 268 112, 265 182 C246 142, 216 134, 200 146 C182 134, 152 144, 135 182 Z" fill="${hairColor}"/>
+          <path d="M158 136 Q200 122 242 136" fill="none" stroke="${hairHi}" stroke-width="2.5" opacity="0.45"/>`;
       } else if (hStyle.includes('bob')) {
-        hairBack = `<path d="M128 172 C122 232, 132 276, 154 292 L246 292 C268 276, 278 232, 272 172 C266 112, 134 112, 128 172 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M132 182 C132 114, 268 114, 268 182 C248 144, 214 136, 198 152 C176 136, 148 148, 132 182 Z" fill="${hairColor}"/>`;
+        // Tóc Bob ngắn ngang cằm/vai: cúp chữ C ôm gọn hai bên má + mái bằng/mái thưa trẻ trung
+        hairBack = `
+          <path d="M122 174 C114 236, 128 278, 160 284 L164 256 L236 256 L240 284 C272 278, 286 236, 278 174 C272 108, 128 108, 122 174 Z" fill="${hairColor}"/>
+          <path d="M132 212 C130 244, 138 264, 154 274" fill="none" stroke="${hairHi}" stroke-width="3" opacity="0.45" stroke-linecap="round"/>
+          <path d="M268 212 C270 244, 262 264, 246 274" fill="none" stroke="${hairHi}" stroke-width="3" opacity="0.45" stroke-linecap="round"/>`;
+        hairTop = `
+          <path d="M126 184 C126 112, 274 112, 274 184 C256 154, 232 156, 200 158 C168 156, 144 154, 126 184 Z" fill="${hairColor}"/>
+          <path d="M164 156 L160 172 M182 157 L180 174 M200 158 L200 174 M218 157 L220 174 M236 156 L240 172" stroke="${skin}" stroke-width="2" opacity="0.65"/>`;
       } else if (hStyle.includes('long_straight')) {
-        hairBack = `<path d="M128 168 L120 390 L280 390 L272 168 C266 108, 134 108, 128 168 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M132 182 C132 114, 268 114, 268 182 C248 142, 214 136, 200 150 C178 136, 148 146, 132 182 Z" fill="${hairColor}"/>`;
-      } else if (hStyle.includes('long_wavy') || (isFemale && !hStyle.includes('short') && !hStyle.includes('slick') && !hStyle.includes('side_part') && !hStyle.includes('curly') && !hStyle.includes('buzz'))) {
-        hairBack = `<path d="M124 166 C106 248, 114 345, 140 392 L260 392 C286 345, 294 248, 276 166 C268 106, 132 106, 124 166 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M132 182 C130 112, 270 112, 268 182 C250 142, 216 135, 198 152 C174 135, 146 148, 132 182 Z" fill="${hairColor}"/>`;
+        // Tóc dài thẳng suôn mượt: viền thẳng sắc nét rủ sâu xuống vai, rẽ ngôi giữa rõ ràng + ánh bóng thẳng
+        hairBack = `
+          <path d="M124 166 L116 408 L284 408 L276 166 C270 106, 130 106, 124 166 Z" fill="${hairColor}"/>
+          <line x1="134" y1="196" x2="128" y2="386" stroke="${hairHi}" stroke-width="3.5" opacity="0.45"/>
+          <line x1="266" y1="196" x2="272" y2="386" stroke="${hairHi}" stroke-width="3.5" opacity="0.45"/>`;
+        hairTop = `
+          <path d="M126 186 C126 110, 274 110, 274 186 C256 140, 224 134, 200 156 C176 134, 144 140, 126 186 Z" fill="${hairColor}"/>
+          <line x1="200" y1="118" x2="200" y2="156" stroke="${skin}" stroke-width="2.5" opacity="0.75"/>`;
+      } else if (hStyle.includes('long_wavy') || (isFemale && !hStyle.includes('short') && !hStyle.includes('slick') && !hStyle.includes('side_part') && !hStyle.includes('curly') && !hStyle.includes('buzz') && !hStyle.includes('wolf'))) {
+        // Tóc dài uốn sóng bồng bềnh: đường sóng S rõ rệt hai bên vai + lọn sóng highlight
+        hairBack = `
+          <path d="M124 164 C102 204, 128 242, 108 286 C94 324, 124 364, 114 406 L286 406 C276 364, 306 324, 292 286 C272 242, 298 204, 276 164 C268 104, 132 104, 124 164 Z" fill="${hairColor}"/>
+          <path d="M126 218 Q112 246 126 276 Q112 308 128 346" fill="none" stroke="${hairHi}" stroke-width="4" opacity="0.5" stroke-linecap="round"/>
+          <path d="M274 218 Q288 246 274 276 Q288 308 272 346" fill="none" stroke="${hairHi}" stroke-width="4" opacity="0.5" stroke-linecap="round"/>`;
+        hairTop = `
+          <path d="M128 186 C124 110, 276 110, 272 186 C254 146, 224 138, 198 158 C172 138, 144 148, 128 186 Z" fill="${hairColor}"/>
+          <path d="M148 144 Q174 130 198 148" fill="none" stroke="${hairHi}" stroke-width="3" opacity="0.45"/>`;
       } else if (hStyle.includes('wolf_cut')) {
-        hairBack = `<path d="M130 174 C122 228, 128 278, 146 305 L254 305 C272 278, 278 228, 270 174 Z" fill="${hairColor}"/>`;
-        hairTop = `<path d="M134 180 C132 110, 268 110, 266 180 C246 138, 216 132, 200 148 C178 132, 150 142, 134 180 Z" fill="${hairColor}"/>`;
+        // Tóc Layer / Wolf Cut phi giới tính: tỉa tầng tua nhọn ôm gò má & gáy, mái bay phá cách
+        hairBack = `
+          <path d="M126 168 L112 222 L130 236 L114 278 L142 292 L134 324 L164 310 L236 310 L266 324 L258 292 L286 278 L270 236 L288 222 L274 168 C268 104, 132 104, 126 168 Z" fill="${hairColor}"/>`;
+        hairTop = `
+          <path d="M128 186 C126 108, 274 108, 272 186 L254 152 L240 174 L224 148 L204 176 L186 146 L166 174 L148 152 Z" fill="${hairColor}"/>
+          <path d="M156 134 L172 152 M244 134 L228 152" stroke="${hairHi}" stroke-width="3" opacity="0.5" stroke-linecap="round"/>`;
       } else if (hStyle.includes('side_part')) {
-        hairTop = `<path d="M136 174 C132 102, 268 102, 264 174 C248 136, 218 134, 186 154 C166 138, 148 144, 136 174 Z" fill="${hairColor}"/>
-                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
-                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
+        // Rẽ ngôi 7/3 Hàn Quốc: đường rẽ ngôi lệch rõ ở bên trái (7/3), phần mái 7 rủ cong chữ C qua trán
+        hairTop = `
+          <path d="M134 182 C128 102, 268 98, 266 178 C252 140, 228 134, 198 154 C180 166, 158 164, 142 152 C140 162, 138 172, 134 182 Z" fill="${hairColor}"/>
+          <path d="M168 122 C182 138, 228 138, 248 166 C228 162, 198 168, 174 154 Z" fill="${hairColor}"/>
+          <path d="M164 116 L172 148" stroke="${skin}" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M184 128 Q216 124 242 148" fill="none" stroke="${hairHi}" stroke-width="3" opacity="0.55" stroke-linecap="round"/>
+          <path d="M134 166 Q143 184 144 198 L135 194 Z" fill="${hairColor}"/>
+          <path d="M266 166 Q257 184 256 198 L265 194 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('curly')) {
-        hairTop = `<path d="M134 176 C126 112, 165 98, 200 104 C235 98, 274 112, 266 176 C248 140, 220 136, 200 144 C180 136, 152 140, 134 176 Z" fill="${hairColor}"/>
-                   <circle cx="152" cy="128" r="16" fill="${hairColor}"/><circle cx="184" cy="118" r="18" fill="${hairColor}"/><circle cx="218" cy="118" r="18" fill="${hairColor}"/><circle cx="248" cy="128" r="16" fill="${hairColor}"/>`;
+        // Tóc xoăn nhẹ lãng tử: nhiều lọn xoăn bồng bềnh rủ tự nhiên quanh trán và hai bên thái dương
+        hairTop = `
+          <g fill="${hairColor}">
+            <circle cx="144" cy="148" r="20"/><circle cx="164" cy="124" r="22"/><circle cx="196" cy="116" r="24"/>
+            <circle cx="228" cy="122" r="22"/><circle cx="254" cy="144" r="20"/><circle cx="136" cy="172" r="14"/><circle cx="264" cy="172" r="14"/>
+            <circle cx="172" cy="146" r="15"/><circle cx="204" cy="144" r="16"/><circle cx="234" cy="146" r="15"/>
+          </g>
+          <path d="M160 124 Q170 116 180 124 M192 116 Q204 108 214 118 M224 126 Q236 118 244 128" fill="none" stroke="${hairHi}" stroke-width="2.6" opacity="0.6" stroke-linecap="round"/>`;
       } else if (hStyle.includes('buzz')) {
-        hairTop = `<path d="M138 174 C138 114, 262 114, 262 174 C244 142, 220 136, 200 136 C180 136, 156 142, 138 174 Z" fill="${hairColor}" opacity="0.88"/>`;
+        // Tóc húi cua thể thao: cạo sát gọn ôm khít đầu, viền trán vuông nam tính, KHÔNG tóc mai dài
+        hairTop = `
+          <path d="M139 178 C139 116, 261 116, 261 178 L256 178 C252 150, 232 144, 200 144 C168 144, 148 150, 144 178 Z" fill="${hairColor}" opacity="0.88"/>
+          <path d="M154 146 Q200 138 246 146" fill="none" stroke="${hairHi}" stroke-width="2" stroke-dasharray="3 4" opacity="0.5"/>`;
       } else if (hStyle.includes('slick')) {
-        hairTop = `<path d="M136 174 C132 98, 268 98, 264 174 C248 134, 222 126, 200 128 C178 126, 152 134, 136 174 Z" fill="${hairColor}"/>
-                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
-                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
+        // Vuốt ngược lịch lãm (Slick Back): đỉnh tóc dựng vuốt ngược cao, có các đường chải bóng mượt ra sau, hai bên gọn
+        hairTop = `
+          <path d="M138 176 C134 114, 152 92, 200 90 C248 92, 266 114, 262 176 L254 176 C248 136, 226 124, 200 124 C174 124, 152 136, 146 176 Z" fill="${hairColor}"/>
+          <path d="M164 118 Q200 96 236 118" fill="none" stroke="${hairHi}" stroke-width="3.2" opacity="0.65" stroke-linecap="round"/>
+          <path d="M174 106 Q200 92 226 106" fill="none" stroke="${hairHi}" stroke-width="2.5" opacity="0.55" stroke-linecap="round"/>
+          <path d="M138 164 L145 186 L138 184 Z" fill="${hairColor}" opacity="0.7"/>
+          <path d="M262 164 L255 186 L262 184 Z" fill="${hairColor}" opacity="0.7"/>`;
       } else {
-        hairTop = `<path d="M136 174 C132 104, 268 104, 264 174 C248 138, 222 132, 200 138 C176 132, 148 140, 136 174 Z" fill="${hairColor}"/>
-                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
-                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
+        // Tóc ngắn gọn gàng (Undercut): hai bên cạo fade nhạt màu, phần đỉnh tóc dày cắt góc cạnh hiện đại
+        hairTop = `
+          <path d="M138 180 L142 142 L152 144 L146 184 Z" fill="${hairColor}" opacity="0.45"/>
+          <path d="M262 180 L258 142 L248 144 L254 184 Z" fill="${hairColor}" opacity="0.45"/>
+          <path d="M142 152 C140 100, 174 96, 204 98 C236 100, 262 108, 258 152 C240 132, 214 134, 194 144 C174 134, 156 138, 142 152 Z" fill="${hairColor}"/>
+          <path d="M164 120 L182 110 L204 118 L228 110 L242 124" fill="none" stroke="${hairHi}" stroke-width="2.8" opacity="0.55" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }
+
+      // ===== DISTINCT OUTFIT SVG RENDERER =====
+      let outfitSvg = '';
+      if (effectiveOutfit === 'suit_navy') {
+        // Vest Navy lịch lãm: áo vest xanh navy, sơ mi trắng, ve áo sắc nét, cà vạt đỏ đô & khăn túi
+        outfitSvg = `
+          <path d="M84 450 C86 330, 134 298, 200 298 C266 298, 314 330, 316 450 Z" fill="#172554"/>
+          <polygon points="174,296 226,296 200,398" fill="#f8fafc"/>
+          <polygon points="174,296 150,330 172,344 162,356 200,404 184,312" fill="#1e3a8a" stroke="#0f172a" stroke-width="1.5"/>
+          <polygon points="226,296 250,330 228,344 238,356 200,404 216,312" fill="#1e3a8a" stroke="#0f172a" stroke-width="1.5"/>
+          <polygon points="193,306 207,306 204,320 196,320" fill="#9f1239"/>
+          <polygon points="196,320 204,320 210,382 200,396 190,382" fill="#be123c"/>
+          <polygon points="244,358 266,352 264,366 244,366" fill="#f8fafc"/>
+          <circle cx="200" cy="418" r="4" fill="#0f172a"/>`;
+      } else if (effectiveOutfit === 'polo_navy') {
+        // Áo Polo năng động: cổ bẻ polo, nẹp nút giữa ngực, đường viền thể thao trên cổ & tay
+        outfitSvg = `
+          <path d="M90 450 C92 336, 138 302, 200 302 C262 302, 308 336, 310 450 Z" fill="#1d4ed8"/>
+          <path d="M174 300 L200 326 L226 300" fill="#0f172a" opacity="0.22"/>
+          <polygon points="172,298 200,326 164,332 156,312" fill="#1e3a8a" stroke="#93c5fd" stroke-width="1.8"/>
+          <polygon points="228,298 200,326 236,332 244,312" fill="#1e3a8a" stroke="#93c5fd" stroke-width="1.8"/>
+          <rect x="193" y="324" width="14" height="58" rx="4" fill="#1e40af" stroke="#60a5fa" stroke-width="1.2"/>
+          <circle cx="200" cy="340" r="3" fill="#f8fafc"/><circle cx="200" cy="358" r="3" fill="#f8fafc"/><circle cx="200" cy="374" r="3" fill="#f8fafc"/>
+          <path d="M114 342 L134 396" stroke="#93c5fd" stroke-width="2.5" opacity="0.5"/>
+          <path d="M286 342 L266 396" stroke="#93c5fd" stroke-width="2.5" opacity="0.5"/>`;
+      } else if (effectiveOutfit === 'turtleneck_black') {
+        // Áo cổ lọ đen: cổ lọ cao ôm sát cổ có gân len dọc sang trọng
+        outfitSvg = `
+          <path d="M88 450 C90 334, 136 300, 200 300 C264 300, 310 334, 312 450 Z" fill="#18181b"/>
+          <rect x="174" y="274" width="52" height="36" rx="10" fill="#27272a" stroke="#3f3f46" stroke-width="1.5"/>
+          <g stroke="#3f3f46" stroke-width="1.6" opacity="0.7">
+            <line x1="184" y1="278" x2="184" y2="308"/><line x1="194" y1="278" x2="194" y2="308"/>
+            <line x1="206" y1="278" x2="206" y2="308"/><line x1="216" y1="278" x2="216" y2="308"/>
+          </g>
+          <path d="M132 326 Q200 342 268 326" fill="none" stroke="#3f3f46" stroke-width="2" opacity="0.45"/>`;
+      } else if (effectiveOutfit === 'denim_jacket') {
+        // Áo khoác Denim: khoác bò xanh mở ngoài áo thun trắng, cổ bẻ, 2 túi nắp ngực & chỉ may vàng
+        outfitSvg = `
+          <path d="M86 450 C88 332, 134 298, 200 298 C266 298, 312 332, 314 450 Z" fill="#2563eb"/>
+          <path d="M170 298 L230 298 L230 450 L170 450 Z" fill="#f8fafc"/>
+          <path d="M174 300 Q200 326 226 300" fill="none" stroke="#cbd5e1" stroke-width="4"/>
+          <polygon points="170,298 144,328 172,340" fill="#1d4ed8" stroke="#fbbf24" stroke-width="1.5"/>
+          <polygon points="230,298 256,328 228,340" fill="#1d4ed8" stroke="#fbbf24" stroke-width="1.5"/>
+          <line x1="168" y1="336" x2="168" y2="446" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="5 4"/>
+          <line x1="232" y1="336" x2="232" y2="446" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="5 4"/>
+          <rect x="120" y="352" width="36" height="32" rx="4" fill="#1d4ed8" stroke="#fbbf24" stroke-width="1.4"/>
+          <polygon points="120,352 156,352 138,366" fill="#3b82f6" stroke="#fbbf24" stroke-width="1.2"/>
+          <rect x="244" y="352" width="36" height="32" rx="4" fill="#1d4ed8" stroke="#fbbf24" stroke-width="1.4"/>
+          <polygon points="244,352 280,352 262,366" fill="#3b82f6" stroke="#fbbf24" stroke-width="1.2"/>
+          <circle cx="162" cy="364" r="3" fill="#e2e8f0"/><circle cx="162" cy="396" r="3" fill="#e2e8f0"/>`;
+      } else if (effectiveOutfit === 'blazer_beige' || effectiveOutfit === 'blazer_rose') {
+        // Blazer Kem / Hồng thanh lịch: blazer khoác ngoài áo trắng + ve áo mềm + dây chuyền vàng tinh tế
+        const bzMain = effectiveOutfit === 'blazer_rose' ? '#be185d' : '#d6b892';
+        const bzLapel = effectiveOutfit === 'blazer_rose' ? '#9d174d' : '#b89468';
+        outfitSvg = `
+          <path d="M88 450 C90 334, 136 300, 200 300 C264 300, 310 334, 312 450 Z" fill="${bzMain}"/>
+          <polygon points="170,300 230,300 218,450 182,450" fill="#fffbeb"/>
+          <path d="M174 300 Q200 334 226 300" fill="${skin}"/>
+          <path d="M178 308 Q200 326 222 308" fill="none" stroke="#f59e0b" stroke-width="2"/>
+          <circle cx="200" cy="322" r="4" fill="#fde047"/>
+          <polygon points="170,300 146,338 168,354 184,412" fill="${bzLapel}"/>
+          <polygon points="230,300 254,338 232,354 216,412" fill="${bzLapel}"/>
+          <circle cx="174" cy="402" r="3.5" fill="#78350f"/><circle cx="226" cy="402" r="3.5" fill="#78350f"/>`;
+      } else if (effectiveOutfit === 'dress_emerald') {
+        // Váy Ngọc Lục Bảo: cổ chữ V thanh lịch khoe xương quai xanh, tay bồng nhẹ, vòng cổ ngọc trai & đường chiết eo
+        outfitSvg = `
+          <path d="M104 450 C106 346, 138 304, 170 302 L200 350 L230 302 C262 304, 294 346, 296 450 Z" fill="#047857"/>
+          <path d="M168 300 L200 352 L232 300 Z" fill="${skin}"/>
+          <path d="M168 300 L200 352 L232 300" fill="none" stroke="#34d399" stroke-width="3"/>
+          <path d="M178 306 Q200 326 222 306" fill="none" stroke="#fef3c7" stroke-width="2.5" stroke-dasharray="3 4"/>
+          <path d="M126 396 Q200 412 274 396" fill="none" stroke="#10b981" stroke-width="4" opacity="0.8"/>`;
+      } else if (effectiveOutfit === 'cardigan_pink') {
+        // Cardigan Hồng dịu dàng: áo len cardigan hồng cài nút khoác ngoài áo trắng cổ tròn
+        outfitSvg = `
+          <path d="M90 450 C92 336, 136 302, 200 302 C264 302, 308 336, 310 450 Z" fill="#f472b6"/>
+          <polygon points="174,302 226,302 200,382" fill="#fff1f2"/>
+          <path d="M176 302 Q200 320 224 302" fill="${skin}"/>
+          <path d="M172 302 L196 382 L196 450 L186 450 L186 382 L162 304 Z" fill="#db2777"/>
+          <path d="M228 302 L204 382 L204 450 L214 450 L214 382 L238 304 Z" fill="#db2777"/>
+          <circle cx="200" cy="394" r="4" fill="#fdf2f8"/><circle cx="200" cy="418" r="4" fill="#fdf2f8"/>
+          <path d="M124 344 L118 430 M276 344 L282 430" stroke="#fbcfe8" stroke-width="2" stroke-dasharray="4 6" opacity="0.55"/>`;
+      } else if (effectiveOutfit === 'club_dress_black') {
+        // Đầm dự tiệc quyến rũ: đầm đen hai dây cúp ngực, lộ vai trần, vòng choker lấp lánh & ánh kim tuyến
+        outfitSvg = `
+          <path d="M108 358 C108 318, 146 298, 200 298 C254 298, 292 318, 292 358 L286 386 L114 386 Z" fill="${skin}"/>
+          <line x1="158" y1="304" x2="152" y2="352" stroke="#18181b" stroke-width="4"/>
+          <line x1="242" y1="304" x2="248" y2="352" stroke="#18181b" stroke-width="4"/>
+          <path d="M114 450 L124 348 Q162 332 200 356 Q238 332 276 348 L286 450 Z" fill="#09090b" stroke="#f43f5e" stroke-width="2"/>
+          <rect x="180" y="286" width="40" height="7" rx="3" fill="#18181b" stroke="#fbbf24" stroke-width="1.2"/>
+          <circle cx="200" cy="296" r="4.5" fill="#fde047"/>
+          <g fill="#fda4af" opacity="0.75">
+            <circle cx="152" cy="382" r="2.2"/><circle cx="178" cy="404" r="2"/><circle cx="224" cy="388" r="2.2"/><circle cx="248" cy="410" r="2"/>
+          </g>`;
+      } else {
+        outfitSvg = `<path d="M90 450 C90 332, 138 298, 200 298 C262 298, 310 332, 310 450 Z" fill="#4f46e5"/>`;
       }
 
       let accSvg = '';
@@ -1477,12 +1656,20 @@
         accSvg += `<g stroke="#fbbf24" stroke-width="2.4" fill="rgba(255,255,255,0.14)"><rect x="158" y="185" width="32" height="20" rx="7"/><rect x="210" y="185" width="32" height="20" rx="7"/><line x1="190" y1="195" x2="210" y2="195"/></g>`;
       }
       if (st.acc && st.acc.includes('earrings')) {
-        accSvg += `<circle cx="136" cy="212" r="4.5" fill="#fbbf24"/><circle cx="264" cy="212" r="4.5" fill="#fbbf24"/>`;
+        const earColor = st.acc.includes('pearl') ? '#f8fafc' : '#fbbf24';
+        accSvg += `<circle cx="136" cy="212" r="4.8" fill="${earColor}" stroke="#94a3b8" stroke-width="1"/><circle cx="264" cy="212" r="4.8" fill="${earColor}" stroke="#94a3b8" stroke-width="1"/>`;
       }
 
-      const mouthSvg = (st.face === 'charming_smirk' || sceneIndex === 2)
-        ? `<path d="M185 236 Q203 245 218 231" fill="none" stroke="#9f1239" stroke-width="3.2" stroke-linecap="round"/>`
-        : `<path d="M183 234 Q200 248 217 234" fill="${isFemale ? '#fb7185' : 'none'}" stroke="#be123c" stroke-width="3.2" stroke-linecap="round"/>`;
+      let mouthSvg = `<path d="M183 234 Q200 248 217 234" fill="${isFemale ? '#fb7185' : 'none'}" stroke="#be123c" stroke-width="3.2" stroke-linecap="round"/>`;
+      let browSvg = `<path d="M161 175 Q176 168 190 174" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/><path d="M210 174 Q224 168 239 175" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/>`;
+      if (st.face === 'charming_smirk' || sceneIndex === 2) {
+        mouthSvg = `<path d="M185 236 Q204 246 220 229" fill="none" stroke="#9f1239" stroke-width="3.2" stroke-linecap="round"/>`;
+      } else if (st.face === 'cool_calm') {
+        mouthSvg = `<path d="M186 237 Q200 239 214 236" fill="none" stroke="#9f1239" stroke-width="3" stroke-linecap="round"/>`;
+        browSvg = `<path d="M161 174 L190 176" fill="none" stroke="${hairColor}" stroke-width="3.2" stroke-linecap="round"/><path d="M210 176 L239 174" fill="none" stroke="${hairColor}" stroke-width="3.2" stroke-linecap="round"/>`;
+      } else if (st.face === 'gentle_soft') {
+        mouthSvg = `<path d="M186 235 Q200 243 214 235" fill="${isFemale ? '#fda4af' : 'none'}" stroke="#e11d48" stroke-width="2.8" stroke-linecap="round"/>`;
+      }
 
       return `<svg viewBox="0 0 400 460" class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg">
         <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal[0]}"/><stop offset="55%" stop-color="${pal[1]}"/><stop offset="100%" stop-color="${pal[2]}"/></linearGradient></defs>
@@ -1490,12 +1677,11 @@
         ${bgSceneSvg}
         <g transform="${charTransform}">
           ${hairBack}
-          <path d="M90 450 C90 332, 138 298, 200 298 C262 298, 310 332, 310 450 Z" fill="${outfitColor}"/>
-          <rect x="182" y="254" width="36" height="54" rx="14" fill="${skin}"/>
+          <rect x="182" y="254" width="36" height="58" rx="14" fill="${skin}"/>
+          ${outfitSvg}
           <ellipse cx="200" cy="198" rx="62" ry="74" fill="${skin}"/>
           <circle cx="138" cy="202" r="10.5" fill="${skin}"/><circle cx="262" cy="202" r="10.5" fill="${skin}"/>
-          <path d="M161 175 Q176 168 190 174" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/>
-          <path d="M210 174 Q224 168 239 175" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/>
+          ${browSvg}
           <ellipse cx="176" cy="195" rx="7.8" ry="8.8" fill="#0f172a"/><ellipse cx="224" cy="195" rx="7.8" ry="8.8" fill="#0f172a"/>
           <circle cx="178.5" cy="192" r="2.8" fill="#ffffff"/><circle cx="226.5" cy="192" r="2.8" fill="#ffffff"/>
           <ellipse cx="157" cy="213" rx="11" ry="5.5" fill="#fb7185" opacity="0.32"/><ellipse cx="243" cy="213" rx="11" ry="5.5" fill="#fb7185" opacity="0.32"/>
@@ -1692,7 +1878,8 @@
         if (el && val && [...el.options].some(o => o.value === val)) el.value = val;
       };
       const colorMatch = (st.hair || '').match(/_(black|brown|chestnut|blonde|silver|red)$/);
-      const hairBase = (st.hair || '').replace(/_(black|brown|chestnut|blonde|silver|red)$/, '');
+      let hairBase = (st.hair || '').replace(/_(black|brown|chestnut|blonde|silver|red)$/, '');
+      if (hairBase === 'slick') hairBase = 'slick_back';
       setIfHas('selAvatarFace', st.face);
       setIfHas('selAvatarSkin', st.skin);
       setIfHas('selAvatarHairStyle', hairBase);
@@ -1724,9 +1911,7 @@
       state.player.customAvatar = null;
       if (state.player.avatarPresetIndex < 0) state.player.avatarPresetIndex = 0;
       const st = getPlayerAvatarStyle(state.player.avatarPresetIndex, gVal);
-      const hairBase = (st.hair || '').replace(/_(black|brown|chestnut|blonde|silver|red)$/, '');
-      const selHair = document.getElementById('selAvatarHairStyle');
-      if (selHair && [...selHair.options].some(o => o.value === hairBase)) selHair.value = hairBase;
+      syncAvatarDropdownsFromStyle(st);
       updateSetupAvatarPreview();
     }
 
@@ -1747,13 +1932,48 @@
       document.getElementById('setupStartBalancePreview').textContent = formatVND(bal);
     }
 
+    function syncSetupFormFromPlayerState() {
+      const p = state.player || {};
+      const g = p.gender || 'Nam';
+      const setElVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) el.value = String(val);
+      };
+      setElVal('inpPlayerName', p.name || 'Minh Khôi');
+      setElVal('inpPlayerAge', p.age || 30);
+      setElVal('selPlayerGender', g);
+      setElVal('selTargetGender', p.targetGender || (g === 'Nam' ? 'Nữ' : (g === 'Nữ' ? 'Nam' : 'Tất cả')));
+      setElVal('inpPlayerBio', p.bio || '');
+
+      const selJob = document.getElementById('selPlayerJob');
+      const inpCustomJob = document.getElementById('inpCustomPlayerJob');
+      if (selJob && inpCustomJob && p.job) {
+        if ([...selJob.options].some(o => o.value === p.job)) {
+          selJob.value = p.job;
+          inpCustomJob.value = '';
+        } else {
+          inpCustomJob.value = p.job;
+        }
+      }
+
+      populateHairStyleDropdownForGender(g);
+      const activeStyle = p.customAvatar ? p.customAvatar : getPlayerAvatarStyle(p.avatarPresetIndex ?? 0, g);
+      syncAvatarDropdownsFromStyle(activeStyle);
+      renderSetupChips();
+      updateSetupAvatarPreview();
+      updateSetupIncomePreview();
+    }
+
     function fillPresetPlayerProfile() {
-      document.getElementById('inpPlayerName').value = 'Minh Khôi';
-      document.getElementById('inpPlayerAge').value = '30';
-      document.getElementById('selPlayerGender').value = 'Nam';
-      document.getElementById('selTargetGender').value = 'Nữ';
-      populateHairStyleDropdownForGender('Nam');
-      renderSetupChips(); updateSetupAvatarPreview(); updateSetupIncomePreview();
+      state.player.name = 'Minh Khôi';
+      state.player.age = 30;
+      state.player.gender = 'Nam';
+      state.player.targetGender = 'Nữ';
+      state.player.job = 'Trưởng phòng Digital Marketing';
+      state.player.bio = 'Thích du lịch khám phá, cà phê cuối tuần và trò chuyện chân thành!';
+      state.player.customAvatar = null;
+      state.player.avatarPresetIndex = 0;
+      syncSetupFormFromPlayerState();
     }
 
     function initCharRuntimeStates() {
@@ -1830,9 +2050,7 @@
       }
       if (name === 'setup') {
         document.getElementById('screen-setup').classList.remove('hidden');
-        const g = document.getElementById('selPlayerGender')?.value || state.player.gender || 'Nam';
-        populateHairStyleDropdownForGender(g);
-        renderSetupChips(); updateSetupAvatarPreview(); updateSetupIncomePreview();
+        syncSetupFormFromPlayerState();
         return;
       }
       if (name === 'ending') {
