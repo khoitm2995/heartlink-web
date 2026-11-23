@@ -1874,6 +1874,24 @@
       return cs.affection >= r.aff && cs.trust >= r.trust && (cs.datesCount || 0) >= r.dates;
     }
 
+    // Xét chấp nhận đi Khách sạn / Nhà riêng dựa theo MỤC ĐÍCH CUỐI CÙNG của từng nhóm nhân vật:
+    // - Nhóm nghiêm túc, kết bạn thuần túy, bận rộn: BẮT BUỘC đủ chỉ số tình cảm/tin tưởng.
+    // - Nhóm có mục đích ngắn hạn / phóng khoáng / FWB / lừa đảo giăng bẫy / thực dụng (khách sạn sang): đồng ý đi luôn KHÔNG cần xét chỉ số.
+    function canAcceptOvernightByMotive(char, cs, venue = null) {
+      if (char.isUnderage || (Number(char.age) || 0) < 18) return false;
+      if ((Number(state.player.age) || 0) < 18) return false;
+      if (cs && cs.fwbAccepted) return true;
+      if (char.isScammer) return true;
+      if (['casual_short', 'fun_dating', 'same_sex_catfish_trap'].includes(char.archetype)) return true;
+      if (char.archetype === 'casual_materialistic' && (!venue || venue.id === 'hotel' || (venue.cost || 0) >= 1000000)) return true;
+      return false;
+    }
+
+    function canAcceptOvernightVenue(char, cs, venue = null) {
+      if (canAcceptOvernightByMotive(char, cs, venue)) return true;
+      return canUnlockAdultMode(char, cs);
+    }
+
     function confirmPlayerAdult() {
       if (state.player.adultConfirmed) return true;
       if ((Number(state.player.age) || 0) < 18) return false;
@@ -1965,9 +1983,13 @@
     function tryOpenIRLDateModal() {
       const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
       if (!char || !cs) return;
+      if (cs.blocked) {
+        showToast(`💔 Mối quan hệ với ${char.name} đã kết thúc.`, 'warn');
+        return;
+      }
       if (!canInviteToDate(cs)) {
         const left = Math.max(1, GREETING_PHASE_MSGS - getPlayerMsgCount(cs));
-        showToast(`💬 Hãy trò chuyện thêm ~${left} tin nhắn nữa rồi hẵng rủ ${char.name} đi chơi nhé!`, 'warn');
+        showToast(`💬 Phải qua giai đoạn chào hỏi! Hãy trò chuyện thêm ~${left} tin nhắn nữa rồi hẵng rủ ${char.name} đi hẹn hò nhé.`, 'warn');
         return;
       }
       openIRLDateModal();
@@ -2240,8 +2262,13 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
           reply = `Quan điểm của mình rất rõ ràng: ${char.financeView} Mình không bao giờ vay mượn hay rủ đầu tư qua app hẹn hò đâu!`;
         }
       } else if (low.includes('hẹn') || low.includes('gặp') || low.includes('cà phê') || low.includes('đi chơi')) {
-        affDelta = 12; trustDelta = 10;
-        reply = `Ý kiến hay quá ${state.player.name} ơi 💕! Bạn bấm nút [📅 Hẹn Hò] ở thanh công cụ phía trên để chọn địa điểm nhé!`;
+        if (!canInviteToDate(cs)) {
+          affDelta = 2; trustDelta = 2;
+          reply = `Tụi mình mới match và đang làm quen thôi mà ${state.player.name} 😊! Nhắn tin trò chuyện thêm một chút cho hiểu nhau đã rồi hẵng hẹn gặp nha.`;
+        } else {
+          affDelta = 10; trustDelta = 8;
+          reply = `Ý kiến hay quá ${state.player.name} ơi 💕! Bạn bấm nút [📅 Hẹn Hò] ở thanh công cụ phía trên để chọn địa điểm nhé!`;
+        }
       } else if (char.isScammer && cs.activeScamOfferStage > 0 && char.scamOffer) {
         const offerDesc = cs.activeScamOfferStage === 1 ? char.scamOffer.stage1Desc : char.scamOffer.stage2Desc;
         reply = `Nghe ${state.player.name} nói “${text.slice(0, 50)}” làm mình càng tin bạn hơn ✨! Nhân tiện chuyện mình đang cần hỗ trợ: ${offerDesc}`;
@@ -2546,7 +2573,7 @@ Lưu ý:
 
       document.getElementById('chatIntuitionBar').classList.toggle('hidden', !!state.realismMode);
       document.getElementById('chatRelationshipStageBar').classList.toggle('hidden', !!state.realismMode);
-      if (cs.adultChatUnlocked && (char.isUnderage || !state.player.adultConfirmed || !canUnlockAdultMode(char, cs))) { cs.adultChatUnlocked = false; cs.inHotelDatingTime = false; }
+      if (cs.adultChatUnlocked && (char.isUnderage || !state.player.adultConfirmed || (!canUnlockAdultMode(char, cs) && !canAcceptOvernightByMotive(char, cs, cs.datingTimeVenue)))) { cs.adultChatUnlocked = false; cs.inHotelDatingTime = false; }
       document.getElementById('badge18PlusMode').classList.toggle('hidden', !cs.adultChatUnlocked);
       document.getElementById('activeChatWrapper').classList.toggle('adult-mode-active', !!cs.adultChatUnlocked);
       document.getElementById('chatDatingTimeBanner').classList.toggle('hidden', !cs.inDatingTime);
@@ -2661,23 +2688,163 @@ Lưu ý:
       startDatingTimeSession(char, state.charStates[char.id], vObj);
     }
 
+    function evaluateVenueAcceptance(char, cs, venue, extraOpts = null) {
+      if (cs.blocked) {
+        return { accepted: false, affDelta: 0, truDelta: 0, sysMsg: `💔 Mối quan hệ với ${char.name} đã kết thúc.`, reply: null };
+      }
+      if (char.isUnderage) {
+        return {
+          accepted: false, affDelta: -15, truDelta: -10,
+          sysMsg: '⚠️ Đối phương có dấu hiệu chưa đủ 18 tuổi nên buổi hẹn bị hủy. Hãy báo cáo tài khoản này.',
+          reply: 'Mình phải đi học và không được ra ngoài gặp người lạ đâu, xin lỗi bạn nha 😢'
+        };
+      }
+      const bypassGreeting = !!(extraOpts && (extraOpts.fromPartnerInvite || extraOpts.isSecondRound));
+      if (!bypassGreeting && !canInviteToDate(cs)) {
+        const left = Math.max(1, GREETING_PHASE_MSGS - getPlayerMsgCount(cs));
+        return {
+          accepted: false, affDelta: -2, truDelta: -2,
+          sysMsg: `💬 Chưa qua giai đoạn chào hỏi (cần nhắn thêm ~${left} tin nhắn trước khi rủ đi hẹn hò).`,
+          reply: applyDialectFlavor(char, `Tụi mình mới match và đang chào hỏi thôi mà ${state.player.name} 😊. Trò chuyện thêm một chút cho hiểu nhau đã rồi hẵng hẹn gặp nhé!`)
+        };
+      }
+      if (extraOpts && extraOpts.fromPartnerInvite) {
+        return { accepted: true };
+      }
+
+      const isOvernight = isPrivateOvernightVenue(venue);
+      const isSerious = ['genuine_love', 'genuine_strict', 'single_parent', 'creator_special'].includes(char.archetype);
+      const vLow = (venue.name || '').toLowerCase();
+      const isTravel = venue.id === 'travel' || /đà lạt|du lịch|resort|biển|vũng tàu|phú quốc/.test(vLow);
+      const isBar = venue.id === 'bar_lounge' || /bar|lounge|pub|club/.test(vLow);
+      const isFineDining = venue.id === 'restaurant' || /fine dining|cao cấp|steak|omakase/.test(vLow);
+
+      // 1. Khách sạn / Nhà riêng:
+      //    - Nhóm có mục đích ngắn hạn / phóng khoáng / FWB / lừa đảo / thực dụng (khách sạn sang): đồng ý đi luôn KHÔNG cần xét chỉ số.
+      //    - Nhóm nghiêm túc, kết bạn thuần túy, bận rộn: phải đạt đủ ngưỡng chỉ số mới đồng ý.
+      if (isOvernight) {
+        if (canAcceptOvernightVenue(char, cs, venue)) {
+          return { accepted: true };
+        }
+        const req = getAdultUnlockRequirement(char).label;
+        if (isSerious) {
+          return {
+            accepted: false, affDelta: -14, truDelta: -15,
+            sysMsg: `🔒 ${char.name} từ chối thẳng lời mời đến ${venue.name} (Yêu cầu: ${req}).`,
+            reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng mà bạn đã rủ đi ${venue.name} rồi sao? Mình tìm hiểu nghiêm túc chứ không thể đồng ý kiểu vội vàng như vậy đâu!`)
+          };
+        }
+        return {
+          accepted: false, affDelta: -8, truDelta: -8,
+          sysMsg: `🔒 ${char.name} từ chối đến ${venue.name} vì mục đích của họ không phù hợp khi chưa đủ thân (Yêu cầu: ${req}).`,
+          reply: applyDialectFlavor(char, `Hơi nhanh quá rồi đó ${state.player.name} 😅. Mình chưa thấy đủ tin tưởng để đi ${venue.name} đâu, gặp chỗ công cộng trước nha!`)
+        };
+      }
+
+      // 2. Du lịch xa / Nghỉ dưỡng qua đêm:
+      //    - Nhóm thực dụng / hẹn hò vui vẻ / ngắn hạn / lừa đảo: sẵn sàng đi luôn không cần xét chỉ số.
+      if (isTravel) {
+        if (char.isScammer || ['casual_materialistic', 'casual_short', 'fun_dating'].includes(char.archetype)) {
+          return { accepted: true };
+        }
+        const minAff = isSerious ? 65 : 50;
+        const minTru = isSerious ? 55 : 40;
+        const needPriorDate = isSerious && (cs.datesCount || 0) < 1;
+        if (cs.affection < minAff || cs.trust < minTru || needPriorDate) {
+          return {
+            accepted: false, affDelta: -5, truDelta: -5,
+            sysMsg: `🔒 ${char.name} từ chối đi du lịch xa (Cần Tình cảm ≥ ${minAff}%, Tin tưởng ≥ ${minTru}%${isSerious ? ' và đã gặp mặt trước ít nhất 1 lần' : ''}).`,
+            reply: applyDialectFlavor(char, `Đi ${venue.name} xa quá ${state.player.name} ơi 😅! Tụi mình chưa đủ thân để đi du lịch riêng cùng nhau đâu, hẹn đi cà phê hay ăn tối trong thành phố trước nhé.`)
+          };
+        }
+      }
+
+      // 3. Bar / Lounge đêm:
+      //    - Booking Bar / thực dụng / ngắn hạn / phóng khoáng: đồng ý đi luôn không cần xét chỉ số.
+      if (isBar) {
+        if (char.isScammer || ['casual_materialistic', 'casual_short', 'fun_dating'].includes(char.archetype)) {
+          return { accepted: true };
+        }
+        if (isSerious && (cs.affection < 45 || cs.trust < 35)) {
+          return {
+            accepted: false, affDelta: -4, truDelta: -4,
+            sysMsg: `🔒 ${char.name} chưa thoải mái đi Bar/Lounge đêm (Cần Tình cảm ≥ 45%, Tin tưởng ≥ 35%).`,
+            reply: applyDialectFlavor(char, `Mình hơi ngại đi bar buổi tối khi tụi mình mới quen ${state.player.name} ạ 😅. Mình chọn quán cà phê hoặc nhà hàng nhẹ nhàng hơn được không?`)
+          };
+        }
+      }
+
+      // 4. Địa điểm công cộng:
+      //    - Nhóm thực dụng đi Fine Dining, hoặc nhóm vui vẻ/ngắn hạn/lừa đảo: sẵn sàng nhận lời luôn không cần xét chỉ số.
+      if (char.isScammer || ['casual_short', 'fun_dating'].includes(char.archetype)) {
+        return { accepted: true };
+      }
+      if (char.archetype === 'casual_materialistic' && (isFineDining || (venue.cost || 0) >= 1000000)) {
+        return { accepted: true };
+      }
+
+      let minPublicAff = char.archetype === 'genuine_strict' ? 38 : (isSerious ? 30 : 25);
+      if (isFineDining && isSerious) minPublicAff = Math.max(minPublicAff, 36);
+      const minPublicTru = char.archetype === 'genuine_strict' ? 30 : (isSerious ? 24 : 18);
+
+      if (cs.affection < minPublicAff || cs.trust < minPublicTru) {
+        return {
+          accepted: false, affDelta: -2, truDelta: 0,
+          sysMsg: `❌ ${char.name} từ chối lời mời tới ${venue.name} vì tình cảm chưa đủ (Cần Tình cảm ≥ ${minPublicAff}%${minPublicTru ? `, Tin tưởng ≥ ${minPublicTru}%` : ''}).`,
+          reply: applyDialectFlavor(char, `Cảm ơn ${state.player.name} đã rủ đi ${venue.name} nhé, nhưng mình cảm thấy tụi mình vẫn cần trò chuyện thêm để hiểu nhau hơn rồi hẵng gặp ngoài đời nha 😊.`)
+        };
+      }
+
+      return { accepted: true };
+    }
+
+    function triggerPartnerWalkoutFromDate(char, cs, walkoutLine = null, reasonLabel = 'không hài lòng trong buổi hẹn') {
+      if (!char || !cs) return;
+      const venue = cs.datingTimeVenue || currentActiveDateVenue || IRL_VENUES[0];
+      const bill = venue.cost || 300000;
+      const paid = Math.min(state.player.balance, bill);
+      state.player.balance -= paid;
+      state.finance.datingSpent += paid;
+      state.finance.ledger.unshift({
+        day: state.day,
+        title: `[Đối phương bỏ về - Trả 100%] Hẹn hò cùng ${char.name} (${venue.name})`,
+        amount: paid,
+        type: 'out'
+      });
+
+      cs.inDatingTime = false;
+      cs.inHotelDatingTime = false;
+      cs.adultChatUnlocked = false;
+      cs.blocked = true;
+      cs.unmatched = true;
+
+      if (walkoutLine) {
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, walkoutLine), time: getSimTimeInfo().fullLabel });
+      }
+      cs.messages.push({
+        sender: 'system',
+        text: `🚪 ${char.name} đã đứng dậy bỏ về giữa buổi hẹn (${reasonLabel})! Bạn phải chịu 100% chi phí buổi hẹn (${formatVND(bill)}) và mối quan hệ với ${char.name} đã chấm dứt hoàn toàn.`
+      });
+
+      saveState();
+      updateTopBarStats();
+      renderMessagesView();
+      showToast(`🚪 ${char.name} đã bỏ về! Bạn phải trả 100% chi phí (${formatVND(bill)}) & kết thúc mối quan hệ.`, 'danger');
+    }
+
     function startDatingTimeSession(char, cs, venue, extraOpts = null) {
       closeIRLDateModal();
-      if (char.isUnderage) {
-        cs.messages.push({ sender: 'system', text: '⚠️ Đối phương có dấu hiệu chưa đủ 18 tuổi nên buổi hẹn bị hủy. Hãy báo cáo tài khoản này.' });
-        cs.messages.push({ sender: 'them', text: 'Mình phải đi học và không được ra ngoài gặp người lạ đâu, xin lỗi bạn nha 😢' });
-        cs.affection = Math.max(0, cs.affection - 15);
-        saveState(); navToScreen('messages');
+      const verdict = evaluateVenueAcceptance(char, cs, venue, extraOpts);
+      if (!verdict.accepted) {
+        if (verdict.affDelta) cs.affection = Math.max(0, Math.min(100, cs.affection + verdict.affDelta));
+        if (verdict.truDelta) cs.trust = Math.max(0, Math.min(100, cs.trust + verdict.truDelta));
+        if (verdict.sysMsg) cs.messages.push({ sender: 'system', text: verdict.sysMsg });
+        if (verdict.reply) cs.messages.push({ sender: 'them', text: verdict.reply, time: getSimTimeInfo().fullLabel });
+        saveState(); updateTopBarStats(); navToScreen('messages');
+        showToast(`❌ ${char.name} đã từ chối đến ${venue.name}!`, 'warn');
         return;
       }
       const isOvernight = isPrivateOvernightVenue(venue);
-      if (isOvernight && !canUnlockAdultMode(char, cs)) {
-        cs.messages.push({ sender: 'system', text: `🔒 Chưa thể hẹn ở không gian riêng tư: ${getAdultUnlockRequirement(char).label}.` });
-        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình chưa thấy thoải mái khi hẹn ở nơi quá riêng tư đâu, mình chọn chỗ công cộng nha.`) });
-        cs.affection = Math.max(0, cs.affection - 10);
-        saveState(); navToScreen('messages');
-        return;
-      }
 
       if (extraOpts && extraOpts.pickupNote) {
         cs.messages.push({ sender: 'system', text: extraOpts.pickupNote });
@@ -2776,7 +2943,11 @@ Lưu ý:
       cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
       cs.trust = Math.max(0, Math.min(100, cs.trust + dTru));
       cs.intimacy = Math.max(0, Math.min(100, (cs.intimacy || 20) + dInt));
-      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reply) });
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reply), time: getSimTimeInfo().fullLabel });
+      if (dAff < 0 && cs.affection <= 15 && cs.inDatingTime) {
+        triggerPartnerWalkoutFromDate(char, cs, 'Mình không thể tiếp tục buổi hẹn này được nữa. Mình về trước đây!', 'hành động khiếm nhã khi chưa đủ thân');
+        return;
+      }
       saveState(); updateTopBarStats(); renderMessagesView();
     }
 
@@ -2879,7 +3050,8 @@ Lưu ý:
       const char = getCharById(state.activeChatCharId), cs = state.charStates[char.id];
       if (!char || !cs) return;
       if (choice === 'hotel_next') {
-        if (char.isUnderage || !canUnlockAdultMode(char, cs)) {
+        const hotelVenue = IRL_VENUES.find(v => v.id === 'hotel');
+        if (char.isUnderage || !canAcceptOvernightVenue(char, cs, hotelVenue)) {
           closeIRLDateModal();
           cs.affection = Math.max(0, cs.affection - 15);
           const reason = char.isUnderage ? 'Đối phương chưa đủ 18 tuổi.' : getAdultUnlockRequirement(char).label;
@@ -2887,7 +3059,7 @@ Lưu ý:
           cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết và tin tưởng để đi khách sạn đâu! Hôm nay mình về trước nhé.`) });
           saveState(); renderMessagesView(); return;
         }
-        startDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'hotel'));
+        startDatingTimeSession(char, cs, hotelVenue, { isSecondRound: true });
         return;
       }
       closeIRLDateModal();
@@ -2903,7 +3075,7 @@ Lưu ý:
           desc: 'Không gian đêm lãng mạn cho Tăng 2'
         };
         cs.affection = Math.min(100, cs.affection + 8);
-        startDatingTimeSession(char, cs, secondRoundVenue);
+        startDatingTimeSession(char, cs, secondRoundVenue, { isSecondRound: true });
         return;
       } else if (choice === 'confess') {
         if (char.isScammer) { triggerSpecificEnding('bad_emotional_exploited', char); return; }
@@ -3010,8 +3182,9 @@ Lưu ý:
 
     function openQuickGiftModal(ctx = 'chat') {
       const tid = ctx === 'pre_date' && pendingInstantInvite ? pendingInstantInvite.charId : state.activeChatCharId;
-      const char = getCharById(tid);
-      if (!char) { showToast('Chưa chọn nhân vật để tặng quà.', 'warn'); return; }
+      const char = getCharById(tid), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) { showToast('Chưa chọn nhân vật để tặng quà.', 'warn'); return; }
+      if (cs.blocked) { showToast(`💔 Mối quan hệ với ${char.name} đã kết thúc.`, 'warn'); return; }
       activeGiftModalContext = ctx;
       document.getElementById('giftModalTitle').textContent = `🎁 Tặng Quà Cho ${char.name}`;
       document.getElementById('giftModalBalance').textContent = formatVND(state.player.balance);
@@ -3034,6 +3207,10 @@ Lưu ý:
     }
 
     function applyGiftResultToCharacter(char, cs, giftName, cost, isSuitable, affDelta, truDelta, reactionMsg, ctx) {
+      if (cs.blocked) {
+        showToast(`💔 Mối quan hệ với ${char.name} đã kết thúc, không thể tặng quà nữa.`, 'warn');
+        return false;
+      }
       if (state.player.balance < cost) {
         showToast(`⚠️ Số dư không đủ để mua "${giftName}" (${formatVND(cost)})!`, 'warn');
         return false;
@@ -3045,8 +3222,15 @@ Lưu ý:
       const ctxLabel = ctx === 'pre_date' ? ' (Quà trước buổi hẹn)' : (ctx === 'dating' ? ' (Quà trong buổi hẹn)' : '');
       state.finance.ledger.unshift({ day: state.day, title: `Tặng ${giftName}${ctxLabel} cho ${char.name}`, amount: cost, type: 'out' });
 
+      // Đảm bảo đối phương LUÔN nói điều gì đó khi nhận quà
+      const spokenReaction = (reactionMsg && String(reactionMsg).trim())
+        ? String(reactionMsg).trim()
+        : (isSuitable
+          ? `Cảm ơn ${state.player.name} nhiều nha, mình rất thích "${giftName}"! 🥰`
+          : `Thật sự thì "${giftName}" không phù hợp với mình chút nào đâu ${state.player.name} ạ... 😅`);
+
       cs.messages.push({ sender: 'me', text: `[🎁 Tặng quà${ctxLabel}] Mình chuẩn bị tặng ${char.name} món quà nhỏ: ${giftName}!`, time: getSimTimeInfo().fullLabel });
-      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reactionMsg), time: getSimTimeInfo().fullLabel });
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, spokenReaction), time: getSimTimeInfo().fullLabel });
       cs.messages.push({
         sender: 'system',
         text: isSuitable
@@ -3054,10 +3238,46 @@ Lưu ý:
           : `😅 "${giftName}" (${formatVND(cost)}) không phù hợp với ${char.name}! (${affDelta}% Tình cảm)`
       });
 
+      // Xử lý hậu quả khi tặng quà đối phương KHÔNG thích làm giảm điểm tình cảm
+      if (!isSuitable && affDelta < 0) {
+        const isInDate = !!(cs.inDatingTime || ctx === 'dating');
+        if (isInDate && (affDelta <= -12 || cs.affection <= 28)) {
+          closeQuickGiftModal();
+          triggerPartnerWalkoutFromDate(
+            char, cs,
+            `Thật sự mình thấy quá thất vọng với món quà "${giftName}" này. Mình xin phép về trước, tụi mình dừng lại tại đây nhé!`,
+            `không thích món quà "${giftName}"`
+          );
+          if (!document.getElementById('view-finance').classList.contains('hidden')) renderFinanceView();
+          return true;
+        }
+        if (!isInDate && (affDelta <= -15 || cs.affection <= 22)) {
+          cs.blocked = true;
+          cs.unmatched = true;
+          cs.adultChatUnlocked = false;
+          cs.messages.push({
+            sender: 'them',
+            text: applyDialectFlavor(char, `Xin lỗi ${state.player.name}, sau món quà vừa rồi mình thấy tụi mình không hợp nhau chút nào. Mình từ chối tìm hiểu tiếp nhé, chào bạn!`),
+            time: getSimTimeInfo().fullLabel
+          });
+          cs.messages.push({
+            sender: 'system',
+            text: `💔 ${char.name} không thích món quà "${giftName}" và đã từ chối tìm hiểu tiếp! Mối quan hệ đã chấm dứt.`
+          });
+          if (ctx === 'pre_date') closeInstantInviteModal();
+          closeQuickGiftModal();
+          saveState(); updateTopBarStats();
+          if (!document.getElementById('view-finance').classList.contains('hidden')) renderFinanceView();
+          if (state.activeChatCharId === char.id && !document.getElementById('view-messages').classList.contains('hidden')) renderMessagesView();
+          showToast(`💔 ${char.name} đã từ chối tìm hiểu tiếp vì không thích món quà!`, 'danger');
+          return true;
+        }
+      }
+
       if (ctx === 'pre_date' && pendingInstantInvite) {
         pendingInstantInvite.giftSummary = `${giftName} (${formatVND(cost)})`;
         const stEl = document.getElementById('instInviteGiftStatus');
-        if (stEl) stEl.textContent = `✅ Đã tặng: ${giftName}`;
+        if (stEl) stEl.textContent = isSuitable ? `✅ Đã tặng: ${giftName}` : `⚠️ Đã tặng: ${giftName} (không hợp gu)`;
       }
 
       saveState(); updateTopBarStats();
@@ -3345,7 +3565,7 @@ Chỉ trả về JSON: {"estimatedCost":500000,"isSuitable":true,"affectionDelta
       }
       closeInstantInviteModal();
       state.activeChatCharId = char.id;
-      startDatingTimeSession(char, cs, inv.venue, { pickupNote });
+      startDatingTimeSession(char, cs, inv.venue, { pickupNote, fromPartnerInvite: true });
     }
 
     function confirmRestartFromProfile() { restartAndShuffleGame(); }
