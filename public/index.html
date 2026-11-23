@@ -2300,7 +2300,9 @@ Trả về DUY NHẤT JSON:
 }
 Lưu ý:
 - Đặt "isAdultTrigger": true NẾU tin nhắn mới của người chơi mang ý khơi gợi 18+, gạ gẫm qua đêm, hỏi hành động nhạy cảm/đụng chạm cơ thể (VD: sờ vòng 1, hôn sâu, lên giường...).
-- CHỈ đặt "dateInvite": {"venue":"tên địa điểm cụ thể bạn rủ đi","estimatedCost":250000,"time":"Buổi tối nay"} NẾU đang nhắn tin qua app (chưa gặp mặt) và trong "reply" bạn CHỦ ĐỘNG rủ người chơi đi chơi/hẹn hò tới một nơi cụ thể; còn không thì để "dateInvite": null.`;
+${canInviteToDate(cs)
+  ? '- CHỈ đặt "dateInvite": {"venue":"tên địa điểm cụ thể bạn rủ đi","estimatedCost":250000,"time":"Buổi tối nay"} NẾU đang nhắn tin qua app (chưa gặp mặt) và trong "reply" bạn THẬT SỰ CHỦ ĐỘNG rủ người chơi đi hẹn hò tới một nơi cụ thể (không tính việc chỉ kể sở thích hay nhắc thoáng qua một địa điểm); còn không thì để "dateInvite": null.'
+  : '- GIAI ĐOẠN HIỆN TẠI: Đang CHÀO HỎI & LÀM QUEN ban đầu. KHÔNG rủ đi hẹn hò ngoài đời và LUÔN ĐẶT "dateInvite": null.'}`;
 
       try {
         const useDirectKey = !!aiConfig.apiKey;
@@ -2422,7 +2424,7 @@ Lưu ý:
       maybeAutoShiftPeriodAfterChat(char, cs);
       saveState(); updateTopBarStats(); renderMessagesView();
 
-      if (!cs.inDatingTime && !cs.blocked && !char.isUnderage) {
+      if (!cs.inDatingTime && !cs.blocked && !char.isUnderage && canInviteToDate(cs)) {
         const inv = detectedInvite || detectPartnerDateInviteOffline(finalReply, char, cs);
         if (inv && inv.venue) openInstantInvitePopup(char, inv, finalReply);
       }
@@ -2475,9 +2477,9 @@ Lưu ý:
     function detectPartnerDateInviteOffline(replyText, char, cs) {
       if (!replyText || cs.inDatingTime || !canInviteToDate(cs)) return null;
       const low = replyText.toLowerCase();
-      const hasInviteCue = /(rủ|đi chơi|đi ăn|đi uống|đi cà phê|đi xem phim|đi bar|đi dạo|gặp nhau ở|hẹn nhau ở|ghé qua nhà|qua nhà mình|đi khách sạn|đi homestay)/.test(low);
-      if (!hasInviteCue) return null;
-      if (/bấm nút|không đi|chưa sẵn sàng|từ chối|bận rồi/.test(low)) return null;
+      const hasExplicitInvite = /(rủ bạn|rủ anh|rủ em|rủ cậu|hẹn nhau ở|gặp nhau ở|đi .+ (nhé|nha|không\?|nhỉ|với mình|cùng mình|với em|cùng em|với anh|cùng anh)|ghé qua nhà|qua nhà mình|hẹn đi)/.test(low);
+      if (!hasExplicitInvite) return null;
+      if (/bấm nút|không đi|chưa sẵn sàng|từ chối|bận rồi|thích đi|hay đi|thường đi/.test(low)) return null;
       const patterns = [
         { re: /khách sạn|homestay|nhà nghỉ/, name: 'Khách Sạn / Homestay Riêng Tư', id: 'hotel' },
         { re: /nhà riêng|qua nhà|căn hộ/, name: 'Nhà Riêng / Căn Hộ Riêng Tư', id: 'private_home' },
@@ -3501,6 +3503,8 @@ Chỉ trả về JSON: {"estimatedCost":500000,"isSuitable":true,"affectionDelta
     let pendingInstantInvite = null;
 
     function openInstantInvitePopup(char, invData, inviteMessage) {
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || cs.blocked || cs.inDatingTime || !canInviteToDate(cs)) return;
       const cost = Math.max(50000, Math.round(Number(invData.estimatedCost) || estimateVenueCost(invData.venue)));
       const low = (invData.venue || '').toLowerCase();
       const vid = invData.venueId || (/khách sạn|homestay|nhà nghỉ/.test(low) ? 'hotel' : (/nhà riêng|căn hộ/.test(low) ? 'private_home' : 'custom'));
