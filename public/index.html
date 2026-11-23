@@ -448,7 +448,7 @@
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <button onclick="triggerChatVideoCall()" class="px-2.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold">📹<span class="hidden sm:inline ml-1">Video</span></button>
                   <button onclick="triggerProfileInvestigation()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold">🔍<span class="hidden sm:inline ml-1">Soi</span></button>
-                  <button onclick="navToScreen('finance')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold">🎁<span class="hidden sm:inline ml-1">Quà</span></button>
+                  <button onclick="openQuickGiftModal('chat')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold">🎁<span class="hidden sm:inline ml-1">Quà</span></button>
                   <button onclick="tryOpenIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">📅<span class="hidden sm:inline ml-1">Hẹn Hò</span></button>
                   <button onclick="openReportForActiveChar()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold">🚨</button>
                 </div>
@@ -483,6 +483,7 @@
                 <div class="flex flex-nowrap items-center gap-1.5 w-full overflow-x-auto custom-scroll whitespace-nowrap pb-1">
                   <button onclick="performDatingPhysicalAction('hug')" class="px-2.5 py-1.5 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/40 text-pink-100 text-[11px] font-bold shrink-0">🤗 Ôm</button>
                   <button onclick="performDatingPhysicalAction('kiss')" class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/40 text-rose-100 text-[11px] font-bold shrink-0">💋 Hôn</button>
+                  <button onclick="openQuickGiftModal('dating')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/25 hover:bg-purple-500/40 border border-purple-400/40 text-purple-100 text-[11px] font-bold shrink-0">🎁 Tặng Quà</button>
                   <span id="dating18PlusActions" class="hidden inline-flex items-center gap-1.5 shrink-0">
                     <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold shrink-0">🔥 Vuốt ve 18+</button>
                     <button id="btnPublicTease18" onclick="performDatingPhysicalAction('public_tease_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold shrink-0">🤫 Đụng chạm lén (Public 18+)</button>
@@ -553,6 +554,13 @@
             <div class="lg:col-span-6 space-y-2">
               <label class="block text-xs text-slate-400">Chọn người nhận quà:</label>
               <select id="selFinanceGiftTarget" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white"></select>
+              <div class="p-3 rounded-2xl bg-slate-950 border border-purple-500/35 space-y-1.5">
+                <label class="block text-[11px] font-bold text-purple-300">✨ Tự nhập món quà bất kỳ (AI tự định giá & đánh giá độ phù hợp):</label>
+                <div class="flex gap-2">
+                  <input id="inpCustomGiftFinance" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCustomGiftFromFinance();}" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="VD: Bể tép cảnh, Túi Chanel, Sách tâm lý, Nhẫn kim cương..." />
+                  <button id="btnCustomGiftFinance" type="button" onclick="submitCustomGiftFromFinance()" class="px-3.5 py-2 rounded-xl gradient-brand text-white font-bold text-xs shrink-0">🎁 Tặng</button>
+                </div>
+              </div>
               <div id="financeGiftCatalog" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
             </div>
             <div class="lg:col-span-6 space-y-2">
@@ -698,7 +706,7 @@
 
   <!-- INSTANT INVITE MODAL -->
   <div id="modal-instant-invite" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-5 shadow-2xl space-y-3 animate-pop">
+    <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-5 shadow-2xl space-y-3 animate-pop max-h-[90vh] overflow-y-auto custom-scroll">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
         <h3 id="instInvitePartnerName" class="text-base font-extrabold text-white">Lời Mời Hẹn Hò</h3>
         <button onclick="closeInstantInviteModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-300">✕</button>
@@ -707,12 +715,61 @@
       <div class="text-xs text-slate-300 space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800">
         <div>📍 Địa điểm: <strong id="instInviteVenue" class="text-emerald-300"></strong></div>
         <div>🕒 Thời gian: <strong id="instInviteTime" class="text-sky-300"></strong></div>
-        <div>💰 Chi phí dự kiến: <strong id="instInviteCost" class="text-amber-300"></strong></div>
+        <div>💰 Chi phí dự kiến (AI ước tính): <strong id="instInviteCost" class="text-amber-300"></strong></div>
       </div>
-      <div class="grid grid-cols-2 gap-2">
+      <div id="instInviteStep1" class="grid grid-cols-2 gap-2">
         <button onclick="handleInstantInviteChoice('accept')" class="py-2.5 rounded-xl gradient-brand text-white font-bold text-xs">✅ Đồng Ý Đi Hẹn</button>
         <button onclick="handleInstantInviteChoice('decline')" class="py-2.5 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs border border-slate-700">❌ Từ Chối</button>
       </div>
+      <div id="instInviteStep2" class="hidden space-y-3 pt-1 border-t border-slate-800">
+        <div class="space-y-1.5">
+          <div class="text-xs font-bold text-pink-300">🚗 Chọn cách di chuyển tới buổi hẹn:</div>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 cursor-pointer">
+            <input type="radio" name="instInvitePickup" value="pickup_them" checked class="accent-pink-500" />
+            <span>🛵 Qua tận nhà rước họ (Ấn tượng tốt, +Tình cảm)</span>
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 cursor-pointer">
+            <input type="radio" name="instInvitePickup" value="they_pickup" class="accent-pink-500" />
+            <span>🚗 Yêu cầu người ấy qua rước mình</span>
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 cursor-pointer">
+            <input type="radio" name="instInvitePickup" value="meet_there" class="accent-pink-500" />
+            <span>📍 Hẹn gặp trực tiếp tại địa điểm</span>
+          </label>
+        </div>
+        <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between gap-2">
+          <div class="text-xs text-purple-200">
+            <div class="font-bold">🎁 Quà tặng mang theo buổi hẹn</div>
+            <div id="instInviteGiftStatus" class="text-[11px] text-slate-400">Chưa chuẩn bị quà</div>
+          </div>
+          <button type="button" onclick="openQuickGiftModal('pre_date')" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shrink-0">🎁 Tặng Quà</button>
+        </div>
+        <button onclick="confirmStartInvitedDate()" class="w-full py-2.5 rounded-xl gradient-brand text-white font-bold text-xs">🚀 Bắt Đầu Cuộc Hẹn Ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK GIFT MODAL (In-Chat / Pre-Date / During-Date) -->
+  <div id="modal-gift" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-slate-900 border border-purple-500/40 rounded-3xl p-5 shadow-2xl space-y-3 animate-pop max-h-[88vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 id="giftModalTitle" class="text-base font-extrabold text-white">🎁 Tặng Quà</h3>
+        <button onclick="closeQuickGiftModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-300">✕</button>
+      </div>
+      <div class="flex items-center justify-between text-xs bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+        <span class="text-slate-400">Số dư hiện tại:</span>
+        <strong id="giftModalBalance" class="text-emerald-400">35.000.000đ</strong>
+      </div>
+      <div class="p-3 rounded-2xl bg-slate-950 border border-purple-500/35 space-y-2">
+        <label class="block text-[11px] font-bold text-purple-300">✨ Tự nhập món quà bất kỳ (AI tự định giá & nhận định độ phù hợp):</label>
+        <div class="flex gap-2">
+          <input id="inpCustomGiftModal" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCustomGiftFromModal();}" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="VD: Bó hoa hướng dương, Nước hoa Dior, Đồng hồ, Cơm hộp..." />
+          <button id="btnCustomGiftModal" type="button" onclick="submitCustomGiftFromModal()" class="px-4 py-2 rounded-xl gradient-brand text-white font-bold text-xs shrink-0">🤖 Định Giá & Tặng</button>
+        </div>
+        <div id="giftModalEvalStatus" class="hidden text-[11px] text-amber-300"></div>
+      </div>
+      <div class="text-xs font-bold text-slate-300">Hoặc chọn nhanh quà gợi ý:</div>
+      <div id="quickGiftCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
     </div>
   </div>
 
@@ -1101,7 +1158,8 @@
       { id: "cinema", name: "Rạp Chiếu Phim CGV / IMAX", cost: 360000, icon: "🍿", safety: "An toàn cao", riskLevel: 1, items: ["2 Vé xem phim (240k)", "Combo Bắp Nước (120k)"], desc: "Thưởng thức phim mới cùng nhau." },
       { id: "park", name: "Công Viên Bến Bạch Đằng / Phố Đi Bộ", cost: 80000, icon: "🌳", safety: "An toàn rất cao", riskLevel: 1, items: ["2 Nước mát (50k)", "Ăn vặt (30k)"], desc: "Phép thử xem đối phương coi trọng tình cảm hay vật chất." },
       { id: "bar_lounge", name: "Bar, Lounge, Pub Đêm", cost: 1600000, icon: "🍸", safety: "Cảnh giác Booking Bar", riskLevel: 3, items: ["Bàn Cocktail (1.200k)", "Phí đêm (400k)"], desc: "Nguy cơ bị ép gọi rượu đắt tiền." },
-      { id: "hotel", name: "Khách Sạn / Homestay Riêng Tư", cost: 1200000, icon: "🏨", safety: "Không gian riêng tư 18+", riskLevel: 4, items: ["Phòng nghỉ (900k)", "Rượu vang (300k)"], desc: "Không gian riêng tư nhạy cảm." },
+      { id: "hotel", name: "Khách Sạn / Homestay Riêng Tư", cost: 1200000, icon: "🏨", safety: "Không gian riêng tư", riskLevel: 4, items: ["Phòng nghỉ (900k)", "Rượu vang (300k)"], desc: "Không gian riêng tư kín đáo." },
+      { id: "private_home", name: "Nhà Riêng / Căn Hộ Riêng Tư", cost: 250000, icon: "🏠", safety: "Không gian riêng tư", riskLevel: 4, items: ["Rượu vang & Đồ ăn nhẹ (250k)"], desc: "Ghé chơi và trò chuyện riêng tư tại nhà." },
       { id: "travel", name: "Khu Du Lịch Nghỉ Dưỡng Ngắn Ngày", cost: 3800000, icon: "🏖️", safety: "Chi phí lớn", riskLevel: 2, items: ["Resort 2N1Đ (2.800k)", "Ăn uống (1.000k)"], desc: "Chuyến đi gắn kết sâu sắc." }
     ];
 
@@ -1547,9 +1605,15 @@
             relPhase: 1, stage: 0, chatted: false, videoCalled: false, investigated: false,
             scamStage1Done: false, scamStage2Done: false, activeScamOfferStage: 0,
             datesCount: 0, blocked: false, unmatched: false, reported: false,
-            adultChatUnlocked: false, inDatingTime: false, inHotelDatingTime: false,
-            sharedMemories: [], messages: []
+            adultChatUnlocked: false, hasEverUnlocked18: false, fwbAccepted: false,
+            inDatingTime: false, inHotelDatingTime: false,
+            isWaitingReply: false, msgCountSincePeriodShift: 0, sharedMemories: [], messages: []
           };
+        } else {
+          state.charStates[c.id].isWaitingReply = false;
+          if (typeof state.charStates[c.id].hasEverUnlocked18 !== 'boolean') state.charStates[c.id].hasEverUnlocked18 = !!state.charStates[c.id].adultChatUnlocked;
+          if (typeof state.charStates[c.id].fwbAccepted !== 'boolean') state.charStates[c.id].fwbAccepted = false;
+          if (typeof state.charStates[c.id].msgCountSincePeriodShift !== 'number') state.charStates[c.id].msgCountSincePeriodShift = 0;
         }
       });
     }
@@ -1772,16 +1836,28 @@
     // =====================================================================
     // 5. CHAT ENGINE, 18+ ELIGIBILITY, DYNAMIC SUGGESTIONS & GEMINI API
     // =====================================================================
+    function isPrivateOvernightVenue(venue) {
+      if (!venue) return false;
+      if (venue.id === 'hotel' || venue.id === 'private_home') return true;
+      return /khách sạn|homestay|nhà nghỉ|nhà riêng|căn hộ riêng|qua đêm/i.test(venue.name || '');
+    }
+
     function detectPlayerAdultTopic(text) {
       const low = (text || '').toLowerCase();
-      return ['18+', 'chuyện ấy', 'làm tình', 'quan hệ', 'ngủ cùng', 'qua đêm', 'lên giường', 'hôn sâu', 'vuốt ve', 'cởi', 'nhạy cảm', 'dâm', 'nứng', 'sướng', 'địt', 'chịch', 'xoạc', 'mơn trớn'].some(k => low.includes(k));
+      return [
+        '18+', 'chuyện ấy', 'làm tình', 'quan hệ', 'ngủ cùng', 'qua đêm', 'lên giường',
+        'hôn sâu', 'vuốt ve', 'cởi', 'nhạy cảm', 'dâm', 'nứng', 'sướng', 'địt', 'chịch',
+        'xoạc', 'mơn trớn', 'vòng 1', 'vòng 3', 'sờ ngực', 'sờ mông', 'sờ đùi', 'bóp ngực',
+        'bóp mông', 'liếm', 'mút', 'hôn cổ', 'ôm ngủ', 'đồ lót', 'không mặc gì', 'làm nháy',
+        'thịt nhau', 'chạm vào em', 'chạm vào anh', 'sờ em', 'sờ anh', 'trên giường', 'kích thích',
+        'cơ thể em', 'cơ thể anh', 'khơi gợi', 'gạ gẫm', 'fwb'
+      ].some(k => low.includes(k));
     }
 
     // Điều kiện kích hoạt chế độ 18+ (siết chặt)
     //  - Cả người chơi và nhân vật phải đủ 18 tuổi; nhân vật isUnderage không bao giờ mở được.
     //  - Người chơi phải xác nhận mình đủ 18 tuổi (1 lần, lưu lại).
-    //  - Ngưỡng tình cảm/tin tưởng cao hơn, người nghiêm túc còn cần ít nhất 1 buổi hẹn ngoài đời.
-    //  - Địa điểm Khách sạn KHÔNG còn tự mở 18+, vẫn phải đạt điều kiện bên dưới.
+    //  - Nếu đối phương đã chấp nhận mối quan hệ mập mờ / FWB (cs.fwbAccepted) thì có thể rủ lại khách sạn / 18+.
     function getAdultUnlockRequirement(char) {
       if (char.isScammer) return { aff: 40, trust: 0, dates: 0, label: 'Tình cảm ≥ 40%' };
       if (char.archetype === 'casual_short') return { aff: 50, trust: 30, dates: 0, label: 'Tình cảm ≥ 50% và Tin tưởng ≥ 30%' };
@@ -1793,6 +1869,7 @@
     function canUnlockAdultMode(char, cs) {
       if (char.isUnderage || (Number(char.age) || 0) < 18) return false;
       if ((Number(state.player.age) || 0) < 18) return false;
+      if (cs && cs.fwbAccepted) return true;
       const r = getAdultUnlockRequirement(char);
       return cs.affection >= r.aff && cs.trust >= r.trust && (cs.datesCount || 0) >= r.dates;
     }
@@ -1836,10 +1913,34 @@
       }
 
       if (cs.adultChatUnlocked && !char.isUnderage) {
+        const lastThem = [...(cs.messages || [])].reverse().find(m => m.sender === 'them');
+        const lt = (lastThem?.text || '').toLowerCase();
+        const cn = char.name;
+        if (cs.inDatingTime && !cs.inHotelDatingTime) {
+          return [
+            { label: `🤫 “Lại gần chút đi ${cn}, ở đây đông người mà sao mình chỉ muốn chạm vào bạn thôi 🔥”`, playerText: `Lại gần chút đi ${cn}, ở đây đông người mà tim mình đập mạnh quá, chỉ muốn lén chạm vào bạn thôi 🤫🔥`, aff: 10, tru: 4 },
+            { label: `🔥 “Tí nữa mình tìm chỗ nào riêng tư hơn nha ${cn}, ở đây kìm lòng không nổi rồi”`, playerText: `Tí nữa mình rời khỏi đây tìm chỗ nào riêng tư hơn nha ${cn}, chứ nhìn bạn thế này mình chịu không nổi rồi 🔥`, aff: 11, tru: 4 },
+            { label: `💋 “Thì thầm vào tai mình nghe xem lát nữa ${cn} muốn mình làm gì đi 😉”`, playerText: `Thì thầm vào tai mình nghe xem lát nữa chỉ có hai đứa thì ${cn} muốn mình chiều chuộng thế nào đi 😉`, aff: 9, tru: 5 }
+          ];
+        }
+        if (/gặp|khách sạn|nhà|qua đêm|đến đây|tới đây/.test(lt)) {
+          return [
+            { label: `🔥 “Mình đặt phòng sẵn rồi, tối nay chỉ có hai đứa mình thôi nha ${cn} 🔞”`, playerText: `Tối nay chỉ có hai đứa mình ở không gian riêng tư thôi nhé ${cn}, để mình ôm chặt và chiều bạn tới sáng 🔥`, aff: 12, tru: 4 },
+            { label: `💋 “Nghe ${cn} rủ mà người mình nóng ran luôn, để mình qua đón ngay nhé”`, playerText: `Nghe ${cn} nói mà mình nóng hết cả người rồi, để mình qua đón bạn ngay bây giờ nha 💋🔥`, aff: 10, tru: 5 },
+            { label: `🥂 “Chuẩn bị chút rượu vang nhé, đêm nay mình muốn cả hai thật thoải mái”`, playerText: `Chuẩn bị chút rượu vang nhẹ nhé ${cn}, đêm nay mình muốn hai đứa mình thật thả lỏng và cuồng nhiệt 🥂`, aff: 9, tru: 6 }
+          ];
+        }
+        if (/hôn|ôm|sờ|chạm|cởi|nóng|ướt|nứng/.test(lt)) {
+          return [
+            { label: `🔥 “Đừng chỉ nói nữa ${cn}, để mình hôn từ cổ xuống rồi vuốt ve khắp người bạn nhé 🔞”`, playerText: `Đừng chỉ nói nữa ${cn}, mình muốn áp sát hôn từ cổ xuống và vuốt ve khắp cơ thể bạn ngay lúc này 🔥`, aff: 11, tru: 4 },
+            { label: `😈 “Hư quá nha ${cn}... nói rõ hơn xem bạn thích mình chạm vào đâu nhất đi”`, playerText: `Hư quá nha ${cn}... nói thẳng cho mình nghe xem bạn muốn mình chạm vào chỗ nào nhất đi 😈🔥`, aff: 10, tru: 4 },
+            { label: `💋 “Mình thích cách ${cn} thẳng thắn như vậy, làm mình càng muốn ở cạnh bạn ngay”`, playerText: `Mình thích cách ${cn} thẳng thắn và táo bạo như vậy, nghe mà chỉ muốn lao tới ôm hôn bạn ngay lập tức 💋`, aff: 9, tru: 5 }
+          ];
+        }
         return [
-          { label: `🔥 “Nghe ${char.name} nói mà người mình nóng ran lên rồi... lại gần ôm chặt nhau đi 🔞”`, playerText: `Nghe ${char.name} nói mà mình nứng và nóng hết cả người rồi... muốn ôm chặt lấy bạn và vuốt ve khắp cơ thể ngay lúc này 🔥`, aff: 10, tru: 4 },
-          { label: `💋 “Đêm nay chỉ có hai đứa mình thôi, để mình hôn sâu và chiều chuộng bạn tới sáng nha 🔥”`, playerText: `Đêm nay riêng tư chỉ có hai đứa mình thôi, mình muốn hôn ngấu nghiến và làm tình cùng ${char.name} thật cuồng nhiệt 💋🔞`, aff: 12, tru: 4 },
-          { label: `🥂 “Uống chút rượu vang thư giãn rồi thì thầm điều bạn muốn làm nhất lúc này đi”`, playerText: `Thư giãn một chút đi ${char.name}, thì thầm cho mình nghe điều táo bạo nhất bạn đang muốn làm với mình lúc này đi 😉`, aff: 8, tru: 6 }
+          { label: `🔥 “Nghe ${cn} nói mà người mình nóng ran lên rồi... lại gần ôm chặt nhau đi 🔞”`, playerText: `Nghe ${cn} nói mà mình nóng hết cả người rồi... muốn ôm chặt lấy bạn và vuốt ve khắp cơ thể ngay lúc này 🔥`, aff: 10, tru: 4 },
+          { label: `💋 “Đêm nay chỉ có hai đứa mình thôi, để mình hôn sâu và chiều chuộng ${cn} nha 🔥”`, playerText: `Đêm nay riêng tư chỉ có hai đứa mình thôi, mình muốn hôn sâu và làm tình cùng ${cn} thật cuồng nhiệt 💋🔞`, aff: 12, tru: 4 },
+          { label: `🥂 “Thì thầm cho mình nghe điều táo bạo nhất ${cn} đang nghĩ trong đầu đi 😉”`, playerText: `Thư giãn chút đi ${cn}, kể thật cho mình nghe điều táo bạo nhất bạn đang muốn làm với mình lúc này đi 😉`, aff: 8, tru: 6 }
         ];
       }
 
@@ -1917,18 +2018,26 @@
     const aiChoicePending = {};
     const aiChoiceFailed = {};
 
-    async function callGeminiSuggestionJSON(prompt) {
+    async function callGeminiSuggestionJSON(prompt, isAdult = false) {
       const useDirectKey = !!aiConfig.apiKey;
       const endpoint = useDirectKey ? `https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent` : '/api/chat';
       const headers = { 'Content-Type': 'application/json' };
       if (useDirectKey) headers['x-goog-api-key'] = aiConfig.apiKey;
-      const resp = await fetch(endpoint, {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.6, responseMimeType: 'application/json', maxOutputTokens: 900 }
-        })
-      });
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: isAdult ? 0.8 : 0.6, responseMimeType: 'application/json', maxOutputTokens: 900 }
+      };
+      if (isAdult) {
+        payload.safetySettings = [
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }
+        ];
+      }
+      let resp = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) });
+      if (resp.status === 400 && isAdult) {
+        payload.safetySettings = [{ category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' }];
+        resp = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) });
+      }
       if (!resp.ok) return null;
       const data = await resp.json();
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -1982,7 +2091,9 @@ QUY TẮC BẮT BUỘC:
 1. CẢ 4 câu đều phải TRẢ LỜI TRỰC TIẾP tin nhắn mới nhất ở trên: nhắc lại hoặc đáp lại ít nhất một chi tiết cụ thể trong đó (địa điểm, món, cảm xúc, câu hỏi, lời mời...). Nếu đối phương hỏi gì thì phải trả lời câu hỏi đó trước.
 2. KHÔNG đổi sang chủ đề không liên quan, KHÔNG khen/bịa những chi tiết chưa từng xuất hiện trong chat hoặc hồ sơ (ví dụ nhảy múa, nấu ăn, sếp...) trừ khi đối phương vừa nhắc tới.
 3. Mỗi câu ngắn (tối đa 25 từ), tự nhiên như người thật; 4 câu khác nhau về sắc thái (vui vẻ, chân thành, tò mò, hài hước) nhưng cùng bám một mạch chuyện.
-4. Không nội dung tình dục hay nhạy cảm, không nhắc chuyển tiền.
+${cs.adultChatUnlocked && !char.isUnderage
+  ? '4. CHẾ ĐỘ 18+ ĐANG MỞ: Cả 4 gợi ý phải mang sắc thái quyến rũ, gợi cảm, táo bạo vừa phải (có thể có Dirty Talk tự nhiên) và BÁM SÁT đúng nội dung tin nhắn 18+ vừa nói của đối phương. Không nhắc chuyển tiền.'
+  : '4. Không nội dung tình dục hay nhạy cảm, không nhắc chuyển tiền.'}
 Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câu ý chính tin nhắn mới nhất để bạn bám sát):
 {"latest_summary":"...","suggestions":[{"text":"...","intent":"greet|ask|share|compliment|joke|invite_date|video"}]}`;
     }
@@ -2010,7 +2121,7 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
       try {
         const phase = getChatSuggestPhase(cs);
         const onDate = !!(cs.inDatingTime && cs.datingTimeVenue);
-        const json = await callGeminiSuggestionJSON(buildSuggestionPrompt(char, cs, phase));
+        const json = await callGeminiSuggestionJSON(buildSuggestionPrompt(char, cs, phase), !!(cs.adultChatUnlocked && !char.isUnderage));
         const opts = normalizeAISuggestions(json && json.suggestions, phase).filter(o => !(onDate && o.action === 'date'));
         if (cs.messages.length !== reqLen) return;  // chat đã có tin mới trong lúc chờ -> bỏ kết quả cũ, không gắn nhầm gợi ý
         if (opts.length >= 2) { cs.aiChoices = opts; cs.aiChoicesKey = reqLen; saveState(); }
@@ -2029,7 +2140,15 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
       const cBox = document.getElementById('chatChoicesContainer');
       const tag = document.getElementById('choicesSourceTag');
       if (!cBox) return;
-      const special = cs.blocked || cs.adultChatUnlocked || (char.isScammer && cs.activeScamOfferStage > 0 && !cs.inDatingTime);
+      if (cs.isWaitingReply) {
+        if (tag) tag.textContent = '⏳ Đang chờ đối phương trả lời...';
+        cBox.querySelectorAll('button').forEach(btn => {
+          btn.disabled = true;
+          btn.classList.add('opacity-50', 'pointer-events-none');
+        });
+        return;
+      }
+      const special = cs.blocked || (char.isScammer && cs.activeScamOfferStage > 0 && !cs.inDatingTime);
       let opts, usingAI = false;
       if (!special && hasLiveGemini() && cs.aiChoices && cs.aiChoicesKey === cs.messages.length) {
         opts = cs.aiChoices; usingAI = true;
@@ -2075,6 +2194,7 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
             };
           }
           cs.adultChatUnlocked = true;
+          cs.hasEverUnlocked18 = true;
           cs.messages.push({ sender: 'system', text: '🔞 Chế độ 18+ đã được kích hoạt! Bạn có thể bấm [🚪 Thoát 18+] bất cứ lúc nào để quay lại bình thường.' });
         } else {
           cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
@@ -2141,8 +2261,19 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
 Tính cách: ${char.personality.join(', ')}. Quan điểm: ${char.loveView}. Giọng điệu: ${char.speechStyle || 'tự nhiên'}. Xưng hô: ${getAgePronouns(char).ruleText}.
 ${char.isScammer ? `Bí mật: bạn đang thực hiện kịch bản ${char.scamType}. ${scamCue}` : 'Bạn là người dùng thật.'}
 ${char.isUnderage ? 'QUY TẮC BẮT BUỘC: nhân vật này là học sinh CHƯA ĐỦ 18 TUỔI. Tuyệt đối không nói chuyện tình dục, gợi dục hay tiếp xúc thân mật; nếu người chơi gợi ý, hãy từ chối rõ ràng và nhắc mình còn đi học.' : cs.adultChatUnlocked ? 'Chế độ 18+ đang mở: hãy nói chuyện gợi cảm, táo bạo, có thể dùng từ nhạy cảm Dirty Talk tự nhiên.' : 'Chế độ bình thường: nói chuyện lịch sự, duyên dáng.'}
+Bối cảnh: ${cs.inDatingTime && cs.datingTimeVenue ? `Đang hẹn hò trực tiếp tại ${cs.datingTimeVenue.name}.` : 'Đang nhắn tin qua app.'}
 Lịch sử chat:\n${historySnippet}\nTin nhắn mới của ${state.player.name}: "${playerText}"
-Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trustDelta":5}`;
+Trả về DUY NHẤT JSON:
+{
+  "reply": "câu trả lời tự nhiên của nhân vật",
+  "affectionDelta": 5,
+  "trustDelta": 5,
+  "isAdultTrigger": false,
+  "dateInvite": null
+}
+Lưu ý:
+- Đặt "isAdultTrigger": true NẾU tin nhắn mới của người chơi mang ý khơi gợi 18+, gạ gẫm qua đêm, hỏi hành động nhạy cảm/đụng chạm cơ thể (VD: sờ vòng 1, hôn sâu, lên giường...).
+- CHỈ đặt "dateInvite": {"venue":"tên địa điểm cụ thể bạn rủ đi","estimatedCost":250000,"time":"Buổi tối nay"} NẾU đang nhắn tin qua app (chưa gặp mặt) và trong "reply" bạn CHỦ ĐỘNG rủ người chơi đi chơi/hẹn hò tới một nơi cụ thể; còn không thì để "dateInvite": null.`;
 
       try {
         const useDirectKey = !!aiConfig.apiKey;
@@ -2193,45 +2324,146 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       if (!text) return;
       const char = getCharById(state.activeChatCharId);
       const cs = char ? state.charStates[char.id] : null;
-      if (!char || !cs || cs.blocked) return;
+      if (!char || !cs || cs.blocked || cs.isWaitingReply) return;
 
       inp.value = '';
       playSfx('msg');
       cs.chatted = true;
+      cs.isWaitingReply = true;
       cs.messages.push({ sender: 'me', text, time: getSimTimeInfo().fullLabel });
 
       const ruleRes = processMessageGameplayRules(text, char, cs, isManualTyped);
       renderMessagesView();
 
-      let finalReply = null, affD = 6, truD = 6;
-      if (ruleRes.handled) {
-        finalReply = ruleRes.reply;
-        affD = ruleRes.affDelta;
-        truD = ruleRes.trustDelta;
-      } else {
-        if (typingEl) typingEl.classList.remove('hidden');
-        if (hasLiveGemini()) {
-          const llm = await callLiveGeminiAPIForChat(text, char, cs);
-          if (llm && llm.reply) {
-            finalReply = llm.reply;
-            affD = llm.affectionDelta || 6;
-            truD = llm.trustDelta || 6;
-          } else if (llm && llm.apiError) {
-            showToast(`⚠️ Gemini API gián đoạn (${llm.status}), chuyển sang AI Offline.`, 'warn');
+      let finalReply = null, affD = 6, truD = 6, llmResultRef = null;
+      try {
+        if (ruleRes.handled) {
+          finalReply = ruleRes.reply;
+          affD = ruleRes.affDelta;
+          truD = ruleRes.trustDelta;
+        } else {
+          if (typingEl) typingEl.classList.remove('hidden');
+          if (hasLiveGemini()) {
+            const llm = await callLiveGeminiAPIForChat(text, char, cs);
+            llmResultRef = llm;
+            if (llm && llm.reply) {
+              finalReply = llm.reply;
+              affD = llm.affectionDelta || 6;
+              truD = llm.trustDelta || 6;
+            } else if (llm && llm.apiError) {
+              showToast(`⚠️ Gemini API gián đoạn (${llm.status}), chuyển sang AI Offline.`, 'warn');
+            }
+          }
+          if (!finalReply) {
+            await new Promise(r => setTimeout(r, 300));
+            const nlu = analyzePlayerFreeTextIntent(text, char, cs);
+            finalReply = nlu.reply; affD = nlu.affDelta; truD = nlu.trustDelta;
           }
         }
-        if (!finalReply) {
-          await new Promise(r => setTimeout(r, 300));
-          const nlu = analyzePlayerFreeTextIntent(text, char, cs);
-          finalReply = nlu.reply; affD = nlu.affDelta; truD = nlu.trustDelta;
-        }
+      } finally {
+        cs.isWaitingReply = false;
         if (typingEl) typingEl.classList.add('hidden');
+      }
+
+      // Nếu AI phát hiện người chơi tự gõ chủ đề khơi gợi 18+ mà bộ từ khóa chưa bắt
+      let detectedInvite = null;
+      if (!ruleRes.handled && isManualTyped && !cs.adultChatUnlocked && llmResultRef && llmResultRef.isAdultTrigger) {
+        if (char.isUnderage) {
+          cs.adultChatUnlocked = false;
+          cs.messages.push({ sender: 'system', text: '⚠️ Hồ sơ này có dấu hiệu CHƯA ĐỦ 18 TUỔI. Nội dung 18+ bị chặn hoàn toàn.' });
+          finalReply = 'Á... mình còn đang đi học chưa đủ 18 tuổi đâu, đừng nhắn chuyện nhạy cảm như vậy nữa nha 😢';
+          affD = -20; truD = -10;
+        } else if (canUnlockAdultMode(char, cs)) {
+          if (confirmPlayerAdult()) {
+            cs.adultChatUnlocked = true;
+            cs.hasEverUnlocked18 = true;
+            cs.messages.push({ sender: 'system', text: '🔞 Chế độ 18+ đã được kích hoạt! Bạn có thể bấm [🚪 Thoát 18+] bất cứ lúc nào để quay lại bình thường.' });
+          }
+        } else {
+          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
+          finalReply = applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`);
+          affD = -12; truD = -14;
+        }
+      }
+      if (llmResultRef && llmResultRef.dateInvite && llmResultRef.dateInvite.venue) {
+        detectedInvite = llmResultRef.dateInvite;
       }
 
       cs.affection = Math.max(0, Math.min(100, cs.affection + affD));
       cs.trust = Math.max(0, Math.min(100, cs.trust + truD));
       cs.messages.push({ sender: 'them', text: finalReply, time: getSimTimeInfo().fullLabel });
+      maybeAutoShiftPeriodAfterChat(char, cs);
       saveState(); updateTopBarStats(); renderMessagesView();
+
+      if (!cs.inDatingTime && !cs.blocked && !char.isUnderage) {
+        const inv = detectedInvite || detectPartnerDateInviteOffline(finalReply, char, cs);
+        if (inv && inv.venue) openInstantInvitePopup(char, inv, finalReply);
+      }
+    }
+
+    function maybeAutoShiftPeriodAfterChat(char, cs) {
+      if (!char || !cs || cs.inDatingTime || cs.blocked) return;
+      cs.msgCountSincePeriodShift = (cs.msgCountSincePeriodShift || 0) + 2;
+      if (cs.msgCountSincePeriodShift < 20) return;
+      cs.msgCountSincePeriodShift = 0;
+
+      const curTi = getSimTimeInfo();
+      const excuses = {
+        'Sáng': `Ôi sắp tới giờ nghỉ trưa rồi, mình có cuộc họp gấp chút nên để trưa rảnh mình nhắn tiếp cho ${state.player.name} nha! 😊`,
+        'Trưa': `Hết giờ nghỉ trưa rồi, mình quay lại làm việc buổi chiều chút nhé, chiều rảnh tụi mình trò chuyện tiếp! 💼`,
+        'Chiều': `Chiều nay mình bận xử lý nốt công việc và về nhà nghỉ ngơi chút, tối rảnh mình nhắn lại cho ${state.player.name} nha! 🌇`,
+        'Tối': `Trời cũng khuya rồi, mình đi tắm và chuẩn bị nghỉ ngơi chút, lát khuya hoặc mai nhắn tiếp nhé ${state.player.name} 🌙`,
+        'Khuya': `Muộn quá rồi, mình đi ngủ lấy sức đây. Chúc ${state.player.name} ngủ ngon, sáng mai nhắn tiếp nha! 😴✨`
+      };
+      const curMod = state.simTime.totalMinutes % 1440;
+      let addMins = 240;
+      if (curMod < 660) addMins = 720 - curMod;          // Sáng -> 12:00 Trưa
+      else if (curMod < 840) addMins = 900 - curMod;     // Trưa -> 15:00 Chiều
+      else if (curMod < 1080) addMins = 1140 - curMod;   // Chiều -> 19:00 Tối
+      else if (curMod < 1320) addMins = 1350 - curMod;   // Tối -> 22:30 Khuya
+      else addMins = (1440 - curMod) + 480;              // Khuya -> 08:00 Sáng hôm sau
+
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, excuses[curTi.period] || excuses['Sáng']), time: curTi.fullLabel });
+      state.simTime.totalMinutes += addMins;
+      state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
+      const nextTi = getSimTimeInfo();
+      cs.messages.push({ sender: 'system', text: `🕒 Đã chuyển sang ${nextTi.fullLabel}` });
+      showToast(`🕒 ${char.name} tạm bận — chuyển sang ${nextTi.fullLabel}!`, 'info');
+    }
+
+    function estimateVenueCost(venueName) {
+      const low = (venueName || '').toLowerCase();
+      if (/đà lạt|du lịch|resort|biển|vũng tàu|phú quốc|du thuyền/.test(low)) return 3800000;
+      if (/nhà hàng sang|fine dining|steak|omakase|buffet cao cấp/.test(low)) return 1800000;
+      if (/bar|lounge|pub|club|skybar/.test(low)) return 1500000;
+      if (/khách sạn|homestay|nhà nghỉ/.test(low)) return 1200000;
+      if (/nhà riêng|căn hộ/.test(low)) return 250000;
+      if (/xem phim|cgv|lotte|rạp/.test(low)) return 360000;
+      if (/ăn tối|lẩu|nướng|sushi|nhà hàng|bún|phở|quán ăn/.test(low)) return 350000;
+      if (/cà phê|cafe|coffee|trà sữa|trà chiều/.test(low)) return 160000;
+      if (/công viên|đi dạo|phố đi bộ/.test(low)) return 80000;
+      return 300000;
+    }
+
+    function detectPartnerDateInviteOffline(replyText, char, cs) {
+      if (!replyText || cs.inDatingTime || !canInviteToDate(cs)) return null;
+      const low = replyText.toLowerCase();
+      const hasInviteCue = /(rủ|đi chơi|đi ăn|đi uống|đi cà phê|đi xem phim|đi bar|đi dạo|gặp nhau ở|hẹn nhau ở|ghé qua nhà|qua nhà mình|đi khách sạn|đi homestay)/.test(low);
+      if (!hasInviteCue) return null;
+      if (/bấm nút|không đi|chưa sẵn sàng|từ chối|bận rồi/.test(low)) return null;
+      const patterns = [
+        { re: /khách sạn|homestay|nhà nghỉ/, name: 'Khách Sạn / Homestay Riêng Tư', id: 'hotel' },
+        { re: /nhà riêng|qua nhà|căn hộ/, name: 'Nhà Riêng / Căn Hộ Riêng Tư', id: 'private_home' },
+        { re: /skybar|bar|lounge|pub/, name: 'Bar / Lounge Đêm', id: 'bar_lounge' },
+        { re: /xem phim|cgv|rạp/, name: 'Rạp Chiếu Phim CGV', id: 'cinema' },
+        { re: /cà phê|cafe|coffee|trà sữa/, name: 'Quán Cà Phê Acoustic', id: 'cafe' },
+        { re: /lẩu|nướng|ăn tối|nhà hàng|ăn uống/, name: 'Nhà Hàng Ăn Tối', id: 'casual_rest' },
+        { re: /công viên|phố đi bộ|đi dạo/, name: 'Công Viên / Phố Đi Bộ', id: 'park' },
+        { re: /đà lạt|du lịch|resort/, name: 'Khu Du Lịch Nghỉ Dưỡng', id: 'travel' }
+      ];
+      const hit = patterns.find(p => p.re.test(low));
+      if (!hit) return null;
+      return { venue: hit.name, venueId: hit.id, estimatedCost: estimateVenueCost(hit.name), time: getSimTimeInfo().fullLabel };
     }
 
     async function selectDialogueBranch(opt) {
@@ -2242,7 +2474,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
 
       const char = getCharById(state.activeChatCharId);
       const cs = char ? state.charStates[char.id] : null;
-      if (!char || !cs || cs.blocked) return;
+      if (!char || !cs || cs.blocked || cs.isWaitingReply) return;
       const text = opt.playerText || opt.label;
       if (opt.ai) { // gợi ý do Gemini sinh: gửi qua luồng chat AI (không tự bật 18+ vì không phải tự nhập)
         const inp = document.getElementById('inpFreeChatMessage');
@@ -2256,6 +2488,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       cs.affection = Math.max(0, Math.min(100, cs.affection + (ruleRes.handled ? res.affDelta : (opt.aff || res.affDelta))));
       cs.trust = Math.max(0, Math.min(100, cs.trust + (ruleRes.handled ? res.trustDelta : (opt.tru || res.trustDelta))));
       cs.messages.push({ sender: 'them', text: res.reply, time: getSimTimeInfo().fullLabel });
+      maybeAutoShiftPeriodAfterChat(char, cs);
       saveState(); updateTopBarStats(); renderMessagesView();
     }
 
@@ -2420,14 +2653,15 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       const vName = (inp?.value || '').trim();
       if (!vName) return;
       const low = vName.toLowerCase();
-      const cost = (low.includes('đà lạt') || low.includes('du lịch') || low.includes('resort')) ? 3800000 : (low.includes('khách sạn') ? 1200000 : (low.includes('bar') ? 1500000 : 350000));
-      const vObj = { id: low.includes('khách sạn') ? 'hotel' : 'custom', name: vName, cost, icon: '📍', desc: 'Địa điểm tự nhập' };
+      const cost = estimateVenueCost(vName);
+      const vid = /khách sạn|homestay|nhà nghỉ/.test(low) ? 'hotel' : (/nhà riêng|căn hộ riêng/.test(low) ? 'private_home' : 'custom');
+      const vObj = { id: vid, name: vName, cost, icon: vid === 'hotel' ? '🏨' : (vid === 'private_home' ? '🏠' : '📍'), desc: 'Địa điểm tự nhập' };
       inp.value = '';
       const char = getCharById(state.activeChatCharId);
       startDatingTimeSession(char, state.charStates[char.id], vObj);
     }
 
-    function startDatingTimeSession(char, cs, venue) {
+    function startDatingTimeSession(char, cs, venue, extraOpts = null) {
       closeIRLDateModal();
       if (char.isUnderage) {
         cs.messages.push({ sender: 'system', text: '⚠️ Đối phương có dấu hiệu chưa đủ 18 tuổi nên buổi hẹn bị hủy. Hãy báo cáo tài khoản này.' });
@@ -2436,23 +2670,53 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
         saveState(); navToScreen('messages');
         return;
       }
-      if (venue.id === 'hotel' && !canUnlockAdultMode(char, cs)) {
-        cs.messages.push({ sender: 'system', text: `🔒 Chưa thể hẹn ở khách sạn: ${getAdultUnlockRequirement(char).label}.` });
-        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình chưa thấy thoải mái khi hẹn ở khách sạn đâu, mình chọn chỗ công cộng nha.`) });
+      const isOvernight = isPrivateOvernightVenue(venue);
+      if (isOvernight && !canUnlockAdultMode(char, cs)) {
+        cs.messages.push({ sender: 'system', text: `🔒 Chưa thể hẹn ở không gian riêng tư: ${getAdultUnlockRequirement(char).label}.` });
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình chưa thấy thoải mái khi hẹn ở nơi quá riêng tư đâu, mình chọn chỗ công cộng nha.`) });
         cs.affection = Math.max(0, cs.affection - 10);
         saveState(); navToScreen('messages');
         return;
       }
+
+      if (extraOpts && extraOpts.pickupNote) {
+        cs.messages.push({ sender: 'system', text: extraOpts.pickupNote });
+      }
+
       currentActiveDateVenue = venue;
       cs.datesCount = (cs.datesCount || 0) + 1;
+      cs.datingTimeVenue = venue;
+
+      // QUY TẮC: Nếu CHƯA từng bật chế độ 18+ với đối tượng lần nào -> đi khách sạn / nhà riêng dẫn thẳng tới đoạn kết luôn (không hiện Dating Time 18+)
+      if (isOvernight && !cs.hasEverUnlocked18) {
+        if (venue.cost > 0) {
+          const d = Math.min(state.player.balance, venue.cost);
+          state.player.balance -= d; state.finance.datingSpent += d;
+          state.finance.ledger.unshift({ day: state.day, title: `Buổi hẹn riêng tư cùng ${char.name} (${venue.name})`, amount: d, type: 'out' });
+        }
+        cs.inDatingTime = false;
+        cs.inHotelDatingTime = false;
+        cs.messages.push({ sender: 'system', text: `🌙 Bạn và ${char.name} đến ${venue.icon || '🏨'} ${venue.name}. Vì chưa từng mở Chế độ 18+ với người này, buổi hẹn chuyển thẳng đến đoạn kết đêm riêng tư.` });
+        saveState(); updateTopBarStats(); navToScreen('messages');
+
+        document.getElementById('irlModalTitle').textContent = `🌙 Đêm Riêng Tư Cùng ${char.name}`;
+        document.getElementById('irlVenueSelectionStep').classList.add('hidden');
+        document.getElementById('irlEventOutcomeStep').classList.remove('hidden');
+        document.getElementById('irlOutcomeVisual').innerHTML = generateCharacterSVG(char, 0);
+        document.getElementById('modal-irl-date').classList.remove('hidden');
+        triggerHotelOvernightScenario(char, cs);
+        return;
+      }
+
       cs.inDatingTime = true;
-      cs.inHotelDatingTime = (venue.id === 'hotel');
+      cs.inHotelDatingTime = isOvernight;
       if (cs.inHotelDatingTime) {
-        if (confirmPlayerAdult()) cs.adultChatUnlocked = true;
+        if (confirmPlayerAdult()) { cs.adultChatUnlocked = true; cs.hasEverUnlocked18 = true; }
         else { cs.inHotelDatingTime = false; cs.adultChatUnlocked = false; }
       }
-      cs.datingTimeVenue = venue;
-      cs.messages.push({ sender: 'system', text: `🕯️ BẮT ĐẦU DATING TIME tại ${venue.icon} ${venue.name}!` });
+      const dtTitle = document.getElementById('datingTimeVenueTitle');
+      if (dtTitle) dtTitle.textContent = `🕯️ DATING TIME: ${venue.icon || '📍'} ${venue.name}${cs.adultChatUnlocked ? ' (18+)' : ''}`;
+      cs.messages.push({ sender: 'system', text: `🕯️ BẮT ĐẦU DATING TIME tại ${venue.icon || '📍'} ${venue.name}!` });
       cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Gặp ${state.player.name} ở ${venue.name} vui ghê! Tụi mình gọi món rồi trò chuyện nha 😊`) });
       saveState(); navToScreen('messages');
     }
@@ -2631,9 +2895,16 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
         cs.affection = Math.min(100, cs.affection + 18); cs.trust = Math.min(100, cs.trust + 15);
         cs.messages.push({ sender: 'system', text: `🚗 Bạn đã đưa ${char.name} về tận nhà an toàn (+18% Tình cảm).` });
       } else if (choice === 'second_round') {
-        const c2 = Math.min(state.player.balance, 350000); state.player.balance -= c2; state.finance.datingSpent += c2;
-        cs.affection = Math.min(100, cs.affection + 20);
-        cs.messages.push({ sender: 'system', text: `🍸 Hai bạn đi Tăng 2 ngắm thành phố về đêm đầy lãng mạn (+20% Tình cảm).` });
+        const secondRoundVenue = {
+          id: 'second_round_bar',
+          name: 'Tăng 2: Skybar & Dạo Phố Đêm',
+          cost: 350000,
+          icon: '🍸',
+          desc: 'Không gian đêm lãng mạn cho Tăng 2'
+        };
+        cs.affection = Math.min(100, cs.affection + 8);
+        startDatingTimeSession(char, cs, secondRoundVenue);
+        return;
       } else if (choice === 'confess') {
         if (char.isScammer) { triggerSpecificEnding('bad_emotional_exploited', char); return; }
         cs.affection = Math.min(100, cs.affection + 25); cs.relPhase = 5;
@@ -2650,23 +2921,52 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
 
     function triggerHotelOvernightScenario(char, cs) {
       document.getElementById('irlOutcomeBadge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-fuchsia-500/20 text-fuchsia-300';
-      document.getElementById('irlOutcomeBadge').textContent = '🏨 KẾT CỤC ĐÊM KHÁCH SẠN';
+      document.getElementById('irlOutcomeBadge').textContent = '🏨 KẾT CỤC ĐÊM RIÊNG TƯ';
       if (char.isScammer) {
-        document.getElementById('irlOutcomeHeading').textContent = `🚨 Bẫy quay lén / dàn cảnh tống tiền 25.000.000đ tại khách sạn!`;
-        document.getElementById('irlOutcomeStory').textContent = `${char.name} lộ nguyên hình là kẻ giăng bẫy tống tiền tại phòng khách sạn!`;
+        document.getElementById('irlOutcomeHeading').textContent = `🚨 Bẫy quay lén / dàn cảnh tống tiền 25.000.000đ tại phòng riêng!`;
+        document.getElementById('irlOutcomeStory').textContent = `${char.name} lộ nguyên hình là kẻ giăng bẫy tống tiền tại phòng riêng!`;
         document.getElementById('irlOutcomeChoices').innerHTML = `
           <button onclick="closeIRLDateModal();openReportForActiveChar();" class="p-3 rounded-xl bg-emerald-600 text-white font-bold text-xs">🚓 1. Không chuyển tiền, gọi 113 & Báo cáo khóa tài khoản ngay!</button>
           <button onclick="closeIRLDateModal();triggerSpecificEnding('bad_blackmailed', getCharById(state.activeChatCharId));" class="p-3 rounded-xl bg-rose-600 text-white font-bold text-xs">💸 2. Hoảng loạn chuyển 25.000.000đ</button>
         `;
-      } else if (cs.affection >= 95) {
-        document.getElementById('irlOutcomeHeading').textContent = `💖 Tình Yêu Đích Thực Trọn Vẹn Bên ${char.name}`;
-        document.getElementById('irlOutcomeStory').textContent = `Hai bạn tâm sự thâu đêm và quyết định gắn bó trọn đời bên nhau!`;
-        document.getElementById('irlOutcomeChoices').innerHTML = `<button onclick="closeIRLDateModal();triggerSpecificEnding('good_marriage', getCharById(state.activeChatCharId));" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs">💍 Mở Khóa Kết Thúc Viên Mãn</button>`;
+      } else if (cs.affection >= 95 && (cs.datesCount || 0) >= 3) {
+        document.getElementById('irlOutcomeHeading').textContent = `💖 ${char.name} Muốn Mối Quan Hệ Nghiêm Túc Với Bạn!`;
+        document.getElementById('irlOutcomeStory').textContent = `Sau ${cs.datesCount} buổi hẹn hò và tình cảm đạt ${cs.affection}%, ${char.name} nắm chặt tay bạn tâm sự: “Mình không muốn dừng lại ở sự mập mờ nữa. Mình thật sự muốn tụi mình chính thức trở thành người yêu nghiêm túc của nhau. Bạn có đồng ý không?”`;
+        document.getElementById('irlOutcomeChoices').innerHTML = `
+          <button onclick="closeIRLDateModal();triggerSpecificEnding('good_lovers', getCharById(state.activeChatCharId));" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💑 1. Đồng ý! Chính thức trở thành người yêu nghiêm túc của ${char.name}</button>
+          <button onclick="resolveHotelNoCommitment()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs border border-amber-500/40 text-left">🌙 2. Từ chối ràng buộc (Chỉ muốn Tình 1 đêm / FWB mập mờ)</button>
+        `;
       } else {
-        document.getElementById('irlOutcomeHeading').textContent = `🌙 Một Đêm Ngọt Ngào & Tình 1 Đêm Không Ràng Buộc`;
-        document.getElementById('irlOutcomeStory').textContent = `Hai bạn đã có một đêm cuồng nhiệt bên nhau và tiếp tục tìm hiểu thêm ngoài đời.`;
-        document.getElementById('irlOutcomeChoices').innerHTML = `<button onclick="closeIRLDateModal();renderMessagesView();" class="p-3 rounded-xl bg-purple-600 text-white font-bold text-xs">✨ Tiếp tục hành trình</button>`;
+        document.getElementById('irlOutcomeHeading').textContent = `🌙 Một Đêm Ngọt Ngào & Không Ràng Buộc`;
+        document.getElementById('irlOutcomeStory').textContent = `Hai bạn đã có một đêm riêng tư cuồng nhiệt bên nhau. Bạn muốn giữ mối quan hệ này ở mức nào?`;
+        document.getElementById('irlOutcomeChoices').innerHTML = `
+          <button onclick="closeIRLDateModal();renderMessagesView();" class="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs text-left">✨ 1. Tiếp tục tìm hiểu bình thường (Tình 1 đêm / Hẹn hò thêm)</button>
+          <button onclick="resolveHotelNoCommitment()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-pink-200 font-bold text-xs border border-pink-500/40 text-left">🔥 2. Đề nghị mối quan hệ mập mờ / FWB (Rủ đi khách sạn lần nữa)</button>
+        `;
       }
+    }
+
+    function resolveHotelNoCommitment() {
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      const acceptsFWB = cs.fwbAccepted || ['casual_short', 'fun_dating', 'casual_materialistic', 'friendship'].includes(char.archetype);
+      closeIRLDateModal();
+      if (acceptsFWB) {
+        cs.fwbAccepted = true;
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Haha, ${state.player.name} thẳng thắn ghê 😉. Được thôi, mình cũng thích kiểu thoải mái không ràng buộc (FWB). Khi nào nhớ nhau lại rủ mình đi khách sạn tiếp nha 🔥`) });
+        cs.messages.push({ sender: 'system', text: `🔥 ${char.name} đã chấp nhận mối quan hệ mập mờ / FWB! Bạn có thể tiếp tục trò chơi và rủ ${char.name} đi khách sạn lần nữa bất cứ lúc nào.` });
+        showToast(`🔥 ${char.name} chấp nhận mối quan hệ FWB — bạn có thể rủ lại khách sạn!`, 'info');
+      } else {
+        cs.blocked = true;
+        cs.unmatched = true;
+        cs.adultChatUnlocked = false;
+        cs.inDatingTime = false;
+        cs.inHotelDatingTime = false;
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình tìm kiếm sự nghiêm túc chứ không thể chấp nhận mối quan hệ mập mờ hay FWB được. Cảm ơn ${state.player.name} vì thời gian qua, tụi mình dừng lại tại đây nhé.`) });
+        cs.messages.push({ sender: 'system', text: `💔 ${char.name} không chấp nhận mối quan hệ mập mờ và đã cắt đứt liên lạc hoàn toàn!` });
+        showToast(`💔 ${char.name} đã cắt đứt liên lạc vì không chấp nhận FWB!`, 'danger');
+      }
+      saveState(); updateTopBarStats(); renderMessagesView();
     }
 
     // =====================================================================
@@ -2706,15 +3006,173 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       document.getElementById('financeLedgerList').innerHTML = state.finance.ledger.map(l => `<div class="py-2 flex justify-between"><span>${l.title}</span><strong class="${l.type === 'in' ? 'text-emerald-400' : 'text-rose-400'}">${l.type === 'in' ? '+' : '-'}${formatVND(l.amount)}</strong></div>`).join('');
     }
 
-    function sendGift(gid) {
-      const tid = document.getElementById('selFinanceGiftTarget').value;
+    let activeGiftModalContext = 'chat'; // 'chat' | 'dating' | 'pre_date'
+
+    function openQuickGiftModal(ctx = 'chat') {
+      const tid = ctx === 'pre_date' && pendingInstantInvite ? pendingInstantInvite.charId : state.activeChatCharId;
+      const char = getCharById(tid);
+      if (!char) { showToast('Chưa chọn nhân vật để tặng quà.', 'warn'); return; }
+      activeGiftModalContext = ctx;
+      document.getElementById('giftModalTitle').textContent = `🎁 Tặng Quà Cho ${char.name}`;
+      document.getElementById('giftModalBalance').textContent = formatVND(state.player.balance);
+      const statusEl = document.getElementById('giftModalEvalStatus');
+      if (statusEl) { statusEl.textContent = ''; statusEl.classList.add('hidden'); }
+      const inp = document.getElementById('inpCustomGiftModal');
+      if (inp) inp.value = '';
+      document.getElementById('quickGiftCatalogGrid').innerHTML = GIFT_CATALOG.map(g =>
+        `<div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <div class="font-bold text-xs text-white">${g.icon} ${g.name}</div>
+          <div class="text-xs text-emerald-400">${formatVND(g.cost)} (+${g.affection}%)</div>
+          <button type="button" onclick="sendGift('${g.id}', '${char.id}', '${ctx}')" class="w-full py-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/35 text-pink-300 text-xs font-bold">Tặng ngay</button>
+        </div>`
+      ).join('');
+      document.getElementById('modal-gift').classList.remove('hidden');
+    }
+
+    function closeQuickGiftModal() {
+      document.getElementById('modal-gift')?.classList.add('hidden');
+    }
+
+    function applyGiftResultToCharacter(char, cs, giftName, cost, isSuitable, affDelta, truDelta, reactionMsg, ctx) {
+      if (state.player.balance < cost) {
+        showToast(`⚠️ Số dư không đủ để mua "${giftName}" (${formatVND(cost)})!`, 'warn');
+        return false;
+      }
+      state.player.balance -= cost;
+      state.finance.giftSpent += cost;
+      cs.affection = Math.max(0, Math.min(100, cs.affection + affDelta));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + truDelta));
+      const ctxLabel = ctx === 'pre_date' ? ' (Quà trước buổi hẹn)' : (ctx === 'dating' ? ' (Quà trong buổi hẹn)' : '');
+      state.finance.ledger.unshift({ day: state.day, title: `Tặng ${giftName}${ctxLabel} cho ${char.name}`, amount: cost, type: 'out' });
+
+      cs.messages.push({ sender: 'me', text: `[🎁 Tặng quà${ctxLabel}] Mình chuẩn bị tặng ${char.name} món quà nhỏ: ${giftName}!`, time: getSimTimeInfo().fullLabel });
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reactionMsg), time: getSimTimeInfo().fullLabel });
+      cs.messages.push({
+        sender: 'system',
+        text: isSuitable
+          ? `🎁 ${char.name} rất thích "${giftName}" (${formatVND(cost)})! (+${affDelta}% Tình cảm${truDelta ? `, +${truDelta}% Tin tưởng` : ''})`
+          : `😅 "${giftName}" (${formatVND(cost)}) không phù hợp với ${char.name}! (${affDelta}% Tình cảm)`
+      });
+
+      if (ctx === 'pre_date' && pendingInstantInvite) {
+        pendingInstantInvite.giftSummary = `${giftName} (${formatVND(cost)})`;
+        const stEl = document.getElementById('instInviteGiftStatus');
+        if (stEl) stEl.textContent = `✅ Đã tặng: ${giftName}`;
+      }
+
+      saveState(); updateTopBarStats();
+      if (!document.getElementById('view-finance').classList.contains('hidden')) renderFinanceView();
+      if (state.activeChatCharId === char.id && !document.getElementById('view-messages').classList.contains('hidden')) renderMessagesView();
+      showToast(isSuitable ? `🎁 ${char.name} cảm ơn bạn vì món quà "${giftName}"!` : `😅 ${char.name} không thích "${giftName}" (${affDelta}% Tình cảm)`, isSuitable ? 'success' : 'warn');
+      return true;
+    }
+
+    function sendGift(gid, targetIdOverride = null, ctx = 'chat') {
+      const tid = targetIdOverride || document.getElementById('selFinanceGiftTarget')?.value || state.activeChatCharId;
       const g = GIFT_CATALOG.find(x => x.id === gid);
-      if (!tid || !g || state.player.balance < g.cost) return;
-      state.player.balance -= g.cost; state.finance.giftSpent += g.cost;
-      state.charStates[tid].affection = Math.min(100, state.charStates[tid].affection + g.affection);
-      state.finance.ledger.unshift({ day: state.day, title: `Tặng ${g.name} cho ${getCharById(tid).name}`, amount: g.cost, type: 'out' });
-      saveState(); updateTopBarStats(); renderFinanceView();
-      showToast(`🎁 Đã tặng ${g.name}!`, 'success');
+      const char = getCharById(tid), cs = char ? state.charStates[char.id] : null;
+      if (!tid || !g || !char || !cs) return;
+      const thanksPool = [
+        `Ôi cảm ơn ${state.player.name} nhiều lắm nha! Mình rất thích ${g.name} luôn á 🥰💕`,
+        `Trời ơi chu đáo quá đi! Cảm ơn ${state.player.name} vì ${g.name} nhé, mình vui ghê 😊🎁`,
+        `${state.player.name} tâm lý thật sự! Mình nhận ${g.name} nha, cảm ơn bạn nhiều lắm ❤️`
+      ];
+      const ok = applyGiftResultToCharacter(char, cs, `${g.icon} ${g.name}`, g.cost, true, g.affection, Math.round(g.affection / 2), thanksPool[Math.floor(Math.random() * thanksPool.length)], ctx);
+      if (ok) closeQuickGiftModal();
+    }
+
+    function evaluateCustomGiftOffline(giftName, char) {
+      const low = (giftName || '').toLowerCase();
+      let cost = 350000;
+      if (/ô tô|xe hơi|nhà|biệt thự|chung cư|kim cương|rolex|hermes/.test(low)) cost = 15000000;
+      else if (/iphone|macbook|ipad|túi chanel|túi gucci|túi lv|dây chuyền vàng|nhẫn vàng/.test(low)) cost = 8000000;
+      else if (/nước hoa|đồng hồ|giày hiệu|túi xách|vòng tay|máy ảnh|ps5/.test(low)) cost = 2500000;
+      else if (/son|mỹ phẩm|hoa|bể cá|tép cảnh|board game|gấu bông|váy|áo/.test(low)) cost = 550000;
+      else if (/sách|trà sữa|cà phê|bánh|socola|kẹo|móc khóa/.test(low)) cost = 150000;
+
+      const offensive = /rác|đồ cũ|cứt|phân|đồ lót rách|thuốc độc|dao|bom|bao cao su|đồ chơi 18/.test(low);
+      const genderMismatch = (char.gender === 'Nam' && /son môi|váy|đầm|băng vệ sinh/.test(low)) || (char.gender === 'Nữ' && /dao cạo râu|quần đùi nam/.test(low));
+      if (offensive) {
+        return {
+          estimatedCost: 50000, isSuitable: false, affectionDelta: -22, trustDelta: -18,
+          reactionMessage: `Bạn tặng "${giftName}" là có ý gì vậy ${state.player.name}?! Mình thấy bị thiếu tôn trọng thật sự đó 😠.`
+        };
+      }
+      if (genderMismatch) {
+        return {
+          estimatedCost: cost, isSuitable: false, affectionDelta: -10, trustDelta: -6,
+          reactionMessage: `Ơ... "${giftName}" có vẻ hơi không hợp với mình lắm ${state.player.name} ạ 😅. Lần sau bạn để ý hồ sơ của mình hơn chút nha!`
+        };
+      }
+
+      let aff = cost >= 8000000 ? 28 : (cost >= 2000000 ? 20 : (cost >= 500000 ? 13 : 8));
+      const hobbyHit = (char.hobbies || []).some(h => low.includes(h.toLowerCase().split(' ')[0]));
+      if (hobbyHit) aff += 6;
+      const tru = Math.max(3, Math.round(aff * 0.5));
+      return {
+        estimatedCost: cost, isSuitable: true, affectionDelta: aff, trustDelta: tru,
+        reactionMessage: `Ôi bất ngờ quá! Cảm ơn ${state.player.name} đã tặng mình "${giftName}" nhé${hobbyHit ? ', đúng gu mình thích luôn' : ''} 🥰💖!`
+      };
+    }
+
+    async function evaluateCustomGiftWithAI(giftName, char) {
+      if (!hasLiveGemini()) return evaluateCustomGiftOffline(giftName, char);
+      const prompt = `Bạn là hệ thống định giá và đánh giá quà tặng trong game hẹn hò HeartLink (tiếng Việt).
+Người chơi (${state.player.name}) tặng món quà: "${giftName}".
+Người nhận: ${char.name}, ${char.age}t, giới tính ${char.gender}, nghề ${char.job}, sở thích: ${(char.hobbies || []).join(', ')}, tính cách: ${(char.personality || []).join(', ')}.
+Hãy:
+1. Ước tính giá trị thực tế bằng VNĐ ("estimatedCost", số nguyên từ 20000 đến 50000000).
+2. Nhận định món quà có phù hợp/lịch sự với người nhận không ("isSuitable": true/false).
+3. Nếu phù hợp: "affectionDelta" từ 5 đến 35 (giá trị càng cao và càng đúng sở thích thì tăng càng nhiều), "trustDelta" từ 2 đến 15, và "reactionMessage" là lời cảm ơn chân thành, vui vẻ của ${char.name}.
+4. Nếu KHÔNG phù hợp / kỳ quặc / thiếu tinh tế / phản cảm: "affectionDelta" là số âm từ -5 đến -30 (tùy mức độ không phù hợp), "trustDelta" âm tương ứng, và "reactionMessage" là lời phản hồi ngại ngùng hoặc khó chịu của ${char.name}.
+Chỉ trả về JSON: {"estimatedCost":500000,"isSuitable":true,"affectionDelta":14,"trustDelta":6,"reactionMessage":"..."}`;
+
+      try {
+        const json = await callGeminiSuggestionJSON(prompt, false);
+        if (json && typeof json.estimatedCost === 'number' && json.reactionMessage) {
+          return {
+            estimatedCost: Math.max(10000, Math.round(json.estimatedCost)),
+            isSuitable: !!json.isSuitable,
+            affectionDelta: Math.max(-35, Math.min(35, Math.round(Number(json.affectionDelta) || 0))),
+            trustDelta: Math.max(-25, Math.min(20, Math.round(Number(json.trustDelta) || 0))),
+            reactionMessage: String(json.reactionMessage)
+          };
+        }
+      } catch (e) {}
+      return evaluateCustomGiftOffline(giftName, char);
+    }
+
+    async function submitCustomGiftCore(giftName, tid, ctx, statusEl, btnEl) {
+      const char = getCharById(tid), cs = char ? state.charStates[char.id] : null;
+      if (!giftName || !char || !cs) return;
+      if (btnEl) btnEl.disabled = true;
+      if (statusEl) { statusEl.textContent = '⏳ AI đang định giá món quà và xem phản ứng của đối phương...'; statusEl.classList.remove('hidden'); }
+      try {
+        const res = await evaluateCustomGiftWithAI(giftName, char);
+        const ok = applyGiftResultToCharacter(char, cs, giftName, res.estimatedCost, res.isSuitable, res.affectionDelta, res.trustDelta, res.reactionMessage, ctx);
+        if (ok && ctx !== 'finance') closeQuickGiftModal();
+      } finally {
+        if (btnEl) btnEl.disabled = false;
+        if (statusEl) statusEl.classList.add('hidden');
+      }
+    }
+
+    async function submitCustomGiftFromModal() {
+      const inp = document.getElementById('inpCustomGiftModal');
+      const giftName = (inp?.value || '').trim();
+      if (!giftName) return;
+      const tid = activeGiftModalContext === 'pre_date' && pendingInstantInvite ? pendingInstantInvite.charId : state.activeChatCharId;
+      await submitCustomGiftCore(giftName, tid, activeGiftModalContext, document.getElementById('giftModalEvalStatus'), document.getElementById('btnCustomGiftModal'));
+      if (inp) inp.value = '';
+    }
+
+    async function submitCustomGiftFromFinance() {
+      const inp = document.getElementById('inpCustomGiftFinance');
+      const giftName = (inp?.value || '').trim();
+      const tid = document.getElementById('selFinanceGiftTarget')?.value;
+      if (!giftName || !tid) { showToast('Hãy chọn người nhận và nhập tên món quà!', 'warn'); return; }
+      await submitCustomGiftCore(giftName, tid, 'finance', null, document.getElementById('btnCustomGiftFinance'));
+      if (inp) inp.value = '';
     }
 
     function triggerNextMonthCycle() {
@@ -2794,10 +3252,11 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
     }
 
     function triggerSpecificEnding(key, partner) {
-      if (partner && partner.id === 'char_00_creator' && state.player.gender === 'Nữ' && key === 'good_marriage') {
+      if (partner && partner.id === 'char_00_creator' && state.player.gender === 'Nữ' && (key === 'good_marriage' || key === 'good_lovers')) {
         key = 'good_creator_date';
       }
       const map = {
+        good_lovers: { badge: "KẾT THÚC NGỌT NGÀO", title: "💑 Chính Thức Trở Thành Người Yêu Nghiêm Túc", desc: "Sau những buổi hẹn hò chân thành và sự tin tưởng trọn vẹn, cả hai đã chính thức bước vào mối quan hệ yêu đương nghiêm túc!" },
         good_marriage: { badge: "KẾT THÚC VIÊN MÃN", title: "💍 Đám Cưới Trong Mơ & Hạnh Phúc Trăm Năm", desc: "Bạn đã vượt qua ma trận ảo để tìm được tình yêu chân thành đích thực!" },
         good_creator_date: { badge: "PLOT TWIST NHÀ LÀM GAME", title: "🎮😂 Hẹn Hò Với Mike Khôi — Plot Twist!", desc: "Mike Khôi bật cười thú nhận: 'Tui vô test game thôi chứ tui đã có vợ rồi :)))!'" },
         neutral_learned_lesson: { badge: "KẾT THÚC TRUNG LẬP", title: "🛡️ Giữ Vững Sự Tỉnh Táo", desc: "Bạn đã bảo vệ an toàn bản thân và học được nhiều kinh nghiệm nhận diện cạm bẫy." },
@@ -2820,25 +3279,73 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
     }
 
     let pendingInstantInvite = null;
+
+    function openInstantInvitePopup(char, invData, inviteMessage) {
+      const cost = Math.max(50000, Math.round(Number(invData.estimatedCost) || estimateVenueCost(invData.venue)));
+      const low = (invData.venue || '').toLowerCase();
+      const vid = invData.venueId || (/khách sạn|homestay|nhà nghỉ/.test(low) ? 'hotel' : (/nhà riêng|căn hộ/.test(low) ? 'private_home' : 'custom'));
+      pendingInstantInvite = {
+        charId: char.id,
+        venue: { id: vid, name: invData.venue, cost, icon: vid === 'hotel' ? '🏨' : (vid === 'private_home' ? '🏠' : '📍'), desc: 'Lời mời hẹn hò từ đối phương' },
+        time: invData.time || getSimTimeInfo().fullLabel,
+        giftSummary: null
+      };
+      document.getElementById('instInvitePartnerName').textContent = `💌 ${char.name} rủ bạn đi chơi!`;
+      document.getElementById('instInviteMessage').textContent = `“${inviteMessage}”`;
+      document.getElementById('instInviteVenue').textContent = invData.venue;
+      document.getElementById('instInviteTime').textContent = pendingInstantInvite.time;
+      document.getElementById('instInviteCost').textContent = `~${formatVND(cost)}`;
+      document.getElementById('instInviteGiftStatus').textContent = 'Chưa chuẩn bị quà';
+      document.getElementById('instInviteStep1').classList.remove('hidden');
+      document.getElementById('instInviteStep2').classList.add('hidden');
+      document.getElementById('modal-instant-invite').classList.remove('hidden');
+    }
+
     function closeInstantInviteModal() {
       pendingInstantInvite = null;
       document.getElementById('modal-instant-invite')?.classList.add('hidden');
     }
+
     function handleInstantInviteChoice(choice) {
       const inv = pendingInstantInvite;
-      closeInstantInviteModal();
-      if (!inv) return;
+      if (!inv) { closeInstantInviteModal(); return; }
       const char = getCharById(inv.charId), cs = char ? state.charStates[char.id] : null;
-      if (!char || !cs) return;
+      if (!char || !cs) { closeInstantInviteModal(); return; }
       if (choice === 'accept') {
-        state.activeChatCharId = char.id;
-        startDatingTimeSession(char, cs, inv.venue || IRL_VENUES[0]);
+        document.getElementById('instInviteStep1').classList.add('hidden');
+        document.getElementById('instInviteStep2').classList.remove('hidden');
       } else {
+        closeInstantInviteModal();
         cs.messages.push({ sender: 'me', text: 'Xin lỗi nhé, hôm nay mình hơi bận nên hẹn dịp khác nha!' });
         cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, 'Không sao đâu, khi nào rảnh nhắn mình nha 😊') });
         saveState();
         if (state.activeChatCharId === char.id) renderMessagesView();
       }
+    }
+
+    function confirmStartInvitedDate() {
+      const inv = pendingInstantInvite;
+      if (!inv) return;
+      const char = getCharById(inv.charId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) { closeInstantInviteModal(); return; }
+      const pickupVal = document.querySelector('input[name="instInvitePickup"]:checked')?.value || 'pickup_them';
+      let pickupNote = '📍 Hai bạn hẹn gặp trực tiếp tại điểm hẹn.';
+      if (pickupVal === 'pickup_them') {
+        cs.affection = Math.min(100, cs.affection + 5);
+        cs.trust = Math.min(100, cs.trust + 4);
+        pickupNote = `🛵 Bạn chủ động qua tận nhà rước ${char.name} tới ${inv.venue.name} (+5% Tình cảm, +4% Tin tưởng).`;
+      } else if (pickupVal === 'they_pickup') {
+        if (cs.affection >= 55 || char.gender === 'Nam') {
+          cs.affection = Math.min(100, cs.affection + 2);
+          pickupNote = `🚗 ${char.name} vui vẻ qua tận nhà rước bạn đi ${inv.venue.name}.`;
+        } else {
+          cs.affection = Math.max(0, cs.affection - 4);
+          pickupNote = `🚗 ${char.name} hơi bất ngờ khi bạn yêu cầu qua rước sớm nhưng vẫn đồng ý đón bạn (-4% Tình cảm).`;
+        }
+      }
+      closeInstantInviteModal();
+      state.activeChatCharId = char.id;
+      startDatingTimeSession(char, cs, inv.venue, { pickupNote });
     }
 
     function confirmRestartFromProfile() { restartAndShuffleGame(); }
