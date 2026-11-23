@@ -1,9 +1,6 @@
 // =====================================================================
 // HEARTLINK STATIC DATA MODULE (heartlink_data.js)
-// Bao gồm: 150 hồ sơ cân bằng (60 Nam, 60 Nữ, 30 LGBT), 16 kịch bản lừa đảo,
-// Địa điểm hẹn hò, Quà tặng, Kết thúc đa nhánh & Giọng điệu vùng miền.
 // =====================================================================
-
 window.HEARTLINK_DATA = (function () {
   const ALL_HOBBIES = [
     "Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert", "Xem phim & Netflix",
@@ -41,6 +38,41 @@ window.HEARTLINK_DATA = (function () {
     { id: "boardgame_box", name: "Hộp Chocolate Bỉ & Gấu Bông Cao Cấp", cost: 950000, affection: 18, icon: "🧸" },
     { id: "perfume", name: "Nước Hoa & Set Mỹ Phẩm Cao Cấp", cost: 2800000, affection: 22, icon: "💄" }
   ];
+
+  const ACHIEVEMENTS_CATALOG = [
+    { id: "ach_true_love", icon: "💘", title: "Trái Tim Chân Thành", desc: "Đạt được kết thúc Tình yêu đích thực hoặc Kết hôn viên mãn." },
+    { id: "ach_scam_hunter", icon: "🕵️", title: "Thám Tử Tình Trường", desc: "Vạch trần và báo cáo chính xác từ 3 kẻ lừa đảo trở lên." },
+    { id: "ach_zero_loss", icon: "🛡️", title: "Miễn Nhiễm Cạm Bẫy", desc: "Kết thúc hành trình với 0đ tiền bị lừa đảo." },
+    { id: "ach_dna_detective", icon: "🧬", title: "Bậc Thầy Phá Án", desc: "Lật tẩy thành công bẫy đổ vỏ ADN hoặc bẫy dàn cảnh khách sạn." },
+    { id: "ach_realism", icon: "🎯", title: "Thử Thách Thực Tế", desc: "Trải nghiệm Chế độ Khó (ẩn Trực giác & Nhãn Giai đoạn)." },
+    { id: "ach_soulmate", icon: "🤝", title: "Tri Kỷ Tâm Giao", desc: "Tìm được người bạn tri kỷ đồng điệu qua ứng dụng." }
+  ];
+
+  const ENDINGS_CATALOG = {
+    good_marriage: { category: "KẾT THÚC TỐT • VIÊN MÃN", catClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40", title: "💍 Đám Cưới Trong Mơ & Hạnh Phúc Trăm Năm", desc: "Vượt qua bao bộ lọc ảo và những cạm bẫy trên mạng, bạn đã dùng sự chân thành và tỉnh táo để tìm thấy một nửa đích thực." },
+    good_serious_rel: { category: "KẾT THÚC TỐT • NGHIÊM TÚC", catClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40", title: "❤️ Mối Quan Hệ Nghiêm Túc & Bền Vững", desc: "Bạn và người thương đã xóa ứng dụng hẹn hò để bắt đầu một hành trình yêu đương nghiêm túc ngoài đời thực." },
+    good_true_love: { category: "KẾT THÚC TỐT • CHÂN THÀNH", catClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40", title: "🌸 Tìm Được Tình Yêu Chân Thành", desc: "Những buổi trò chuyện ấm áp và cuộc gặp gỡ ngoài đời đã thắp lên ngọn lửa tình yêu trong sáng." },
+    good_soulmate: { category: "KẾT THÚC TỐT • TRI KỶ", catClass: "bg-sky-500/20 text-sky-300 border border-sky-500/40", title: "🤝 Tìm Được Người Bạn Tri Kỷ Tâm Giao", desc: "Bạn đã tìm được một người bạn tri kỷ tuyệt vời cùng chung đam mê để sẻ chia mọi buồn vui trong cuộc sống!" },
+    good_civil_breakup: { category: "KẾT THÚC TỐT • VĂN MINH", catClass: "bg-teal-500/20 text-teal-300 border border-teal-500/40", title: "🕊️ Nhận Ra Không Phù Hợp & Chia Tay Văn Minh", desc: "Dám thẳng thắn nhìn nhận sự khác biệt lối sống và dừng lại đúng lúc bằng sự tử tế." },
+    good_creator_date: { category: "KẾT THÚC BÍ MẬT • PLOT TWIST NHÀ LÀM GAME", catClass: "bg-pink-500/30 text-pink-200 border border-pink-400/60", title: "🎮😂 Hẹn Hò Với Nhà Làm Game Mike Khôi — Plot Twist Cực Mạnh!", desc: "Sau bao thử thách khó nhằn, bạn đã chinh phục thành công Mike Khôi! Nhưng ngay giữa buổi hẹn hò, Mike Khôi bật cười thú nhận: “Tui vô test game thôi chứ tui đã có vợ rồi :)))!”" },
+    special_celeb_paparazzi: { category: "KẾT THÚC BÍ MẬT • NGƯỜI NỔI TIẾNG", catClass: "bg-purple-500/20 text-purple-200 border border-purple-400/60", title: "📸🌟 Lọt Ống Kính Paparazzi — Hẹn Hò Bí Mật Với Ngôi Sao!", desc: "Chuyện tình bí mật của bạn và ngôi sao nổi tiếng chính thức lên trang nhất báo giải trí!" },
+    special_nb_pride_love: { category: "KẾT THÚC ĐẶC BIỆT • PHI NHỊ NGUYÊN", catClass: "bg-purple-500/30 text-white border border-purple-400/60", title: "🌈✨ Tình Yêu Vượt Mọi Định Kiến — Hạnh Phúc Trọn Vẹn!", desc: "Sự chân thành và thấu cảm của bạn đã vượt qua mọi ranh giới để tạo nên mối quan hệ rực rỡ." },
+    neutral_no_match: { category: "KẾT THÚC TRUNG LẬP", catClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40", title: "🔍 Chưa Tìm Được Người Thực Sự Phù Hợp", desc: "Bạn đã lướt qua nhiều hồ sơ nhưng chưa tìm thấy ai thực sự chạm tới trái tim mình. Ít nhất bạn vẫn bảo toàn được tài chính!" },
+    neutral_ghosted: { category: "KẾT THÚC TRUNG LẬP", catClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40", title: "👻 Bị Ghost / Trải Nghiệm Thoáng Qua", desc: "Đối phương chỉ tìm kiếm niềm vui ngắn hạn không ràng buộc và lặng lẽ rời đi." },
+    neutral_learned_lesson: { category: "KẾT THÚC TRUNG LẬP • CẢNH GIÁC CAO", catClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40", title: "🛡️ Mất Thời Gian Nhưng Học Được Kinh Nghiệm Quý Giá", desc: "Bạn đã vạch trần nhiều chiêu trò lừa đảo tinh vi và trang bị cho mình bộ kỹ năng nhận diện rủi ro sắc bén." },
+    neutral_delete_app: { category: "KẾT THÚC TRUNG LẬP • ĐỘC LẬP", catClass: "bg-purple-500/20 text-purple-300 border border-purple-500/40", title: "🧘 Xóa Ứng Dụng & Tập Trung Phát Triển Bản Thân", desc: "Bạn quyết định đóng ứng dụng hẹn hò để dành trọn thời gian cho sự nghiệp và cuộc sống thực tế." },
+    bad_hiv_infection: { category: "KẾT THÚC XẤU • HẬU QUẢ SỨC KHỎE", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "☣️ Lây Nhiễm HIV Do Quan Hệ Thiếu An Toàn Với Người Lạ", desc: "Vì chủ quan qua đêm tại khách sạn mà không tìm hiểu kỹ lịch sử sức khỏe và không dùng biện pháp bảo vệ an toàn." },
+    bad_real_jealousy_caught: { category: "KẾT THÚC XẤU • BÊ BỐI ĐÁNH GHEN", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "💥 Bị Người Yêu Thật Của Đối Phương Theo Dõi Đánh Ghen Tại Khách Sạn", desc: "Đối phương thực chất đã có người yêu ngoài đời và bị định vị theo dõi tới tận phòng khách sạn!" },
+    bad_paternity_trap: { category: "KẾT THÚC XẤU • BẪY ĐỔ VỎ", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "👶 Bị Gài Bẫy “Đổ Vỏ” Cái Thai & Ép Chu Cấp Tài Chính", desc: "Chỉ sau một đêm tại khách sạn, đối phương mang phiếu siêu âm không khớp thời gian đến ép bạn nhận trách nhiệm." },
+    bad_Underage_Violation: { category: "KẾT THÚC XẤU • VI PHẠM ĐẠO ĐỨC", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "🚓 Vi Phạm Quy Định Bảo Vệ Người Chưa Đủ 18 Tuổi", desc: "Tài khoản của bạn bị khóa vĩnh viễn vì cố tình tiếp cận người dùng chưa đủ 18 tuổi." },
+    bad_scammed_money: { category: "KẾT THÚC XẤU • CẢNH BÁO ĐỎ", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "💸 Bị Lừa Tiền Vì Lòng Tin Đặt Nhầm Chỗ", desc: "Vì mủi lòng trước những lời hứa gửi quà, vé máy bay giả hoặc bi kịch dựng sẵn, bạn đã mất trắng tiền tích lũy." },
+    bad_account_stolen: { category: "KẾT THÚC XẤU • MẤT TÀI KHOẢN", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "🔓 Bị Đánh Cắp Tài Khoản & Dữ Liệu Cá Nhân (Phishing)", desc: "Bấm vào link bình chọn lạ và nhập mã OTP khiến tài khoản ngân hàng của bạn bị chiếm quyền kiểm soát." },
+    bad_blackmailed: { category: "KẾT THÚC XẤU • TỐNG TIỀN", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "📸 Bị Tống Tiền Bằng Hình Ảnh Riêng Tư / Dàn Cảnh Khách Sạn", desc: "Kẻ gian dùng clip quay lén hoặc dàn cảnh đánh ghen để cưỡng đoạt tiền của bạn." },
+    bad_manipulated: { category: "KẾT THÚC XẤU • THAO TÚNG TÂM LÝ", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "🕸️ Bị Thao Túng Tâm Lý & Kiểm Soát Tài Chính", desc: "Chiêu thức Love Bombing khiến bạn tự nguyện giao nộp tiền tiết kiệm vào quỹ chung của kẻ thao túng." },
+    bad_emotional_exploited: { category: "KẾT THÚC XẤU • LỢI DỤNG TÌNH CẢM", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "💔 Bị Lợi Dụng Tình Cảm & Thực Dụng", desc: "Bạn đã chi trả hàng loạt hóa đơn đắt đỏ và quà cáp xa xỉ cho một người chỉ xem bạn là công cụ vật chất." },
+    bad_investment_scam: { category: "KẾT THÚC XẤU • SẬP BẪY ĐẦU TƯ", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "📉 Bị Lừa Đảo Đầu Tư Tài Chính (Crypto / Chứng Khoán / Cá Cược)", desc: "Kịch bản thả lãi mồi ban đầu khiến bạn nạp số vốn lớn vào sàn giả mạo và mất sạch." },
+    bad_app_banned_false_reports: { category: "KẾT THÚC ĐẶC BIỆT • KHÓA TÀI KHOẢN", catClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40", title: "🚫 Tài Khoản Bị Khóa Vĩnh Viễn Do Report Sai Quá 3 Lần", desc: "Bạn đã báo cáo nhầm những người dùng chân thành quá 3 lần quy định." }
+  };
 
   const SCAM_BLUEPRINTS = [
     { archetype: "scam_crypto", scamType: "Kịch bản 1: Lừa đảo đầu tư tiền ảo (Crypto Pig Butchering)", job: "Quản lý Quỹ Đầu tư Web3", stage1Title: "Nạp thử lệnh trải nghiệm sàn BituxePro (+500k lãi mồi)", stage1Amount: 2000000, stage1Reward: 500000, stage1Desc: "Rủ bạn nạp 2.000.000đ đánh lệnh 3 phút và cho rút lãi ngay 500.000đ.", stage2Title: "Vào gói VIP Sóng Cá Voi", stage2Amount: 30000000, stage2Desc: "Giục nạp 30.000.000đ rồi khóa tài khoản đòi thuế giải ngân!" },
@@ -414,9 +446,6 @@ window.HEARTLINK_DATA = (function () {
     }
   ];
 
-  // Hàm sinh đủ 150 hồ sơ cân bằng: 60 Nam, 60 Nữ, 30 LGBT (Phi nhị nguyên)
-  // Đảm bảo tỷ lệ 20% Nghiêm túc (30 hồ sơ) & 80% Giải trí + Đủ 16 kịch bản lừa đảo (120 hồ sơ)
-  // Kết hợp đa dạng giọng điệu vùng miền & tính cách (Huế, Ngọng N/L, Người Hoa, Miền Tây, Gen Z, Gia trưởng, Sởi lởi)
   function build150BalancedCharacters() {
     const maleNames = [
       "Phạm Hoàng Khang", "Đỗ Gia Bảo", "Lý Tuấn Anh", "Ngô Nhật Minh", "Vương Đình Khôi",
@@ -500,7 +529,6 @@ window.HEARTLINK_DATA = (function () {
       if (!speechStyle && gender === "Nam" && i % 7 === 0) speechStyle = "male_patriarch";
       if (!speechStyle && gender === "Nữ" && i % 6 === 0) speechStyle = "female_outgoing";
 
-      // Đảm bảo tỷ lệ 20% nghiêm túc (genuine_love / genuine_strict), 80% giải trí & đủ 16 kịch bản lừa đảo
       const isSerious = (i % 5 === 0);
       const isScammer = !isSerious && (i % 5 === 1 || i % 5 === 2);
       const scamBp = isScammer ? SCAM_BLUEPRINTS[i % SCAM_BLUEPRINTS.length] : null;
@@ -527,19 +555,12 @@ window.HEARTLINK_DATA = (function () {
 
       result.push({
         id: `char_bal_${i + 1}`,
-        name,
-        age,
-        gender,
-        location: locObj.loc,
-        distance: 2 + (i % 14),
-        job,
+        name, age, gender, location: locObj.loc, distance: 2 + (i % 14), job,
         education: isSerious ? "Đại học Chính quy" : "Cao đẳng / Đại học",
         height: gender === "Nữ" ? (158 + (i % 11)) : (171 + (i % 14)),
-        relationshipStatus: "Độc thân",
-        verified: !isScammer,
+        relationshipStatus: "Độc thân", verified: !isScammer,
         joinedTime: isScammer ? `Mới tham gia ${(i % 5) + 1} ngày trước` : `Tham gia ${(i % 6) + 2} tháng trước`,
-        photoCount: 4,
-        completionRate: isScammer ? 82 : 95,
+        photoCount: 4, completionRate: isScammer ? 82 : 95,
         subtleClue: isScammer
           ? `Làm ${job}, hay lái câu chuyện sang cơ hội tài chính/nhờ vả và né Video Call.`
           : `Hồ sơ làm ${job} tại ${locObj.loc}, thông tin nhất quán với lối sống thực tế.`,
@@ -556,10 +577,7 @@ window.HEARTLINK_DATA = (function () {
         idealType: "Người biết lắng nghe, tôn trọng ranh giới và rõ ràng.",
         dailyHabit: `Làm ${job} ban ngày, cuối tuần thích ${h1.toLowerCase()}.`,
         financeView: isScammer ? "Dùng đòn bẩy tài chính để nhân đôi tài sản nhanh." : "Độc lập, sòng phẳng và minh bạch.",
-        archetype,
-        scamType: isScammer ? scamBp.scamType : null,
-        isScammer,
-        speechStyle,
+        archetype, scamType: isScammer ? scamBp.scamType : null, isScammer, speechStyle,
         trueMotive: isScammer
           ? scamBp.scamType
           : (isSerious ? "Tìm người yêu nghiêm túc và tiến tới gắn bó lâu dài." : "Kết nối hẹn hò giải trí / bạn bè đồng điệu."),
@@ -613,6 +631,8 @@ window.HEARTLINK_DATA = (function () {
     ALL_TRAITS,
     IRL_VENUES,
     GIFT_CATALOG,
+    ACHIEVEMENTS_CATALOG,
+    ENDINGS_CATALOG,
     build150BalancedCharacters
   };
 })();

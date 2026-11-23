@@ -1,44 +1,2102 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>HeartLink — Dating App Simulator (Mô Phỏng Hẹn Hò & Phòng Chống Lừa Đảo)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="heartlink_data.js"></script>
   <script>
     tailwind.config = {
-<!-- ... existing code ... -->
-  <!-- ===================================================================== -->
-  <!-- APPLICATION LOGIC & 150 CHARACTERS ENGINE                             -->
-  <!-- ===================================================================== -->
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: { brand: { pink: '#FF3868', rose: '#FE3C72', purple: '#8B5CF6' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', sans-serif; overflow-x: hidden; user-select: none; }
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 56, 104, 0.35); border-radius: 999px; }
+    .gradient-brand { background: linear-gradient(135deg, #FF3868 0%, #EC4899 50%, #8B5CF6 100%); }
+    .gradient-cyber { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    .swipe-card { touch-action: pan-y; transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s ease; will-change: transform; }
+    .swipe-card.dragging { transition: none !important; cursor: grabbing !important; }
+    @keyframes popIn { 0% { transform: scale(0.75); opacity: 0; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    .animate-pop { animation: popIn 0.28s ease-out forwards; }
+    @keyframes floatUp { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    .msg-bubble { animation: floatUp 0.2s ease-out forwards; }
+    #activeChatWrapper.adult-mode-active { background: #000000 !important; border-color: rgba(225, 29, 72, 0.65) !important; }
+    #activeChatWrapper.adult-mode-active #chatTopBar,
+    #activeChatWrapper.adult-mode-active #chatIntuitionBar,
+    #activeChatWrapper.adult-mode-active #chatRelationshipStageBar,
+    #activeChatWrapper.adult-mode-active #dialogueChoicesWrapper,
+    #activeChatWrapper.adult-mode-active #chatInputBar,
+    #activeChatWrapper.adult-mode-active #aiTypingIndicator { background: #050508 !important; border-color: rgba(225, 29, 72, 0.35) !important; }
+    #activeChatWrapper.adult-mode-active #chatMessagesStream { background: #000000 !important; }
+    #activeChatWrapper.adult-mode-active #inpFreeChatMessage { background: #0d0d12 !important; border-color: rgba(225, 29, 72, 0.5) !important; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden max-w-full">
+
+  <!-- TOP GLOBAL HEADER -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-2.5 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-1.5">
+      <button id="btnLogoHome" onclick="navToScreen('splash')" class="flex items-center gap-2 text-left shrink-0" title="Về Trang Chủ">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl gradient-brand flex items-center justify-center shadow-lg shadow-pink-500/30">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-extrabold text-sm sm:text-lg tracking-tight bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 bg-clip-text text-transparent">HeartLink</span>
+          <span class="text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">150 Hồ Sơ</span>
+        </div>
+      </button>
+
+      <div id="topStatsBar" class="hidden flex-nowrap items-center gap-1 sm:gap-2 overflow-x-auto custom-scroll py-0.5 max-w-full">
+        <button onclick="navToScreen('finance')" class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-semibold shrink-0 whitespace-nowrap">
+          <span>💳</span><span id="headerBalanceText">35.000.000đ</span>
+        </button>
+        <button onclick="navToScreen('messages')" class="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300 text-[11px] sm:text-xs font-semibold shrink-0 whitespace-nowrap">
+          <span>💬</span><strong id="headerMatchCount">0</strong>
+        </button>
+        <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/15 border border-purple-500/35 text-purple-200 text-[11px] sm:text-xs font-semibold shrink-0 whitespace-nowrap">
+          <span>📅</span><span id="headerDayText">T2, Ngày 1 • Sáng</span>
+        </div>
+        <button onclick="advanceToNextPeriod()" class="flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-500/25 hover:bg-indigo-500/40 border border-indigo-400/50 text-indigo-100 text-[11px] sm:text-xs font-bold transition shrink-0 whitespace-nowrap" title="Chuyển sang buổi tiếp theo">
+          <span>⏩</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1 sm:gap-1.5">
+        <button onclick="openAIEngineModal()" class="px-2 py-1.5 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 text-purple-200 text-xs font-bold flex items-center gap-1 border border-purple-500/40" title="Cấu hình AI & Sinh nhân vật">
+          <span>🤖</span><span class="hidden sm:inline">AI</span>
+        </button>
+        <button onclick="toggleRealismMode()" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 border border-slate-700">
+          <span>🎯</span><span class="hidden md:inline" id="realismModeLabel">Thường</span>
+        </button>
+        <button onclick="openAchievementsModal()" class="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold flex items-center gap-1 border border-amber-500/30">
+          <span>🏆</span><span class="hidden sm:inline" id="headerAchCount">0/6</span>
+        </button>
+        <button onclick="toggleSound()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="btnFinishSummary" onclick="triggerManualSummaryEnding()" class="hidden px-2.5 py-1.5 rounded-lg gradient-brand text-white text-[11px] sm:text-xs font-semibold shadow-sm shrink-0">
+          <span>🏁 Kết thúc</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-6 py-2 sm:py-3 flex flex-col">
+
+    <!-- SCREEN 1: SPLASH -->
+    <section id="screen-splash" class="flex-1 flex items-center justify-center py-4">
+      <div class="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-10 shadow-2xl relative overflow-hidden">
+        <div class="lg:col-span-7 flex flex-col justify-center space-y-5 z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300 text-xs font-semibold w-fit">
+            <span>🔥 150 Hồ Sơ (60 Nam • 60 Nữ • 30 LGBT) • 16 Kịch Bản Lừa Đảo</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            Tìm Kiếm <span class="bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 bg-clip-text text-transparent">Tình Yêu Chân Thành</span> Giữa Ma Trận Hẹn Hò Ảo
+          </h1>
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            Trải nghiệm <strong>HeartLink</strong> với đầy đủ <strong>150 hồ sơ cân bằng</strong> (20% nghiêm túc, 80% giải trí & đủ 16 kịch bản lừa đảo), giọng điệu vùng miền (Huế, Miền Bắc ngọng N/L, Người Hoa Chợ Lớn, Miền Tây, Gen Z), người nổi tiếng & nhân vật phá tường thứ 4!
+          </p>
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button onclick="openGenderPreselectModal()" class="px-6 py-3.5 rounded-2xl gradient-brand text-white font-bold text-sm sm:text-base shadow-xl hover:scale-[1.02] transition">
+              <span>🚀 Tạo Hồ Sơ & Bắt Đầu Chơi</span>
+            </button>
+            <button onclick="quickStartGame()" class="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-sm border border-slate-700 transition">
+              <span>⚡ Vào Nhanh (Hồ sơ mẫu)</span>
+            </button>
+            <button id="btnContinueSaved" onclick="continueSavedGame()" class="hidden px-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition">
+              <span>▶️ Tiếp tục Tiến trình Cũ</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 flex items-center justify-center z-10">
+          <div class="w-full max-w-xs bg-slate-950 border-2 border-slate-800 rounded-3xl p-4 shadow-2xl space-y-3">
+            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+              <span class="font-bold text-pink-400">● HEARTLINK LIVE</span>
+              <span>150 Hồ Sơ Độc Lập</span>
+            </div>
+            <div id="splashPreviewSvg" class="w-full h-56 rounded-2xl overflow-hidden bg-slate-800"></div>
+            <div class="space-y-1 px-1">
+              <h3 class="font-bold text-base text-white">Lê Minh Thư, 27 <span class="text-sky-400 text-xs">✔</span></h3>
+              <p class="text-xs text-slate-400">"Kiến trúc sư thiết kế nội thất • Thích cà phê & thủy sinh"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: PLAYER REGISTRATION & CUSTOM AVATAR STUDIO -->
+    <section id="screen-setup" class="hidden flex-1 py-2">
+      <div class="max-w-5xl mx-auto bg-slate-900/95 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-2xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-white">✨ Thiết Lập Hồ Sơ Cá Nhân</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Tùy chỉnh diện mạo Avatar, tính cách và đối tượng tìm hiểu của bạn.</p>
+          </div>
+          <button type="button" onclick="fillPresetPlayerProfile()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-500/30 text-xs font-semibold">
+            🎲 Điền nhanh
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mt-5">
+          <!-- Custom Avatar Studio -->
+          <div class="md:col-span-4 flex flex-col items-center space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <div id="setupPlayerAvatarPreview" class="w-36 h-44 rounded-2xl overflow-hidden border-2 border-pink-500/50 bg-slate-800 shadow-lg"></div>
+            <div class="w-full space-y-2 text-left">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-pink-300 text-center">🎨 Tùy Chỉnh Avatar Cá Nhân</div>
+              <div class="grid grid-cols-2 gap-1.5 text-xs">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Kiểu mặt & Biểu cảm</label>
+                  <select id="selAvatarFace" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="warm_smile">Cười ấm áp</option>
+                    <option value="charming_smirk">Nụ cười cuốn hút</option>
+                    <option value="gentle_soft">Dịu dàng thanh tú</option>
+                    <option value="cool_calm">Điềm đạm lạnh lùng</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Tông da</label>
+                  <select id="selAvatarSkin" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="#fde4d4">Trắng sáng</option>
+                    <option value="#f2caa8" selected>Tự nhiên ấm</option>
+                    <option value="#eac0a2">Mật ong khỏe</option>
+                    <option value="#d8a484">Nâu rám nắng</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Kiểu tóc</label>
+                  <select id="selAvatarHairStyle" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="short_modern">Tóc ngắn gọn gàng</option>
+                    <option value="slick_black">Vuốt ngược lịch lãm</option>
+                    <option value="long_wavy">Tóc dài uốn sóng</option>
+                    <option value="bob_cut">Tóc Bob ngang vai</option>
+                    <option value="bun_elegant">Tóc búi thanh lịch</option>
+                    <option value="wolf_cut">Tóc Layer cá tính</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Màu tóc</label>
+                  <select id="selAvatarHairColor" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="black" selected>Đen tự nhiên</option>
+                    <option value="brown">Nâu hạt dẻ</option>
+                    <option value="chestnut">Nâu đỏ trầm</option>
+                    <option value="blonde">Vàng bạch kim</option>
+                    <option value="silver">Bạc khói</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Trang phục</label>
+                  <select id="selAvatarOutfit" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="suit_navy" selected>Vest Navy lịch lãm</option>
+                    <option value="polo_navy">Áo Polo năng động</option>
+                    <option value="turtleneck_black">Áo cổ lọ đen</option>
+                    <option value="denim_jacket">Áo khoác Denim</option>
+                    <option value="blazer_beige">Blazer Kem thanh lịch</option>
+                    <option value="dress_emerald">Váy Ngọc Lục Bảo</option>
+                    <option value="cardigan_pink">Cardigan Hồng dịu dàng</option>
+                    <option value="club_dress_black">Đầm dự tiệc quyến rũ</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Phụ kiện</label>
+                  <select id="selAvatarAcc" onchange="onCustomAvatarPartChange()" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-white">
+                    <option value="glasses_thin" selected>Kính gọng mảnh</option>
+                    <option value="sunglasses">Kính râm thời trang</option>
+                    <option value="earrings_pearl">Khuyên tai ngọc trai</option>
+                    <option value="earrings_gold">Khuyên tai vàng</option>
+                    <option value="none">Không phụ kiện</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-1 pt-1">
+                <button type="button" onclick="selectPlayerAvatarPreset(0)" class="py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] text-slate-200">Mẫu 1</button>
+                <button type="button" onclick="selectPlayerAvatarPreset(1)" class="py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] text-slate-200">Mẫu 2</button>
+                <button type="button" onclick="selectPlayerAvatarPreset(2)" class="py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] text-slate-200">Mẫu 3</button>
+              </div>
+            </div>
+            <div class="w-full pt-2 space-y-1 text-xs text-slate-400 border-t border-slate-800">
+              <div class="flex justify-between"><span>Số dư:</span><strong id="setupStartBalancePreview" class="text-emerald-400">35.000.000đ</strong></div>
+              <div class="flex justify-between"><span>Thu nhập:</span><strong id="setupIncomePreview" class="text-sky-400">25.000.000đ</strong></div>
+            </div>
+          </div>
+
+          <!-- Profile Fields -->
+          <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tên hiển thị *</label>
+              <input id="inpPlayerName" type="text" value="Minh Khôi" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tuổi của bạn (18–60) *</label>
+              <input id="inpPlayerAge" type="number" min="18" max="60" value="30" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Giới tính của bạn</label>
+              <select id="selPlayerGender" onchange="onPlayerGenderChange()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
+                <option value="Nam" selected>Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Phi nhị nguyên">LGBT / Phi nhị nguyên</option>
+                <option value="Song tính">Song tính</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Giới tính muốn tìm hiểu</label>
+              <select id="selTargetGender" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
+                <option value="Nữ" selected>Nữ (60 hồ sơ)</option>
+                <option value="Nam">Nam (60 hồ sơ)</option>
+                <option value="Phi nhị nguyên">LGBT / Phi nhị nguyên (30 hồ sơ)</option>
+                <option value="Tất cả">Tất cả (150 hồ sơ)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Nghề nghiệp</label>
+              <select id="selPlayerJob" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
+                <option value="Trưởng phòng Digital Marketing" selected>Trưởng phòng Digital Marketing</option>
+                <option value="Kỹ sư Phần mềm / IT">Kỹ sư Phần mềm / IT</option>
+                <option value="Kiến trúc sư Nội thất">Kiến trúc sư Nội thất</option>
+                <option value="Bác sĩ / Y tế">Bác sĩ / Y tế</option>
+                <option value="Kinh doanh Tự do">Kinh doanh Tự do</option>
+              </select>
+              <input id="inpCustomPlayerJob" type="text" class="mt-1.5 w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="Hoặc tự nhập nghề nghiệp..." />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Mức thu nhập</label>
+              <select id="selPlayerIncome" onchange="updateSetupIncomePreview()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">
+                <option value="hide">🔒 Ẩn thu nhập (Quỹ: 28 triệu)</option>
+                <option value="10000000">10.000.000đ/tháng</option>
+                <option value="15000000">15.000.000đ/tháng</option>
+                <option value="25000000" selected>25.000.000đ/tháng</option>
+                <option value="45000000">45.000.000đ/tháng</option>
+                <option value="100000000">100.000.000đ/tháng</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Sở thích của bạn (Chọn nhiều)</label>
+              <div id="setupHobbiesContainer" class="flex flex-wrap gap-1.5"></div>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tính cách của bạn (Chọn nhiều)</label>
+              <div id="setupTraitsContainer" class="flex flex-wrap gap-1.5"></div>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Giới thiệu bản thân</label>
+              <textarea id="inpPlayerBio" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white">Thích du lịch khám phá, cà phê cuối tuần và trò chuyện chân thành!</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <button type="button" onclick="navToScreen('splash')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium">← Quay lại</button>
+          <button type="button" onclick="completePlayerSetup()" class="px-8 py-3 rounded-2xl gradient-brand text-white font-bold text-sm sm:text-base shadow-xl">Hoàn Tất & Bắt Đầu →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN APP SHELL -->
+    <section id="app-shell" class="hidden flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4">
+      <aside class="lg:w-60 shrink-0 bg-slate-900/90 border border-slate-800 rounded-2xl p-2 sm:p-3 flex lg:flex-col justify-between gap-2 order-2 lg:order-1 sticky bottom-1 lg:static z-30 backdrop-blur-md">
+        <div class="flex lg:flex-col gap-1.5 w-full justify-around">
+          <button id="navBtnSwipe" onclick="navToScreen('swipe')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-pink-500/20 text-pink-300 border border-pink-500/40">
+            <span>🔥</span><span class="hidden sm:inline">Quẹt Hồ Sơ</span><span id="navRemainCount" class="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-slate-800">150</span>
+          </button>
+          <button id="navBtnMessages" onclick="navToScreen('messages')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800">
+            <span>💬</span><span class="hidden sm:inline">Tin Nhắn</span><span id="navMatchBadge" class="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-pink-500 text-white font-bold">0</span>
+          </button>
+          <button id="navBtnMoments" onclick="navToScreen('moments')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800">
+            <span>📸</span><span class="hidden sm:inline">Khoảnh Khắc</span><span id="navMomentsBadge" class="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 font-bold">0</span>
+          </button>
+          <button id="navBtnFinance" onclick="navToScreen('finance')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800">
+            <span>💳</span><span class="hidden sm:inline">Tài Chính</span>
+          </button>
+          <button id="navBtnReport" onclick="navToScreen('report')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800">
+            <span>🚨</span><span class="hidden sm:inline">Báo Cáo</span>
+          </button>
+          <button id="navBtnProfile" onclick="navToScreen('profile')" class="nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800">
+            <span>👤</span><span class="hidden sm:inline">Hồ Sơ Tôi</span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="flex-1 order-1 lg:order-2 flex flex-col min-h-[580px]">
+        <!-- VIEW 1: SWIPE DECK -->
+        <div id="view-swipe" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          <div class="lg:col-span-5 flex flex-col items-center">
+            <div class="w-full max-w-md flex items-center justify-between gap-2 mb-2 px-1">
+              <select id="selLiveGenderFilter" onchange="changeLiveGenderFilter(this.value)" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs font-semibold text-pink-300">
+                <option value="Tất cả">Tất cả (150 hồ sơ)</option>
+                <option value="Nữ">Chỉ Nữ (60)</option>
+                <option value="Nam">Chỉ Nam (60)</option>
+                <option value="Phi nhị nguyên">LGBT / Phi nhị nguyên (30)</option>
+              </select>
+              <span id="deckCounterLabel" class="text-xs font-semibold text-slate-400">Hồ sơ 1 / 150</span>
+            </div>
+
+            <div class="w-full max-w-md relative select-none">
+              <div id="activeSwipeCard" class="swipe-card w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative cursor-grab">
+                <div id="stampLike" class="hidden pointer-events-none absolute top-8 left-6 z-30 border-4 border-emerald-400 text-emerald-400 font-black text-2xl px-4 py-1 rounded-xl -rotate-12 bg-slate-950/70">THÍCH 💚</div>
+                <div id="stampNope" class="hidden pointer-events-none absolute top-8 right-6 z-30 border-4 border-rose-500 text-rose-500 font-black text-2xl px-4 py-1 rounded-xl rotate-12 bg-slate-950/70">BỎ QUA ✕</div>
+                <div id="stampSuper" class="hidden pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 z-30 border-4 border-sky-400 text-sky-300 font-black text-2xl px-4 py-1 rounded-xl bg-slate-950/70">SIÊU THÍCH ★</div>
+
+                <div id="albumDotsBar" class="absolute top-3 left-3 right-3 z-20 flex gap-1.5"></div>
+                <button type="button" onclick="changeCardPhoto(-1, event)" class="absolute top-12 bottom-28 left-0 w-1/3 z-20 flex items-center justify-start pl-2 opacity-0 hover:opacity-100"><span class="w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center">‹</span></button>
+                <button type="button" onclick="changeCardPhoto(1, event)" class="absolute top-12 bottom-28 right-0 w-1/3 z-20 flex items-center justify-end pr-2 opacity-0 hover:opacity-100"><span class="w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center">›</span></button>
+
+                <div id="cardArtworkContainer" class="w-full h-[380px] sm:h-[420px] relative bg-slate-800 overflow-hidden"></div>
+
+                <div class="p-4 bg-slate-950 border-t border-slate-800/80">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 id="cardCharNameAge" class="text-xl font-extrabold text-white">Tên, 26</h3>
+                      <span id="cardVerifiedBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold"></span>
+                    </div>
+                    <span id="cardDistanceBadge" class="text-xs font-semibold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-full shrink-0">📍 3 km</span>
+                  </div>
+                  <p id="cardJobEdu" class="text-xs text-pink-300 font-medium mt-1"></p>
+                  <p id="cardPhotoCaption" class="text-xs text-amber-300/90 italic mt-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20"></p>
+                  <p id="cardBioPreview" class="text-xs text-slate-300 mt-2 line-clamp-2"></p>
+                  <div id="cardHobbiesPills" class="flex flex-wrap gap-1.5 mt-2.5"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-center gap-5 mt-3.5">
+                <button onclick="handleSwipeAction('left')" class="w-14 h-14 rounded-full bg-slate-900 hover:bg-rose-500/20 border-2 border-rose-500/60 text-rose-400 hover:scale-110 transition flex flex-col items-center justify-center shadow-lg">
+                  <span class="text-xl font-black leading-none">✕</span>
+                  <span class="text-[9px] font-bold uppercase mt-0.5">Bỏ qua</span>
+                </button>
+                <button onclick="handleSwipeAction('super')" class="w-12 h-12 rounded-full bg-slate-900 hover:bg-sky-500/20 border-2 border-sky-400/60 text-sky-300 hover:scale-110 transition flex flex-col items-center justify-center shadow-lg">
+                  <span class="text-lg font-black leading-none">★</span>
+                  <span class="text-[8px] font-bold uppercase mt-0.5">Siêu thích</span>
+                </button>
+                <button onclick="handleSwipeAction('right')" class="w-14 h-14 rounded-full gradient-brand text-white hover:scale-110 transition flex flex-col items-center justify-center shadow-xl">
+                  <span class="text-xl font-black leading-none">♥</span>
+                  <span class="text-[9px] font-bold uppercase mt-0.5">Thích</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-4 max-h-[650px] overflow-y-auto custom-scroll">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-base font-extrabold text-white">📋 Hồ Sơ Chi Tiết & Quan Điểm Sống</h3>
+              <span id="detailCompletionBadge" class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold">Hoàn thiện: 95%</span>
+            </div>
+            <div id="detailAlbumStrip" class="grid grid-cols-4 gap-2"></div>
+            <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 space-y-2.5">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-pink-400">1. Thông Tin Cơ Bản</h4>
+              <div id="detailBasicGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs"></div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 space-y-2.5">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-purple-400">2. Thông Tin Cá Nhân & Quan Điểm Sống</h4>
+              <div id="detailPersonalGrid" class="space-y-2 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: MESSAGES & CHAT ROOM -->
+        <div id="view-messages" class="hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3">
+          <div class="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 sm:p-4 flex flex-col max-h-32 lg:max-h-[650px]">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <h3 class="font-extrabold text-xs sm:text-sm text-white">Danh Sách Match</h3>
+              <span id="chatListTotalMatches" class="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[11px] font-bold">0 Match</span>
+            </div>
+            <div id="matchedContactsList" class="flex-1 overflow-y-auto custom-scroll divide-y divide-slate-800/60 mt-1"></div>
+          </div>
+
+          <div class="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col h-[calc(100dvh-170px)] min-h-[450px] lg:h-[650px] overflow-hidden">
+            <div id="emptyChatPlaceholder" class="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-3">
+              <div class="text-3xl">💬</div>
+              <h4 class="font-bold text-base text-white">Chưa chọn cuộc trò chuyện</h4>
+              <button onclick="navToScreen('swipe')" class="px-5 py-2.5 rounded-xl gradient-brand text-white text-xs font-bold">🔥 Quay lại Quẹt Hồ Sơ</button>
+            </div>
+
+            <div id="activeChatWrapper" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden">
+              <div id="chatTopBar" class="p-2.5 sm:px-4 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2.5">
+                  <div id="chatHeaderAvatar" class="w-10 h-10 rounded-full overflow-hidden border border-pink-500/50 shrink-0 bg-slate-800"></div>
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <h4 id="chatHeaderName" class="font-bold text-sm text-white">Tên</h4>
+                      <span id="chatHeaderVerified" class="text-xs"></span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                      <span id="chatHeaderJob">Nghề</span>
+                      <span>•</span>
+                      <span class="text-pink-400 font-semibold">Tình cảm: <strong id="chatHeaderAffection">20</strong>%</span>
+                      <span>•</span>
+                      <span class="text-sky-400 font-semibold">Tin tưởng: <strong id="chatHeaderTrust">20</strong>%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <button onclick="triggerChatVideoCall()" class="px-2.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold">📹<span class="hidden sm:inline ml-1">Video</span></button>
+                  <button onclick="triggerProfileInvestigation()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold">🔍<span class="hidden sm:inline ml-1">Soi</span></button>
+                  <button onclick="navToScreen('finance')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold">🎁<span class="hidden sm:inline ml-1">Quà</span></button>
+                  <button onclick="openIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">📅<span class="hidden sm:inline ml-1">Hẹn Hò</span></button>
+                  <button onclick="openReportForActiveChar()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold">🚨</button>
+                </div>
+              </div>
+
+              <div id="chatIntuitionBar" class="px-3 py-1 bg-slate-950/90 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px] shrink-0">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span id="intuitionSincerityText" class="text-emerald-300">Chân thành: ???</span>
+                  <span id="intuitionDangerText" class="text-amber-300">Nguy hiểm: ???</span>
+                  <span id="intuitionMotiveText" class="text-purple-300">Động cơ: ???</span>
+                </div>
+                <button onclick="openActiveCharProfileModal()" class="text-pink-400 hover:underline font-semibold">Hồ sơ →</button>
+              </div>
+
+              <div id="chatRelationshipStageBar" class="px-3 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2 text-[11px] shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                  <span class="font-bold text-pink-300 truncate" id="relPhaseBadge">Giai đoạn: Chào hỏi</span>
+                  <span id="badge18PlusMode" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600/35 border border-rose-500/70 text-rose-200 text-[10px] font-extrabold shrink-0">
+                    🔞 18+
+                    <button type="button" onclick="exitAdultChatMode()" class="ml-1 px-1.5 py-0.2 rounded bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-600 text-[9px] font-bold">🚪 Thoát 18+</button>
+                  </span>
+                </div>
+                <span id="relMemorySummaryPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 shrink-0">💬 Tự nhiên</span>
+              </div>
+
+              <!-- DATING TIME BANNER -->
+              <div id="chatDatingTimeBanner" class="hidden px-3 py-2 bg-gradient-to-r from-pink-600/25 via-rose-500/20 to-purple-600/25 border-b border-pink-500/40 space-y-1.5 shrink-0">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-extrabold text-pink-200 truncate" id="datingTimeVenueTitle">🕯️ DATING TIME</div>
+                  <div class="text-[10px] text-rose-200/90 shrink-0" id="datingTimeSubInfo">Tác động x2</div>
+                </div>
+                <div class="flex flex-nowrap items-center gap-1.5 w-full overflow-x-auto custom-scroll whitespace-nowrap pb-1">
+                  <button onclick="performDatingPhysicalAction('hug')" class="px-2.5 py-1.5 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/40 text-pink-100 text-[11px] font-bold shrink-0">🤗 Ôm</button>
+                  <button onclick="performDatingPhysicalAction('kiss')" class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/40 text-rose-100 text-[11px] font-bold shrink-0">💋 Hôn</button>
+                  <span id="dating18PlusActions" class="hidden inline-flex items-center gap-1.5 shrink-0">
+                    <button onclick="performDatingPhysicalAction('touch_18')" class="px-2.5 py-1.5 rounded-xl bg-rose-700/45 hover:bg-rose-600/65 border border-rose-500/60 text-rose-100 text-[11px] font-bold shrink-0">🔥 Vuốt ve 18+</button>
+                    <button id="btnPublicTease18" onclick="performDatingPhysicalAction('public_tease_18')" class="px-2.5 py-1.5 rounded-xl bg-red-700/55 hover:bg-red-600/75 border border-red-400/70 text-white text-[11px] font-bold shrink-0">🤫 Đụng chạm lén (Public 18+)</button>
+                    <button id="btnSecretCorner18" onclick="performDatingPhysicalAction('secret_corner_18')" class="px-2.5 py-1.5 rounded-xl bg-amber-700/55 hover:bg-amber-600/75 border border-amber-400/70 text-amber-50 text-[11px] font-bold shrink-0">🔥 Kéo vào góc khuất 18+</button>
+                    <button id="btnHotelClimax18" onclick="performDatingPhysicalAction('hotel_climax_18')" class="hidden px-2.5 py-1.5 rounded-xl bg-red-700/65 hover:bg-red-600/85 border border-red-400/80 text-white text-[11px] font-bold shrink-0">🔞 Làm tình cuồng nhiệt</button>
+                  </span>
+                  <button id="btnFinishDatingTime" onclick="finishDatingTimeToBill()" class="px-3 py-1.5 rounded-xl gradient-brand text-white text-[11px] font-bold shadow shrink-0">🧾 Tính Tiền & Kết Thúc</button>
+                </div>
+              </div>
+
+              <div id="chatMessagesStream" class="flex-1 min-h-[120px] px-3 py-2.5 overflow-y-auto custom-scroll space-y-2.5 bg-slate-950/40"></div>
+
+              <!-- Scam Offer Banner -->
+              <div id="chatScamActionBanner" class="hidden p-2.5 mx-2.5 mb-2 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div class="text-xs">
+                  <div id="scamBannerTitle" class="font-bold text-amber-300">⚡ Đề nghị tài chính</div>
+                  <p id="scamBannerDesc" class="text-slate-300 text-[11px]"></p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button onclick="respondToScamFinancialOffer(true)" class="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs">Đồng ý</button>
+                  <button onclick="respondToScamFinancialOffer(false)" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-600">Từ chối</button>
+                </div>
+              </div>
+
+              <div id="aiTypingIndicator" class="hidden px-4 py-1 bg-slate-950/90 border-t border-slate-800/60 text-[11px] text-pink-300 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-pink-400 animate-ping"></span>
+                <span>Đối phương đang nhập tin nhắn...</span>
+              </div>
+
+              <div id="dialogueChoicesWrapper" class="px-2.5 pt-2 pb-1 bg-slate-950 border-t border-slate-800 space-y-1 shrink-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase text-slate-300">💬 Gợi ý câu trả lời:</span>
+                  <button onclick="regenerateAIChoicesForActiveChat()" class="px-2 py-0.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[10px] font-bold">🔄 Đổi gợi ý</button>
+                </div>
+                <div id="chatChoicesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-24 sm:max-h-32 overflow-y-auto custom-scroll"></div>
+              </div>
+
+              <div id="chatInputBar" class="p-2 bg-slate-950 border-t border-slate-800 flex items-center gap-2 shrink-0">
+                <input id="inpFreeChatMessage" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();sendFreeTextAIChat();}" class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:border-pink-500 focus:outline-none" placeholder="Tự nhập tin nhắn hoặc câu hỏi của bạn..." />
+                <button id="btnSendFreeChat" onclick="sendFreeTextAIChat()" class="px-4 py-2 rounded-xl gradient-brand text-white font-bold text-xs sm:text-sm shrink-0">Gửi ➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 3: MOMENTS -->
+        <div id="view-moments" class="hidden flex-1 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="text-lg font-extrabold text-white">📸 Khoảnh Khắc (Moments)</h3>
+            <button onclick="generateDailyMomentsForMatches(true)" class="px-3 py-1.5 rounded-xl bg-purple-600/25 border border-purple-500/40 text-purple-200 text-xs font-bold">🔄 Làm mới</button>
+          </div>
+          <div id="momentsFeedContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto custom-scroll"></div>
+        </div>
+
+        <!-- VIEW 4: FINANCE -->
+        <div id="view-finance" class="hidden flex-1 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <h3 class="text-lg font-extrabold text-white">💳 Tài Chính & Quà Tặng</h3>
+            <button onclick="triggerNextMonthCycle()" class="px-3.5 py-2 rounded-xl gradient-cyber text-white text-xs font-bold">📅 Sang Tháng Mới (+Lương)</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div class="p-3 rounded-2xl bg-slate-950 border border-emerald-500/30"><span class="text-slate-400">Số dư</span><strong id="finBalanceVal" class="block text-base font-black text-emerald-400 mt-0.5">35.000.000đ</strong></div>
+            <div class="p-3 rounded-2xl bg-slate-950 border border-sky-500/30"><span class="text-slate-400">Thu nhập/tháng</span><strong id="finIncomeVal" class="block text-base font-black text-sky-400 mt-0.5">25.000.000đ</strong></div>
+            <div class="p-3 rounded-2xl bg-slate-950 border border-pink-500/30"><span class="text-slate-400">Đã chi hẹn & quà</span><strong id="finDatingSpentVal" class="block text-base font-black text-pink-400 mt-0.5">0đ</strong></div>
+            <div class="p-3 rounded-2xl bg-slate-950 border border-rose-500/40"><span class="text-slate-400">Mất do lừa đảo</span><strong id="finScamLostVal" class="block text-base font-black text-rose-500 mt-0.5">0đ</strong></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-6 space-y-2.5">
+              <label class="block text-xs text-slate-400">Chọn người nhận quà:</label>
+              <select id="selFinanceGiftTarget" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white"></select>
+              <div id="financeGiftCatalog" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+            <div class="lg:col-span-6 space-y-2">
+              <h4 class="text-xs font-bold text-slate-300 uppercase">📜 Lịch sử giao dịch</h4>
+              <div id="financeLedgerList" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 max-h-64 overflow-y-auto custom-scroll divide-y divide-slate-800 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 5: REPORT -->
+        <div id="view-report" class="hidden flex-1 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-4">
+          <h3 class="text-lg font-extrabold text-white border-b border-slate-800 pb-3">🚨 Báo Cáo Lừa Đảo & Chặn</h3>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-6 bg-slate-950/70 border border-slate-800 rounded-2xl p-4 space-y-3">
+              <div>
+                <label class="block text-xs text-slate-300 mb-1">1. Chọn tài khoản</label>
+                <select id="selReportTargetChar" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"></select>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-300 mb-1">2. Lý do báo cáo (16 Kịch bản)</label>
+                <select id="selReportReason" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+                  <option value="scam_crypto">Kịch bản 1: Lừa đảo đầu tư tiền ảo (Crypto)</option>
+                  <option value="scam_foreign_military">Kịch bản 2: Giả danh quân nhân / người nước ngoài</option>
+                  <option value="scam_borrow_money">Kịch bản 3: Lừa đảo vay tiền cấp cứu</option>
+                  <option value="scam_love_bombing">Kịch bản 4: Thao túng tâm lý & tài chính</option>
+                  <option value="scam_catfish">Kịch bản 5: Giả mạo danh tính (Catfish)</option>
+                  <option value="scam_phishing_link">Kịch bản 6: Gửi đường link độc hại (Phishing)</option>
+                  <option value="scam_stock_app">Kịch bản 7: Ứng dụng chứng khoán giả</option>
+                  <option value="scam_gambling">Kịch bản 8: Cá cược trực tuyến / Lỗ hổng game</option>
+                  <option value="scam_celeb">Kịch bản 9: Giả mạo người nổi tiếng</option>
+                  <option value="scam_sextortion">Kịch bản 10: Tống tiền ảnh nhạy cảm (Sextortion)</option>
+                  <option value="scam_flight_hotel">Kịch bản 11: Lừa vé máy bay / khách sạn</option>
+                  <option value="scam_sales_booking">Kịch bản 12: Booking Bar / Chốt đơn hoàn hoa hồng</option>
+                  <option value="scam_ekyc_sim">Kịch bản 13: Đánh cắp CCCD / eKYC vay nợ hộ</option>
+                  <option value="scam_sugar_deposit">Kịch bản 14: Bẫy Sugar đòi phí đặt cọc VIP</option>
+                  <option value="scam_fake_shop_order">Kịch bản 15: Thanh toán hộ đơn hàng hoàn tiền giả</option>
+                  <option value="scam_physical_theft">Kịch bản 16: Chuốc thuốc / Trộm tài sản ngoài đời</option>
+                  <option value="just_block">Chỉ chặn liên lạc bình thường</option>
+                </select>
+              </div>
+              <button onclick="submitCharacterReport()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs">🚨 Gửi Báo Cáo & Chặn Ngay</button>
+            </div>
+            <div class="lg:col-span-6 space-y-2">
+              <div class="flex justify-between text-xs"><strong class="text-white">Kết quả điều tra</strong><span id="reportAccuracyBadge" class="text-emerald-400 font-bold">Đúng: 0</span></div>
+              <div id="reportedListContainer" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 max-h-64 overflow-y-auto custom-scroll space-y-2 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 6: PROFILE -->
+        <div id="view-profile" class="hidden flex-1 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3.5">
+              <div id="profileViewAvatar" class="w-20 h-24 rounded-2xl overflow-hidden border-2 border-pink-500 bg-slate-800"></div>
+              <div>
+                <h3 id="profileViewNameAge" class="text-xl font-black text-white">Minh Khôi, 30</h3>
+                <p id="profileViewJobLoc" class="text-xs text-pink-400 font-semibold"></p>
+                <p id="profileViewGoal" class="text-xs text-slate-400 mt-1"></p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="navToScreen('setup')" class="px-3.5 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-700">✏️ Chỉnh sửa</button>
+              <button onclick="triggerManualSummaryEnding()" class="px-3.5 py-2 rounded-xl gradient-brand text-xs font-bold text-white">🏁 Xem Kết Thúc</button>
+              <button onclick="confirmRestartFromProfile()" class="px-3.5 py-2 rounded-xl bg-rose-500/20 text-xs font-bold text-rose-300 border border-rose-500/40">🔄 Chơi Lại</button>
+            </div>
+          </div>
+          <div id="profileViewDetailsList" class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1.5 text-slate-300"></div>
+          <div id="profileRelationshipCandidates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 10: ENDING SCREEN -->
+    <section id="screen-ending" class="hidden flex-1 py-4">
+      <div class="max-w-4xl mx-auto bg-slate-900/95 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div class="text-center space-y-2 border-b border-slate-800 pb-5">
+          <div id="endingCategoryBadge" class="inline-block px-4 py-1 rounded-full text-xs font-black uppercase">KẾT THÚC</div>
+          <h2 id="endingTitleText" class="text-2xl sm:text-4xl font-black text-white pt-1">Kết Thúc Hành Trình</h2>
+          <p id="endingSubtitleText" class="text-sm text-slate-300 max-w-2xl mx-auto"></p>
+        </div>
+        <div id="endingPartnerSpotlight" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-center gap-4"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div id="sumMatched" class="text-xl font-black text-pink-400">0</div><div class="text-[11px] text-slate-400">Lượt Match</div></div>
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div id="sumDates" class="text-xl font-black text-sky-400">0</div><div class="text-[11px] text-slate-400">Buổi hẹn hò</div></div>
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div id="sumScamDetected" class="text-xl font-black text-emerald-400">0</div><div class="text-[11px] text-slate-400">Lừa đảo phát hiện</div></div>
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div id="sumFinalBalance" class="text-base font-black text-emerald-300">0đ</div><div class="text-[11px] text-slate-400">Số dư cuối</div></div>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-slate-800">
+          <button onclick="navToScreen('splash')" class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl">🏠 Về Trang Chủ</button>
+          <button onclick="restartAndShuffleGame()" class="px-6 py-3.5 rounded-2xl gradient-brand text-white font-bold text-sm shadow-xl">🔄 Chơi Lại Từ Đầu</button>
+          <button onclick="navToScreen('swipe')" class="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm border border-slate-700">↩️ Tiếp Tục Khám Phá</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MATCH MODAL -->
+  <div id="modal-match" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-900 border-2 border-pink-500/60 rounded-3xl p-6 text-center space-y-4 animate-pop">
+      <h2 class="text-3xl font-black italic bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">IT'S A MATCH!</h2>
+      <p id="matchModalSubtitle" class="text-xs text-slate-300"></p>
+      <div class="flex items-center justify-center gap-4 py-2">
+        <div id="matchPlayerAvatar" class="w-24 h-28 rounded-2xl overflow-hidden border-2 border-sky-400 -rotate-6"></div>
+        <div class="w-10 h-10 rounded-full gradient-brand flex items-center justify-center text-white font-black">♥</div>
+        <div id="matchTargetAvatar" class="w-24 h-28 rounded-2xl overflow-hidden border-2 border-pink-400 rotate-6"></div>
+      </div>
+      <div class="flex gap-2.5">
+        <button onclick="closeMatchModal(); navToScreen('messages');" class="flex-1 py-3 rounded-2xl gradient-brand text-white font-bold text-xs">💬 Nhắn Tin Ngay</button>
+        <button onclick="closeMatchModal()" class="flex-1 py-3 rounded-2xl bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700">🔥 Tiếp Tục Quẹt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IRL DATE MODAL -->
+  <div id="modal-irl-date" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto custom-scroll animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="irlModalTitle" class="text-base sm:text-lg font-extrabold text-white">📅 Lên Lịch Hẹn Hò Ngoài Đời</h3>
+        <button onclick="closeIRLDateModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div id="irlVenueSelectionStep" class="space-y-3">
+        <div class="p-3 rounded-2xl bg-slate-950 border border-pink-500/30 space-y-2">
+          <label class="block text-[11px] font-bold text-pink-300">✨ Hoặc tự nhập địa điểm bất kỳ (AI tự động định giá):</label>
+          <div class="flex gap-2">
+            <input id="inpCustomDateVenue" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCustomDateVenue();}" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white" placeholder="VD: Đà Lạt, Du thuyền, Rooftop Quận 1, Homestay..." />
+            <button type="button" onclick="submitCustomDateVenue()" class="px-4 py-2 rounded-xl gradient-brand text-white font-bold text-xs shrink-0">🤖 Định Giá & Hẹn</button>
+          </div>
+        </div>
+        <div id="irlVenuesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto custom-scroll"></div>
+      </div>
+
+      <div id="irlEventOutcomeStep" class="hidden space-y-4">
+        <div id="irlOutcomeVisual" class="w-full h-44 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800"></div>
+        <div id="irlOutcomeBadge" class="inline-block px-3 py-1 rounded-full text-xs font-bold"></div>
+        <h4 id="irlOutcomeHeading" class="text-base sm:text-lg font-extrabold text-white"></h4>
+        <p id="irlOutcomeStory" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+        <div id="irlOutcomeChoices" class="grid grid-cols-1 gap-2 pt-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIVERSAL MODAL -->
+  <div id="modal-universal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="max-w-xl w-full bg-slate-900 border border-slate-700 rounded-3xl p-5 space-y-4 max-h-[88vh] overflow-y-auto custom-scroll animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="uniModalTitle" class="text-base font-extrabold text-white">Thông báo</h3>
+        <button onclick="closeUniversalModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div id="uniModalBody" class="text-xs sm:text-sm text-slate-300 space-y-3"></div>
+      <div id="uniModalFooter" class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="closeUniversalModal()" class="px-5 py-2 rounded-xl gradient-brand text-white text-xs font-bold">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENDER PRESELECT MODAL -->
+  <div id="modal-gender-preselect" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-6 shadow-2xl space-y-4 animate-pop">
+      <div class="text-center space-y-1">
+        <h3 class="text-lg font-extrabold text-white">Chọn Giới Tính Của Bạn</h3>
+        <p class="text-xs text-slate-400">Hệ thống tự động chọn đối tượng tìm hiểu phù hợp.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="selectPreSetupGender('Nam')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-sky-500/20 border border-slate-700 text-white font-bold text-sm">👨 Nam</button>
+        <button onclick="selectPreSetupGender('Nữ')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-pink-500/20 border border-slate-700 text-white font-bold text-sm">👩 Nữ</button>
+        <button onclick="selectPreSetupGender('Phi nhị nguyên')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-purple-500/20 border border-slate-700 text-white font-bold text-sm">🌈 LGBT / Phi nhị nguyên</button>
+        <button onclick="selectPreSetupGender('Song tính')" class="p-3.5 rounded-2xl bg-slate-950 hover:bg-emerald-500/20 border border-slate-700 text-white font-bold text-sm">✨ Song tính</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- APPLICATION SCRIPT -->
   <script>
     const DATA_STORE = window.HEARTLINK_DATA || {};
     const RAW_CHARACTERS = typeof DATA_STORE.build150BalancedCharacters === 'function'
       ? DATA_STORE.build150BalancedCharacters()
       : [];
-
-    const ALL_HOBBIES = DATA_STORE.ALL_HOBBIES || [
-      "Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert", "Xem phim & Netflix",
-      "Gym & Thể thao", "Ẩm thực & Nấu ăn", "Nuôi thú cưng (Chó/Mèo)", "Nhiếp ảnh",
-      "Đọc sách", "Chơi game / Esports", "Thời trang & Mua sắm", "Yoga & Thiền"
-    ];
-
-    const ALL_TRAITS = DATA_STORE.ALL_TRAITS || [
-      "Chân thành", "Tinh tế", "Hài hước", "Thận trọng", "Lãng mạn",
-      "Thực tế", "Điềm đạm", "Cởi mở", "Thẳng thắn"
-    ];
-
+    const ALL_HOBBIES = DATA_STORE.ALL_HOBBIES || ["Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert", "Xem phim & Netflix", "Gym & Thể thao", "Ẩm thực & Nấu ăn"];
+    const ALL_TRAITS = DATA_STORE.ALL_TRAITS || ["Chân thành", "Tinh tế", "Hài hước", "Thận trọng", "Lãng mạn", "Thực tế", "Điềm đạm", "Cởi mở", "Thẳng thắn"];
     const IRL_VENUES = DATA_STORE.IRL_VENUES || [];
-
     const GIFT_CATALOG = DATA_STORE.GIFT_CATALOG || [];
+    const ACHIEVEMENTS_CATALOG = DATA_STORE.ACHIEVEMENTS_CATALOG || [];
+    const ENDINGS_CATALOG = DATA_STORE.ENDINGS_CATALOG || {};
 
-    // SOUND SYNTHESIZER (Web Audio API)
-<!-- ... existing code ... -->
-    // =====================================================================
-    // SPECIAL LIFE SITUATION CHARACTERS (LOADED FROM heartlink_data.js)
-    // =====================================================================
-    function ensureSpecialSituationCharactersInjected() {
-      // Toàn bộ 150 hồ sơ (bao gồm Boss Cuối Mike Khôi, các tình huống đặc biệt,
-      // người nổi tiếng, nhân vật hư cấu & 16 kịch bản lừa đảo) đã được nạp từ heartlink_data.js
+    let soundEnabled = true;
+    let audioCtx = null;
+    function playSfx(kind) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = kind === 'alert' ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(kind === 'match' ? 660 : (kind === 'alert' ? 220 : 520), audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.16);
+      } catch (e) {}
+    }
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
     }
 
-    // =====================================================================
-    // 5-STAGE RELATIONSHIP PROGRESSION SYSTEM & NATURAL MESSAGING ENGINE
-<!-- ... existing code ... -->
+    function formatVND(n) { return Math.round(Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
+
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toastContainer');
+      if (!box) return;
+      const cls = type === 'danger' ? 'bg-rose-950 border-rose-500 text-rose-200'
+        : (type === 'warn' ? 'bg-amber-950 border-amber-500 text-amber-200'
+        : (type === 'success' ? 'bg-emerald-950 border-emerald-500 text-emerald-200' : 'bg-slate-900 border-pink-500/50 text-slate-100'));
+      const d = document.createElement('div');
+      d.className = `px-4 py-2.5 rounded-2xl border shadow-xl text-xs font-semibold animate-pop ${cls}`;
+      d.textContent = msg;
+      box.appendChild(d);
+      setTimeout(() => d.remove(), 3400);
+    }
+
+    function openUniversalModal(title, bodyHtml) {
+      document.getElementById('uniModalTitle').innerHTML = title;
+      document.getElementById('uniModalBody').innerHTML = bodyHtml;
+      document.getElementById('modal-universal').classList.remove('hidden');
+    }
+    function closeUniversalModal() { document.getElementById('modal-universal').classList.add('hidden'); }
+
+    // AVATAR SVG ENGINE
+    function generateCharacterSVG(char, sceneIndex = 0) {
+      const st = char.avatarStyle || {};
+      const albumItem = (char.album && char.album[sceneIndex]) ? char.album[sceneIndex] : { title: char.name, scene: 'portrait' };
+      const palMap = {
+        luxury_night: ['#090d16', '#3b0764', '#f59e0b'],
+        yacht_sunset: ['#172554', '#be185d', '#fb923c'],
+        neon_club: ['#130322', '#701a75', '#f43f5e'],
+        interior_studio: ['#18181b', '#3f3f46', '#fbbf24'],
+        office_modern: ['#0f172a', '#1d4ed8', '#38bdf8'],
+        flower_shop: ['#4c0519', '#be123c', '#fda4af'],
+        studio_pink: ['#4a044e', '#be185d', '#f9a8d4'],
+        stage_lights: ['#1e1b4b', '#6d28d9', '#f472b6'],
+        law_office: ['#172554', '#1e40af', '#93c5fd'],
+        server_room: ['#061326', '#0369a1', '#2dd4bf'],
+        street_sunset: ['#1c1917', '#9a3412', '#fbbf24'],
+        photo_gallery: ['#271a12', '#78350f', '#fcd34d'],
+        cozy_room: ['#291522', '#6b21a8', '#f472b6'],
+        aquarium: ['#042f2e', '#0f766e', '#34d399'],
+        cafe_aesthetic: ['#24170f', '#78350f', '#fdba74']
+      };
+      const pal = palMap[st.bg] || ['#1e1b4b', '#4c1d95', '#ec4899'];
+      const skin = st.skin || '#f4d2b8';
+      const isFemale = st.gender === 'female';
+      const isNonBinary = st.gender === 'nonbinary';
+      const hairColors = { blonde: '#facc15', red: '#be123c', silver: '#e2e8f0', brown: '#6b3e26', chestnut: '#7c2d12', black: '#18181b' };
+      let hairColor = '#1e1b4b';
+      if (st.hair) {
+        const hit = Object.keys(hairColors).find(k => st.hair.includes(k));
+        if (hit) hairColor = hairColors[hit];
+      }
+      const outfitColors = { suit_navy: '#1e3a8a', dress_emerald: '#047857', cardigan_pink: '#db2777', turtleneck_black: '#18181b', offshoulder_white: '#f8fafc', denim_jacket: '#2563eb', shirt_tie_blue: '#1d4ed8', hoodie_dark: '#334155', club_dress_black: '#be123c', blazer_beige: '#b45309', polo_navy: '#1e40af', blazer_rose: '#be185d' };
+      const outfitColor = outfitColors[st.outfit] || '#6366f1';
+      const gid = `g_${(char.id || 'u').replace(/[^a-zA-Z0-9_]/g, '')}_${sceneIndex}`;
+
+      let hairBack = '', hairTop = '';
+      const hStyle = st.hair || '';
+      if (hStyle.includes('bun')) {
+        hairBack = `<circle cx="200" cy="96" r="34" fill="${hairColor}"/><path d="M138 175 C134 225, 142 260, 156 285 L244 285 C258 260, 266 225, 262 175 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 182 C134 114, 266 114, 266 182 C248 144, 216 136, 200 150 C180 134, 150 146, 134 182 Z" fill="${hairColor}"/>`;
+      } else if (hStyle.includes('bob')) {
+        hairBack = `<path d="M128 172 C122 232, 132 276, 154 292 L246 292 C268 276, 278 232, 272 172 C266 112, 134 112, 128 172 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M132 182 C132 114, 268 114, 268 182 C248 144, 214 136, 198 152 C176 136, 148 148, 132 182 Z" fill="${hairColor}"/>`;
+      } else if (hStyle.includes('long_wavy') || isFemale) {
+        hairBack = `<path d="M124 166 C106 248, 114 345, 140 392 L260 392 C286 345, 294 248, 276 166 C268 106, 132 106, 124 166 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M132 182 C130 112, 270 112, 268 182 C250 142, 216 135, 198 152 C174 135, 146 148, 132 182 Z" fill="${hairColor}"/>`;
+      } else if (hStyle.includes('wolf_cut') || hStyle.includes('idol') || isNonBinary) {
+        hairBack = `<path d="M130 174 C122 228, 128 278, 146 305 L254 305 C272 278, 278 228, 270 174 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 180 C132 110, 268 110, 266 180 C246 138, 216 132, 200 148 C178 132, 150 142, 134 180 Z" fill="${hairColor}"/>`;
+      } else {
+        hairTop = `<path d="M136 174 C132 104, 268 104, 264 174 C252 138, 224 128, 200 132 C174 128, 146 140, 136 174 Z" fill="${hairColor}"/><path d="M135 162 Q145 178 147 194 L137 190 Z" fill="${hairColor}"/><path d="M265 162 Q255 178 253 194 L263 190 Z" fill="${hairColor}"/>`;
+      }
+
+      const faceType = st.face || (isFemale ? 'gentle_soft' : 'warm_smile');
+      const mouthSvg = faceType === 'charming_smirk'
+        ? `<path d="M185 235 Q202 245 218 230" fill="none" stroke="#be123c" stroke-width="3.2" stroke-linecap="round"/>`
+        : (faceType === 'cool_calm'
+          ? `<path d="M187 236 Q200 239 213 236" fill="none" stroke="#9f1239" stroke-width="3" stroke-linecap="round"/>`
+          : (faceType === 'gentle_soft' || isFemale
+            ? `<path d="M183 233 Q200 248 217 233" fill="#fb7185" stroke="#e11d48" stroke-width="3" stroke-linecap="round"/>`
+            : `<path d="M184 235 Q200 246 216 235" fill="none" stroke="#9f1239" stroke-width="3.2" stroke-linecap="round"/>`));
+
+      let accSvg = '';
+      if (st.acc && st.acc.includes('glasses')) {
+        accSvg += `<g stroke="#fbbf24" stroke-width="2.4" fill="rgba(255,255,255,0.14)"><rect x="158" y="185" width="32" height="20" rx="7"/><rect x="210" y="185" width="32" height="20" rx="7"/><line x1="190" y1="195" x2="210" y2="195"/></g>`;
+      } else if (st.acc === 'sunglasses') {
+        accSvg += `<g fill="#090d16" stroke="#f8fafc" stroke-width="2"><rect x="156" y="182" width="35" height="22" rx="6"/><rect x="209" y="182" width="35" height="22" rx="6"/><line x1="191" y1="192" x2="209" y2="192"/></g>`;
+      }
+      if (isFemale || (st.acc && st.acc.includes('earrings'))) {
+        accSvg += `<circle cx="136" cy="212" r="4.5" fill="#fbbf24"/><circle cx="264" cy="212" r="4.5" fill="#fbbf24"/>`;
+      }
+
+      return `<svg viewBox="0 0 400 460" class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal[0]}"/><stop offset="55%" stop-color="${pal[1]}"/><stop offset="100%" stop-color="${pal[2]}"/></linearGradient></defs>
+        <rect width="400" height="460" fill="url(#${gid})"/>
+        <circle cx="332" cy="78" r="88" fill="${pal[2]}" opacity="0.22"/>
+        <g transform="translate(0, 14)">
+          ${hairBack}
+          <path d="M90 450 C90 332, 138 298, 200 298 C262 298, 310 332, 310 450 Z" fill="${outfitColor}"/>
+          <path d="M168 300 L200 346 L232 300" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.55"/>
+          <rect x="182" y="254" width="36" height="54" rx="14" fill="${skin}"/>
+          <ellipse cx="200" cy="198" rx="62" ry="74" fill="${skin}"/>
+          <circle cx="138" cy="202" r="10.5" fill="${skin}"/><circle cx="262" cy="202" r="10.5" fill="${skin}"/>
+          <path d="M161 175 Q176 168 190 174" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/>
+          <path d="M210 174 Q224 168 239 175" fill="none" stroke="${hairColor}" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="176" cy="195" rx="7.8" ry="8.8" fill="#0f172a"/><ellipse cx="224" cy="195" rx="7.8" ry="8.8" fill="#0f172a"/>
+          <circle cx="178.5" cy="192" r="2.8" fill="#ffffff"/><circle cx="226.5" cy="192" r="2.8" fill="#ffffff"/>
+          <ellipse cx="157" cy="213" rx="11" ry="5.5" fill="#fb7185" opacity="0.3"/><ellipse cx="243" cy="213" rx="11" ry="5.5" fill="#fb7185" opacity="0.3"/>
+          <path d="M200 198 L196 217 L204 219" fill="none" stroke="#b47b5c" stroke-width="2.2" stroke-linecap="round"/>
+          ${mouthSvg}${accSvg}${hairTop}
+        </g>
+        <rect x="16" y="396" width="368" height="42" rx="12" fill="rgba(9,13,22,0.82)"/>
+        <text x="28" y="422" fill="#f8fafc" font-size="13" font-weight="600">📷 ${albumItem.title || 'Ảnh hồ sơ'}</text>
+      </svg>`;
+    }
+
+    function getPlayerAvatarStyle(presetIdx = 0, genderVal = 'Nam') {
+      if (state.player && state.player.customAvatar && presetIdx === -1) {
+        return { ...state.player.customAvatar, gender: genderVal === 'Nữ' ? 'female' : (genderVal === 'Phi nhị nguyên' ? 'nonbinary' : 'male') };
+      }
+      const isF = genderVal === 'Nữ', isNB = genderVal === 'Phi nhị nguyên';
+      const presets = isF ? [
+        { face: 'gentle_soft', skin: '#fde4d4', hair: 'bun_elegant_black', outfit: 'blazer_rose', bg: 'flower_shop', acc: 'earrings_pearl', gender: 'female' },
+        { face: 'charming_smirk', skin: '#fff0f3', hair: 'long_wavy_brown', outfit: 'dress_emerald', bg: 'yacht_sunset', acc: 'earrings_gold', gender: 'female' },
+        { face: 'warm_smile', skin: '#fae0d0', hair: 'bob_cut_chestnut', outfit: 'blazer_beige', bg: 'cafe_aesthetic', acc: 'glasses_thin', gender: 'female' }
+      ] : isNB ? [
+        { face: 'charming_smirk', skin: '#f8dac6', hair: 'wolf_cut_blonde', outfit: 'denim_jacket', bg: 'stage_lights', acc: 'earrings_gold', gender: 'nonbinary' },
+        { face: 'cool_calm', skin: '#f4d0b6', hair: 'wolf_cut_silver', outfit: 'turtleneck_black', bg: 'neon_club', acc: 'glasses_thin', gender: 'nonbinary' },
+        { face: 'warm_smile', skin: '#fae2d2', hair: 'bob_cut_chestnut', outfit: 'blazer_beige', bg: 'cafe_aesthetic', acc: 'none', gender: 'nonbinary' }
+      ] : [
+        { face: 'warm_smile', skin: '#f2caa8', hair: 'short_modern_black', outfit: 'suit_navy', bg: 'aquarium', acc: 'glasses_thin', gender: 'male' },
+        { face: 'charming_smirk', skin: '#f0c8a8', hair: 'slick_black', outfit: 'turtleneck_black', bg: 'luxury_night', acc: 'sunglasses', gender: 'male' },
+        { face: 'cool_calm', skin: '#f4d2b8', hair: 'short_modern_brown', outfit: 'polo_navy', bg: 'office_modern', acc: 'none', gender: 'male' }
+      ];
+      return presets[presetIdx % presets.length] || presets[0];
+    }
+
+    // GAME STATE
+    let state = {
+      started: false,
+      day: 1,
+      month: 1,
+      simTime: { totalMinutes: 480 },
+      realismMode: false,
+      achievements: [],
+      momentsFeed: [],
+      player: {
+        name: "Minh Khôi", age: 30, gender: "Nam", targetGender: "Nữ",
+        location: "TP. Hồ Chí Minh", job: "Trưởng phòng Digital Marketing",
+        income: 25000000, livingCost: 9000000, balance: 35000000,
+        goal: "Tìm người yêu nghiêm túc",
+        hobbies: ["Du lịch & Khám phá", "Cà phê & Trà chiều", "Âm nhạc & Concert"],
+        traits: ["Chân thành", "Tinh tế", "Hài hước"],
+        bio: "Thích du lịch khám phá, cà phê cuối tuần và trò chuyện chân thành!",
+        avatarPresetIndex: 0,
+        customAvatar: null
+      },
+      finance: { datingSpent: 0, giftSpent: 0, scamLost: 0, ledger: [] },
+      deckOrder: [],
+      currentDeckPos: 0,
+      currentPhotoIdx: 0,
+      liveGenderFilter: "Tất cả",
+      swipedLeftIds: [],
+      swipedRightIds: [],
+      superLikedIds: [],
+      matchedIds: [],
+      activeChatCharId: null,
+      charStates: {},
+      reportsLog: [],
+      scamDetectedCount: 0,
+      falseReportCount: 0
+    };
+
+    function saveState() { try { localStorage.setItem('heartlink_dating_sim_v2', JSON.stringify(state)); } catch (e) {} }
+    function loadSavedState() { try { const r = localStorage.getItem('heartlink_dating_sim_v2'); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+    function getCharById(id) { return RAW_CHARACTERS.find(c => c.id === id) || RAW_CHARACTERS[0]; }
+
+    function initCharRuntimeStates() {
+      RAW_CHARACTERS.forEach(c => {
+        if (!state.charStates[c.id]) {
+          state.charStates[c.id] = {
+            affection: 25, trust: 25, goodwill: 55, respect: 65, intimacy: 15,
+            relPhase: 1, stage: 0, chatted: false, videoCalled: false, investigated: false,
+            datesCount: 0, blocked: false, unmatched: false, reported: false,
+            adultChatUnlocked: false, inDatingTime: false, inHotelDatingTime: false,
+            datingTimeVenue: null, datingTimeTurns: 0,
+            activeScamOfferStage: 0, scamStage1Done: false, scamStage2Done: false,
+            sharedMemories: [], messages: [], dynamicSuggestedChoices: null
+          };
+        }
+      });
+    }
+
+    // TIME & DIALECT HELPERS
+    const WEEKDAYS_VN = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+    function getSimTimeInfo() {
+      const mins = (state.simTime && typeof state.simTime.totalMinutes === 'number') ? state.simTime.totalMinutes : 480;
+      const day = Math.floor(mins / 1440) + 1;
+      const hour = Math.floor((mins % 1440) / 60);
+      const weekday = WEEKDAYS_VN[(day - 1) % 7];
+      const period = hour < 11 ? 'Sáng' : (hour < 14 ? 'Trưa' : (hour < 18 ? 'Chiều' : (hour < 22 ? 'Tối' : 'Khuya')));
+      return {
+        day, hour, period,
+        shortLabel: `${weekday.replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')}, Ngày ${day} • ${period}`,
+        fullLabel: `${weekday}, Ngày ${day} • Buổi ${period}`
+      };
+    }
+
+    function advanceToNextPeriod() {
+      const info = getSimTimeInfo();
+      let nextHour = 12, nextDay = info.day;
+      if (info.hour < 11) nextHour = 12;
+      else if (info.hour < 14) nextHour = 15;
+      else if (info.hour < 18) nextHour = 19;
+      else if (info.hour < 22) nextHour = 23;
+      else { nextHour = 8; nextDay += 1; }
+      state.simTime.totalMinutes = (nextDay - 1) * 1440 + nextHour * 60;
+      state.day = nextDay;
+      const newInfo = getSimTimeInfo();
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid);
+        const cs = state.charStates[cid];
+        if (!c || !cs || cs.blocked || cs.unmatched) return;
+        cs.messages.push({ sender: 'system', text: `🕒 Đã chuyển sang ${newInfo.fullLabel}`, time: newInfo.fullLabel });
+        if (state.player.gender !== 'Nam') {
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(c, `Sang buổi ${newInfo.period.toLowerCase()} rồi nè ${state.player.name}, bạn đang làm gì thế? 😊`), time: newInfo.fullLabel });
+        }
+      });
+      saveState(); updateTopBarStats();
+      if (state.activeChatCharId) renderMessagesView();
+      showToast(`⏩ Đã chuyển sang ${newInfo.fullLabel}`, 'info');
+    }
+
+    function getAgePronouns(char) {
+      const pAge = Number(state.player.age) || 25;
+      const cAge = Number(char.age) || 25;
+      if (pAge === cAge) return { partnerSelf: 'mình', partnerCallPlayer: state.player.name };
+      if (pAge > cAge) return { partnerSelf: 'em', partnerCallPlayer: state.player.gender === 'Nam' ? 'anh' : 'chị' };
+      return { partnerSelf: char.gender === 'Nam' ? 'anh' : 'chị', partnerCallPlayer: 'em' };
+    }
+
+    function applyDialectFlavor(char, text) {
+      if (!char || !text) return text;
+      const style = char.speechStyle;
+      let out = text;
+      if (style === 'central_hue') out = out.replace(/sao vậy/gi, 'răng rứa').replace(/thế nào/gi, 'răng').replace(/như vậy/gi, 'rứa') + ' Nghe dễ thương chi lạ rứa!';
+      else if (style === 'north_nl') out = out.replace(/làm/g, 'nàm').replace(/nói/g, 'lói').replace(/lắm/g, 'nắm');
+      else if (style === 'hoa_cholon') out = out.replace(/mình /g, 'ngộ ').replace(/bạn /g, 'nị ') + ' Ngộ thấy nị dễ thương quá à nghen!';
+      else if (style === 'mekong_west') out = out.replace(/không/g, 'hổng').replace(/vậy/g, 'dzậy') + ' Thương quá trời quá đất!';
+      else if (style === 'genz_slang') out += ' Oke la luôn á, chill phết!';
+      else if (style === 'male_patriarch') out += ' Đàn ông làm trụ cột, phụ nữ tinh tế là phải biết lắng nghe nhé.';
+      else if (style === 'female_outgoing') out = 'Ui trời ơi thích ghê á! ' + out + ' Kể tiếp nghe với nè!';
+      else if (style === 'fict_deadpool') out = '[Phá tường thứ 4] Ê người chơi đang cầm máy ơi! ' + out + ' (Đừng méc Mike Khôi là tui đọc trộm code nha 😂!)';
+      else if (style === 'fict_shehulk') out = '[Phá tường thứ 4] Khoan để luật sư Jennifer check điều khoản game cái! ' + out;
+      else if (style === 'fict_joker') out = 'Why so serious? Hahaha! 🃏 ' + out;
+      else if (style === 'fict_ironman') out = 'JARVIS vừa phân tích câu của bạn xong — ' + out;
+      return out;
+    }
+
+    // SETUP SCREEN LOGIC
+    function openGenderPreselectModal() { document.getElementById('modal-gender-preselect').classList.remove('hidden'); }
+    function selectPreSetupGender(genderVal) {
+      document.getElementById('modal-gender-preselect').classList.add('hidden');
+      const gSel = document.getElementById('selPlayerGender');
+      if (gSel) gSel.value = genderVal;
+      onPlayerGenderChange();
+      navToScreen('setup');
+    }
+
+    function onPlayerGenderChange() {
+      const gVal = document.getElementById('selPlayerGender').value;
+      state.player.gender = gVal;
+      const tSel = document.getElementById('selTargetGender');
+      if (tSel) {
+        if (gVal === 'Nam') tSel.value = 'Nữ';
+        else if (gVal === 'Nữ') tSel.value = 'Nam';
+        else tSel.value = 'Phi nhị nguyên';
+      }
+      const nameInp = document.getElementById('inpPlayerName');
+      if (nameInp && (nameInp.value === 'Minh Khôi' || nameInp.value === 'Ánh Mai')) {
+        nameInp.value = gVal === 'Nữ' ? 'Ánh Mai' : 'Minh Khôi';
+      }
+      selectPlayerAvatarPreset(0);
+    }
+
+    function onCustomAvatarPartChange() {
+      const face = document.getElementById('selAvatarFace').value;
+      const skin = document.getElementById('selAvatarSkin').value;
+      const hStyle = document.getElementById('selAvatarHairStyle').value;
+      const hColor = document.getElementById('selAvatarHairColor').value;
+      const outfit = document.getElementById('selAvatarOutfit').value;
+      const acc = document.getElementById('selAvatarAcc').value;
+      state.player.avatarPresetIndex = -1;
+      state.player.customAvatar = { face, skin, hair: `${hStyle}_${hColor}`, outfit, bg: 'aquarium', acc };
+      updateSetupAvatarPreview();
+    }
+
+    function selectPlayerAvatarPreset(idx) {
+      state.player.avatarPresetIndex = idx;
+      state.player.customAvatar = null;
+      const gVal = document.getElementById('selPlayerGender') ? document.getElementById('selPlayerGender').value : state.player.gender;
+      const st = getPlayerAvatarStyle(idx, gVal);
+      if (document.getElementById('selAvatarFace')) {
+        document.getElementById('selAvatarFace').value = st.face || 'warm_smile';
+        document.getElementById('selAvatarSkin').value = st.skin || '#f2caa8';
+        document.getElementById('selAvatarOutfit').value = st.outfit || 'suit_navy';
+        document.getElementById('selAvatarAcc').value = st.acc || 'glasses_thin';
+      }
+      updateSetupAvatarPreview();
+    }
+
+    function updateSetupAvatarPreview() {
+      const gVal = document.getElementById('selPlayerGender') ? document.getElementById('selPlayerGender').value : state.player.gender;
+      const preview = document.getElementById('setupPlayerAvatarPreview');
+      if (!preview) return;
+      preview.innerHTML = generateCharacterSVG({
+        id: 'player_preview',
+        name: document.getElementById('inpPlayerName').value || 'Bạn',
+        avatarStyle: getPlayerAvatarStyle(state.player.avatarPresetIndex, gVal),
+        album: [{ title: `${gVal} • Hồ sơ`, scene: 'portrait' }]
+      }, 0);
+    }
+
+    function renderSetupChips() {
+      const hBox = document.getElementById('setupHobbiesContainer');
+      if (hBox) {
+        hBox.innerHTML = '';
+        ALL_HOBBIES.forEach(h => {
+          const active = state.player.hobbies.includes(h);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition ${active ? 'bg-pink-500/25 border-pink-500 text-pink-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
+          btn.textContent = (active ? '✓ ' : '+ ') + h;
+          btn.onclick = () => {
+            if (active && state.player.hobbies.length > 1) state.player.hobbies = state.player.hobbies.filter(x => x !== h);
+            else if (!active) state.player.hobbies.push(h);
+            renderSetupChips();
+          };
+          hBox.appendChild(btn);
+        });
+      }
+      const tBox = document.getElementById('setupTraitsContainer');
+      if (tBox) {
+        tBox.innerHTML = '';
+        ALL_TRAITS.forEach(t => {
+          const active = state.player.traits.includes(t);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition ${active ? 'bg-purple-500/25 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
+          btn.textContent = (active ? '✓ ' : '+ ') + t;
+          btn.onclick = () => {
+            if (active && state.player.traits.length > 1) state.player.traits = state.player.traits.filter(x => x !== t);
+            else if (!active) state.player.traits.push(t);
+            renderSetupChips();
+          };
+          tBox.appendChild(btn);
+        });
+      }
+    }
+
+    function updateSetupIncomePreview() {
+      const v = document.getElementById('selPlayerIncome').value;
+      const inc = v === 'hide' ? 20000000 : (parseInt(v, 10) || 25000000);
+      const bal = v === 'hide' ? 28000000 : Math.round(inc * 1.4);
+      document.getElementById('setupIncomePreview').textContent = v === 'hide' ? '🔒 Ẩn thu nhập' : formatVND(inc) + '/tháng';
+      document.getElementById('setupStartBalancePreview').textContent = formatVND(bal);
+    }
+
+    function fillPresetPlayerProfile() {
+      document.getElementById('inpPlayerName').value = 'Minh Khôi';
+      document.getElementById('inpPlayerAge').value = '30';
+      document.getElementById('selPlayerGender').value = 'Nam';
+      document.getElementById('selTargetGender').value = 'Nữ';
+      renderSetupChips();
+      updateSetupIncomePreview();
+      selectPlayerAvatarPreset(0);
+    }
+
+    function completePlayerSetup() {
+      state.player.name = (document.getElementById('inpPlayerName').value || '').trim() || 'Minh Khôi';
+      state.player.age = Math.max(18, Math.min(60, parseInt(document.getElementById('inpPlayerAge').value, 10) || 30));
+      state.player.gender = document.getElementById('selPlayerGender').value;
+      state.player.targetGender = document.getElementById('selTargetGender').value;
+      const cJob = (document.getElementById('inpCustomPlayerJob').value || '').trim();
+      state.player.job = cJob || document.getElementById('selPlayerJob').value;
+      const vInc = document.getElementById('selPlayerIncome').value;
+      state.player.income = vInc === 'hide' ? 20000000 : (parseInt(vInc, 10) || 25000000);
+      if (!state.started) {
+        state.player.balance = vInc === 'hide' ? 28000000 : Math.round(state.player.income * 1.4);
+        state.finance.ledger = [{ day: 1, title: 'Số dư khởi tạo tài khoản', amount: state.player.balance, type: 'in' }];
+      }
+      state.player.bio = document.getElementById('inpPlayerBio').value;
+      state.liveGenderFilter = state.player.targetGender;
+      if (document.getElementById('selLiveGenderFilter')) document.getElementById('selLiveGenderFilter').value = state.liveGenderFilter;
+      state.started = true;
+      initCharRuntimeStates();
+      buildFilteredDeckOrder(true);
+      saveState();
+      navToScreen('swipe');
+      showToast(`Chào mừng ${state.player.name}! Hãy quẹt phải để kết nối nhé.`, 'success');
+    }
+
+    function quickStartGame() { fillPresetPlayerProfile(); completePlayerSetup(); }
+    function continueSavedGame() {
+      const s = loadSavedState();
+      if (s && s.started) { state = s; initCharRuntimeStates(); navToScreen('swipe'); }
+      else quickStartGame();
+    }
+
+    // NAVIGATION
+    function navToScreen(name) {
+      ['screen-splash', 'screen-setup', 'app-shell', 'screen-ending'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const topStats = document.getElementById('topStatsBar');
+      const btnFinish = document.getElementById('btnFinishSummary');
+
+      if (name === 'splash') {
+        document.getElementById('screen-splash').classList.remove('hidden');
+        topStats.classList.add('hidden'); btnFinish.classList.add('hidden');
+        const saved = loadSavedState();
+        if (saved && saved.started) document.getElementById('btnContinueSaved').classList.remove('hidden');
+        return;
+      }
+      if (name === 'setup') {
+        document.getElementById('screen-setup').classList.remove('hidden');
+        renderSetupChips(); updateSetupAvatarPreview(); updateSetupIncomePreview();
+        return;
+      }
+      if (name === 'ending') {
+        document.getElementById('screen-ending').classList.remove('hidden');
+        return;
+      }
+
+      if (!state.started) { quickStartGame(); return; }
+      document.getElementById('app-shell').classList.remove('hidden');
+      topStats.classList.remove('hidden'); topStats.classList.add('flex');
+      btnFinish.classList.remove('hidden');
+
+      ['swipe', 'messages', 'moments', 'finance', 'report', 'profile'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.toggle('hidden', v !== name);
+      });
+      const tabMap = { swipe: 'navBtnSwipe', messages: 'navBtnMessages', moments: 'navBtnMoments', finance: 'navBtnFinance', report: 'navBtnReport', profile: 'navBtnProfile' };
+      Object.entries(tabMap).forEach(([k, id]) => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        b.className = k === name
+          ? 'nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-pink-500/20 text-pink-300 border border-pink-500/40'
+          : 'nav-tab-btn flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800';
+      });
+
+      updateTopBarStats();
+      if (name === 'swipe') renderActiveSwipeCard();
+      if (name === 'messages') renderMessagesView();
+      if (name === 'moments') renderMomentsView();
+      if (name === 'finance') renderFinanceView();
+      if (name === 'report') renderReportView();
+      if (name === 'profile') renderProfileView();
+    }
+
+    function updateTopBarStats() {
+      document.getElementById('headerBalanceText').textContent = formatVND(state.player.balance);
+      document.getElementById('headerMatchCount').textContent = state.matchedIds.length;
+      document.getElementById('navMatchBadge').textContent = state.matchedIds.length;
+      document.getElementById('headerDayText').textContent = getSimTimeInfo().shortLabel;
+      document.getElementById('navRemainCount').textContent = state.deckOrder.length;
+      document.getElementById('navMomentsBadge').textContent = (state.momentsFeed || []).length;
+      document.getElementById('headerAchCount').textContent = `${(state.achievements || []).length}/6`;
+    }
+
+    // SWIPE ENGINE
+    function buildFilteredDeckOrder(shuffle = false) {
+      let pool = RAW_CHARACTERS.filter(c => {
+        const cs = state.charStates[c.id];
+        if (cs && cs.blocked) return false;
+        if (state.liveGenderFilter !== 'Tất cả' && c.gender !== state.liveGenderFilter) return false;
+        return true;
+      });
+      if (pool.length === 0) pool = RAW_CHARACTERS;
+      let ids = pool.map(c => c.id);
+      if (shuffle) {
+        for (let i = ids.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+        }
+      }
+      state.deckOrder = ids;
+      state.currentDeckPos = 0;
+      state.currentPhotoIdx = 0;
+    }
+
+    function getCurrentSwipeCharacter() {
+      if (!state.deckOrder || state.deckOrder.length === 0) buildFilteredDeckOrder(false);
+      return getCharById(state.deckOrder[state.currentDeckPos % state.deckOrder.length]);
+    }
+
+    function changeLiveGenderFilter(val) {
+      state.liveGenderFilter = val;
+      buildFilteredDeckOrder(true);
+      renderActiveSwipeCard();
+      saveState();
+    }
+
+    function changeCardPhoto(delta, ev) {
+      if (ev) ev.stopPropagation();
+      const char = getCurrentSwipeCharacter();
+      const tot = (char.album && char.album.length) ? char.album.length : 1;
+      state.currentPhotoIdx = (state.currentPhotoIdx + delta + tot) % tot;
+      renderActiveSwipeCard();
+    }
+
+    function renderActiveSwipeCard() {
+      const char = getCurrentSwipeCharacter();
+      if (!char) return;
+      const tot = char.album ? char.album.length : 1;
+      document.getElementById('deckCounterLabel').textContent = `Hồ sơ ${(state.currentDeckPos % state.deckOrder.length) + 1} / ${state.deckOrder.length}`;
+      const dots = document.getElementById('albumDotsBar');
+      dots.innerHTML = '';
+      for (let i = 0; i < tot; i++) {
+        const d = document.createElement('div');
+        d.className = `h-1.5 flex-1 rounded-full ${i === state.currentPhotoIdx ? 'bg-white' : 'bg-white/30'}`;
+        dots.appendChild(d);
+      }
+      document.getElementById('cardArtworkContainer').innerHTML = generateCharacterSVG(char, state.currentPhotoIdx);
+      document.getElementById('cardCharNameAge').textContent = `${char.name}, ${char.age}`;
+      const vb = document.getElementById('cardVerifiedBadge');
+      vb.className = char.verified ? 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-500/20 text-sky-300' : 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300';
+      vb.textContent = char.verified ? '✔ Đã xác minh' : '⚠ Chưa xác minh';
+      document.getElementById('cardDistanceBadge').textContent = `📍 ${char.distance} km`;
+      document.getElementById('cardJobEdu').textContent = `💼 ${char.job} • 🎓 ${char.education}`;
+      const curAlb = (char.album && char.album[state.currentPhotoIdx]) ? char.album[state.currentPhotoIdx] : {};
+      document.getElementById('cardPhotoCaption').textContent = `“${curAlb.caption || ''}”`;
+      document.getElementById('cardBioPreview').textContent = char.bio;
+      document.getElementById('cardHobbiesPills').innerHTML = (char.hobbies || []).map(h => `<span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-300">${h}</span>`).join('');
+
+      document.getElementById('detailCompletionBadge').textContent = `Hoàn thiện: ${char.completionRate}%`;
+      document.getElementById('detailAlbumStrip').innerHTML = (char.album || []).map((a, idx) => `
+        <button type="button" onclick="state.currentPhotoIdx=${idx};renderActiveSwipeCard();" class="h-16 rounded-xl overflow-hidden border-2 ${idx === state.currentPhotoIdx ? 'border-pink-500' : 'border-slate-800 opacity-75'}">${generateCharacterSVG(char, idx)}</button>
+      `).join('');
+      document.getElementById('detailBasicGrid').innerHTML = `
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Họ tên</span><strong class="text-white">${char.name}</strong></div>
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Tuổi & Giới</span><strong class="text-white">${char.age}t • ${char.gender}</strong></div>
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Chiều cao</span><strong class="text-white">${char.height} cm</strong></div>
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Khu vực</span><strong class="text-white">${char.location}</strong></div>
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Nghề nghiệp</span><strong class="text-pink-300">${char.job}</strong></div>
+        <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Tình trạng</span><strong class="text-white">${char.relationshipStatus}</strong></div>
+      `;
+      document.getElementById('detailPersonalGrid').innerHTML = `
+        <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Giới thiệu:</span> <span class="text-slate-200">${char.bio}</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Phong cách sống</span><strong class="text-slate-200">${char.lifestyle}</strong></div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Tính cách</span><strong class="text-purple-300">${(char.personality || []).join(', ')}</strong></div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Quan điểm tình yêu</span><strong class="text-slate-200">${char.loveView}</strong></div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><span class="text-slate-400 block">Quan điểm tài chính</span><strong class="text-emerald-300">${char.financeView}</strong></div>
+        </div>
+      `;
+    }
+
+    function handleSwipeAction(dir) {
+      const char = getCurrentSwipeCharacter();
+      if (!char) return;
+      const card = document.getElementById('activeSwipeCard');
+      if (dir === 'left') {
+        playSfx('swipe_left');
+        card.style.transform = 'translateX(-120%) rotate(-15deg)';
+        card.style.opacity = '0';
+        state.swipedLeftIds.push(char.id);
+      } else {
+        playSfx(dir === 'super' ? 'super' : 'swipe_right');
+        card.style.transform = 'translateX(120%) rotate(15deg)';
+        card.style.opacity = '0';
+        state.swipedRightIds.push(char.id);
+        if (dir === 'super') {
+          state.charStates[char.id].affection = Math.min(100, state.charStates[char.id].affection + 15);
+          state.charStates[char.id].trust = Math.min(100, state.charStates[char.id].trust + 10);
+        }
+        const chance = char.id === 'char_00_creator' ? (dir === 'super' ? 0.35 : 0.15) : (char.isScammer ? 0.92 : (dir === 'super' ? 0.85 : 0.55));
+        if (Math.random() < chance && !state.matchedIds.includes(char.id)) {
+          state.matchedIds.unshift(char.id);
+          seedOpeningMessage(char);
+          openMatchModal(char);
+        } else {
+          showToast(`${char.name} chưa phản hồi lúc này, tiếp tục khám phá nhé!`, 'info');
+        }
+      }
+      setTimeout(() => {
+        card.style.transition = 'none'; card.style.transform = ''; card.style.opacity = '1';
+        state.currentDeckPos += 1; state.currentPhotoIdx = 0;
+        saveState(); updateTopBarStats(); renderActiveSwipeCard();
+        setTimeout(() => { card.style.transition = ''; }, 30);
+      }, 220);
+    }
+
+    function openMatchModal(char) {
+      playSfx('match');
+      document.getElementById('matchPlayerAvatar').innerHTML = generateCharacterSVG({ id: 'p_m', name: state.player.name, avatarStyle: getPlayerAvatarStyle(state.player.avatarPresetIndex, state.player.gender), album: [{ title: state.player.name }] }, 0);
+      document.getElementById('matchTargetAvatar').innerHTML = generateCharacterSVG(char, 0);
+      document.getElementById('matchModalSubtitle').textContent = `Bạn và ${char.name} (${char.age}t • ${char.job}) đã ghép đôi thành công!`;
+      state.activeChatCharId = char.id;
+      document.getElementById('modal-match').classList.remove('hidden');
+    }
+    function closeMatchModal() { document.getElementById('modal-match').classList.add('hidden'); }
+
+    // CHAT, 18+ MODE & DYNAMIC SUGGESTIONS
+    function seedOpeningMessage(char) {
+      const cs = state.charStates[char.id];
+      if (!cs || cs.messages.length > 0) return;
+      const pr = getAgePronouns(char);
+      const raw = `Chào ${pr.partnerCallPlayer}! Vừa thấy hồ sơ của ${pr.partnerCallPlayer} là ${pr.partnerSelf} ấn tượng ngay. Công việc ${state.player.job} dạo này có bận lắm không? 😊`;
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, raw), time: getSimTimeInfo().fullLabel });
+    }
+
+    function detectPlayerAdultTopic(text) {
+      const low = (text || '').toLowerCase();
+      return ['18+', 'chuyện ấy', 'làm tình', 'quan hệ', 'ngủ cùng', 'qua đêm', 'nóng bỏng', 'quyến rũ', 'thân mật', 'lên giường', 'hôn sâu', 'chạm vào', 'cởi', 'sext', 'nhạy cảm', 'kích thích', 'vuốt ve', 'dâm', 'nứng', 'sướng', 'địt', 'chịch', 'xoạc', 'mút', 'liếm', 'sờ'].some(k => low.includes(k));
+    }
+
+    function canUnlockAdultMode(char, cs) {
+      if (char.isScammer || char.archetype === 'casual_short') return true;
+      const isSerious = ['genuine_love', 'genuine_strict', 'single_parent', 'creator_special'].includes(char.archetype);
+      if (isSerious) return (cs.affection >= 70 && cs.trust >= 60) || !!cs.inHotelDatingTime;
+      return cs.affection >= 45 || !!cs.inHotelDatingTime;
+    }
+
+    function exitAdultChatMode() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      cs.adultChatUnlocked = false;
+      cs.inHotelDatingTime = false;
+      cs.dynamicSuggestedChoices = null;
+      cs.messages.push({ sender: 'system', text: '🚪 Đã thoát Chế độ 18+ và quay lại cuộc trò chuyện bình thường.', time: getSimTimeInfo().fullLabel });
+      saveState(); renderMessagesView();
+      showToast('🚪 Đã thoát Chế độ 18+!', 'info');
+    }
+
+    function getDialogueOptionsForStage(char, cs) {
+      if (cs.blocked) return [{ label: "Tài khoản này đã bị chặn", action: "blocked" }];
+
+      // Priority 1: Active financial/scam offer -> immediate context-aware replies
+      if (char.isScammer && cs.activeScamOfferStage > 0) {
+        return [
+          { label: `🕵️ “Khoan đã, sao mới quen mà ${char.name} lại nhắc chuyện tiền bạc gấp vậy?”`, playerText: `Mình thấy hơi lạ: tụi mình mới quen trên app mà sao ${char.name} lại hỏi chuyện tiền bạc gấp thế? Bạn giải thích rõ xem nào?`, aff: -10, trust: -10 },
+          { label: `🛡️ “Nguyên tắc của mình là KHÔNG chuyển tiền qua mạng. Gặp mặt cà phê nói chuyện nhé!”`, playerText: `Mình nói thẳng nguyên tắc là không bao giờ chuyển tiền hay nạp app qua mạng đâu. Nếu ${char.name} thật lòng thì hẹn gặp ở quán cà phê công cộng nhé!`, aff: -12, trust: -8 },
+          { label: `📹 “Bật Video Call 1 phút nhìn mặt thật trước đã rồi mới nói chuyện tiếp nha!”`, playerText: `Chuyện tiền bạc nhạy cảm lắm, bật Video Call nhìn mặt thật xác minh 1 phút trước đã nhé ${char.name}!`, aff: -6, trust: 4 },
+          { label: `🚨 Báo cáo dấu hiệu lừa đảo ngay`, action: "open_report" }
+        ];
+      }
+
+      // Priority 2: 18+ Mode unlocked -> candid dirty talk options
+      if (cs.adultChatUnlocked) {
+        return [
+          { label: `🔥 “Nghe ${char.name} nói mà người mình nóng ran lên rồi... lại đây ôm chặt và vuốt ve nhau đi 🔞”`, playerText: `Nghe ${char.name} nói mà mình nóng hết cả người rồi 🔥... Muốn áp sát vào bạn, hôn sâu và vuốt ve khắp cơ thể bạn ngay lúc này quá 🔞!`, aff: 12, trust: 4 },
+          { label: `💋 “Đêm nay chỉ có hai đứa mình thôi, nói thật xem ${char.name} đang muốn làm chuyện đó tới mức nào? 💦”`, playerText: `Không có ai ở đây đâu ${char.name}... nói thật đi, lúc này bạn đang nứng và muốn tụi mình làm tình cuồng nhiệt tới mức nào? 💋🔞`, aff: 14, trust: 3 },
+          { label: `🥂 “Thư giãn chút đã nha, tối nay tụi mình hẹn gặp riêng tư để tiếp tục nhé?”`, playerText: `Nhấp chút đồ uống cho đỡ nóng người đi ${char.name}, tối nay mình hẹn gặp nhau riêng tư để tiếp tục nhé 🔥?`, action: "open_date" }
+        ];
+      }
+
+      // Priority 3: Normal Mode dynamic suggestions based on partner's latest message
+      const lastPartner = [...(cs.messages || [])].reverse().find(m => m.sender === 'them');
+      const pLow = (lastPartner ? lastPartner.text : '').toLowerCase();
+      if (pLow.includes('công việc') || pLow.includes('bận')) {
+        return [
+          { label: `“Công việc ${state.player.job} của mình khá cuốn, cuối tuần mình hay đi ${state.player.hobbies[0].toLowerCase()}.”`, playerText: `Công việc ${state.player.job} của mình khá cuốn nhưng cũng hay bận, cuối tuần mình thường đi ${state.player.hobbies[0].toLowerCase()}. Còn ${char.name} thì sao?`, aff: 9, trust: 8 },
+          { label: `“Nghe lịch trình của ${char.name} bận thế, làm ${char.job} chắc áp lực lắm nhỉ?”`, playerText: `Thấy ${char.name} làm ${char.job} cũng nhiều việc phết, những lúc áp lực nhất bạn thường làm gì để thư giãn?`, aff: 8, trust: 9 },
+          { label: `“Cuối tuần này rảnh thì tụi mình hẹn đi cà phê ngoài đời trò chuyện nhé 📅!”`, playerText: `Cuối tuần này mình cũng trống lịch nè! Tụi mình hẹn gặp nhau ngoài đời uống nước trò chuyện cho tự nhiên nhé ${char.name}!`, action: "open_date" }
+        ];
+      }
+
+      return [
+        { label: `“Mình rất thích cách suy nghĩ của ${char.name}, kể thêm về sở thích ${char.hobbies[0]} đi!”`, playerText: `Mình rất ấn tượng với quan điểm của ${char.name} đó! Kể thêm cho mình nghe về sở thích ${char.hobbies[0]} của bạn đi 😊.`, aff: 9, trust: 8 },
+        { label: `“Tụi mình gọi Video Call 1 phút nhìn mặt nhau chào hỏi cho tự nhiên nhé 📹?”`, playerText: `Nói chuyện hợp quá rồi, mình gọi Video Call 1 phút nhìn mặt nhau chào hỏi cho tự nhiên nhé ${char.name}!`, action: "video_call" },
+        { label: `“Cuối tuần này rảnh thì tụi mình lên lịch hẹn gặp ngoài đời nhé 📅!”`, playerText: `Trò chuyện qua tin nhắn mãi cũng nhớ, cuối tuần này tụi mình hẹn gặp ngoài đời nhé ${char.name}!`, action: "open_date" }
+      ];
+    }
+
+    function generateOfflineReply(text, char, cs) {
+      const low = text.toLowerCase();
+      const pr = getAgePronouns(char);
+      let reply = '';
+      let aff = 7, trust = 7;
+
+      // 18+ topic detection (ONLY when player types manually!)
+      if (detectPlayerAdultTopic(text) || cs.adultChatUnlocked) {
+        if (!cs.adultChatUnlocked && !canUnlockAdultMode(char, cs)) {
+          aff = -10; trust = -12;
+          reply = `Khoan đã ${pr.partnerCallPlayer}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện nhạy cảm 18+ đâu nha 😅. Tìm hiểu nghiêm túc thêm đã nhé!`;
+          return { reply: applyDialectFlavor(char, reply), aff, trust };
+        }
+        if (!cs.adultChatUnlocked) {
+          cs.adultChatUnlocked = true;
+          showToast('🔞 Đã mở khóa Chế độ 18+ (Bấm 🚪 Thoát 18+ bất cứ lúc nào để quay lại)!', 'info');
+        }
+        aff = 14; trust = 4;
+        reply = char.gender === 'Nam'
+          ? `Ưm... nghe ${pr.partnerCallPlayer} nói mà người ${pr.partnerSelf} nóng ran hết lên rồi 🔥🔞... Muốn ôm chặt lấy ${pr.partnerCallPlayer}, hôn sâu và vuốt ve khắp cơ thể ngay lúc này quá... á 💦`
+          : `Ưm... á... nghe ${pr.partnerCallPlayer} dirty talk mà ${pr.partnerSelf} nứng quá đi mất 🔥💦... Lại đây ôm chặt lấy ${pr.partnerSelf}, sờ soạng và làm chuyện ấy thật cuồng nhiệt đi mà 🔞💋!`;
+        return { reply: applyDialectFlavor(char, reply), aff, trust };
+      }
+
+      if (char.isScammer && (cs.stage >= 2 || low.includes('tiền') || low.includes('đầu tư') || low.includes('vay'))) {
+        cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        reply = `Đúng lúc ${pr.partnerSelf} đang muốn chia sẻ với ${pr.partnerCallPlayer} chuyện này: ${cs.scamStage1Done ? char.scamOffer.stage2Desc : char.scamOffer.stage1Desc}`;
+        return { reply: applyDialectFlavor(char, reply), aff: 4, trust: -5 };
+      }
+
+      if (low.includes('hẹn') || low.includes('gặp') || low.includes('cà phê') || low.includes('đi chơi')) {
+        aff = 12; trust = 10;
+        reply = `Ý kiến tuyệt vời luôn ${pr.partnerCallPlayer} ơi 💕! ${pr.partnerSelf} rất mong được gặp ${pr.partnerCallPlayer} ngoài đời. Bạn bấm nút [📅 Hẹn Hò] ở trên để chọn quán nhé!`;
+      } else {
+        reply = `Nghe ${pr.partnerCallPlayer} chia sẻ “${text.slice(0, 50)}” thấy hợp vibe ghê 😊! Với ${pr.partnerSelf} thì ${char.loveView.toLowerCase()} Còn ${pr.partnerCallPlayer} mong chờ điều gì nhất khi hai đứa tiến xa hơn?`;
+      }
+      return { reply: applyDialectFlavor(char, reply), aff, trust };
+    }
+
+    async function sendFreeTextAIChat() {
+      const inp = document.getElementById('inpFreeChatMessage');
+      const typingEl = document.getElementById('aiTypingIndicator');
+      if (!inp) return;
+      const text = (inp.value || '').trim();
+      if (!text) return;
+
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || cs.blocked) return;
+
+      inp.value = '';
+      playSfx('msg');
+      cs.chatted = true;
+      cs.stage = (cs.stage || 0) + 1;
+      const timeStr = getSimTimeInfo().fullLabel;
+      cs.messages.push({ sender: 'me', text, time: timeStr });
+      renderMessagesView();
+
+      if (typingEl) typingEl.classList.remove('hidden');
+      await new Promise(r => setTimeout(r, 350));
+      if (typingEl) typingEl.classList.add('hidden');
+
+      const res = generateOfflineReply(text, char, cs);
+      const mult = cs.inDatingTime ? 2 : 1;
+      cs.affection = Math.max(0, Math.min(100, cs.affection + res.aff * mult));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + res.trust * mult));
+      cs.messages.push({ sender: 'them', text: res.reply, time: timeStr });
+
+      saveState(); updateTopBarStats(); renderMessagesView();
+    }
+
+    function selectDialogueBranch(opt) {
+      if (opt.action === 'blocked') return;
+      if (opt.action === 'open_report') { openReportForActiveChar(); return; }
+      if (opt.action === 'open_date') { openIRLDateModal(); return; }
+      if (opt.action === 'video_call') { triggerChatVideoCall(); return; }
+
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || cs.blocked) return;
+
+      playSfx('msg');
+      cs.chatted = true;
+      cs.stage = (cs.stage || 0) + 1;
+      const timeStr = getSimTimeInfo().fullLabel;
+      const pText = opt.playerText || opt.label;
+      cs.messages.push({ sender: 'me', text: pText, time: timeStr });
+
+      // Note: Selecting suggested replies NEVER auto-unlocks 18+ mode!
+      const mult = cs.inDatingTime ? 2 : 1;
+      cs.affection = Math.max(0, Math.min(100, cs.affection + (opt.aff || 7) * mult));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + (opt.trust || 7) * mult));
+
+      const pr = getAgePronouns(char);
+      let reply = cs.adultChatUnlocked
+        ? `Ưm... nghe ${pr.partnerCallPlayer} nói làm ${pr.partnerSelf} thích mê luôn á 🔥🔞... Tiếp tục đi nha!`
+        : `Cảm ơn ${pr.partnerCallPlayer} nha 😊! Nói chuyện với ${pr.partnerCallPlayer} làm ${pr.partnerSelf} thấy vui và thoải mái lắm. Mình tìm hiểu thêm về nhau nhé!`;
+      if (char.isScammer && cs.stage >= 2 && char.scamOffer) {
+        cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        reply = `Nhân tiện ${pr.partnerSelf} đang có việc gấp muốn nhờ ${pr.partnerCallPlayer}: ${cs.scamStage1Done ? char.scamOffer.stage2Desc : char.scamOffer.stage1Desc}`;
+      }
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reply), time: timeStr });
+
+      saveState(); updateTopBarStats(); renderMessagesView();
+    }
+
+    function regenerateAIChoicesForActiveChat() {
+      renderActiveChatRoom();
+      showToast('🔄 Đã làm mới gợi ý câu trả lời!', 'info');
+    }
+
+    function renderMessagesView() {
+      const listEl = document.getElementById('matchedContactsList');
+      document.getElementById('chatListTotalMatches').textContent = `${state.matchedIds.length} Match`;
+      listEl.innerHTML = '';
+
+      if (state.matchedIds.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">Chưa có lượt Match nào.</div>`;
+        document.getElementById('emptyChatPlaceholder').classList.remove('hidden');
+        document.getElementById('activeChatWrapper').classList.add('hidden');
+        return;
+      }
+
+      if (!state.activeChatCharId || !state.matchedIds.includes(state.activeChatCharId)) {
+        state.activeChatCharId = state.matchedIds[0];
+      }
+
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid);
+        const cs = state.charStates[cid];
+        const isAct = cid === state.activeChatCharId;
+        const lastMsg = (cs.messages && cs.messages.length) ? cs.messages[cs.messages.length - 1].text : 'Bắt đầu trò chuyện...';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `w-full p-2.5 flex items-center gap-2.5 text-left rounded-2xl ${isAct ? 'bg-pink-500/20 border border-pink-500/40' : 'hover:bg-slate-800/60'}`;
+        btn.innerHTML = `
+          <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-slate-800">${generateCharacterSVG(c, 0)}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between"><span class="font-bold text-xs text-white truncate">${c.name}</span><span class="text-[10px] text-pink-400 font-bold">${cs.affection}% ♥</span></div>
+            <p class="text-[11px] text-slate-400 truncate">${lastMsg}</p>
+          </div>
+        `;
+        btn.onclick = () => { state.activeChatCharId = cid; renderMessagesView(); };
+        listEl.appendChild(btn);
+      });
+
+      document.getElementById('emptyChatPlaceholder').classList.add('hidden');
+      document.getElementById('activeChatWrapper').classList.remove('hidden');
+      renderActiveChatRoom();
+    }
+
+    function renderActiveChatRoom() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      seedOpeningMessage(char);
+
+      document.getElementById('chatHeaderAvatar').innerHTML = generateCharacterSVG(char, 0);
+      document.getElementById('chatHeaderName').textContent = `${char.name}, ${char.age}`;
+      document.getElementById('chatHeaderVerified').innerHTML = char.verified ? '<span class="text-sky-400">✔</span>' : '<span class="text-amber-400">⚠</span>';
+      document.getElementById('chatHeaderJob').textContent = char.job;
+      document.getElementById('chatHeaderAffection').textContent = cs.affection;
+      document.getElementById('chatHeaderTrust').textContent = cs.trust;
+
+      const rev = cs.investigated || cs.videoCalled;
+      document.getElementById('intuitionSincerityText').textContent = rev ? `Chân thành: ${char.hiddenStats.sincerity}/100` : 'Chân thành: ??? (Bấm Soi)';
+      document.getElementById('intuitionDangerText').textContent = rev ? `Nguy hiểm: ${char.hiddenStats.danger}/100` : 'Nguy hiểm: ???';
+      document.getElementById('intuitionMotiveText').textContent = rev ? `Động cơ: ${char.hiddenStats.financialMotive}/100` : 'Động cơ: ???';
+
+      document.getElementById('chatIntuitionBar').classList.toggle('hidden', !!state.realismMode);
+      document.getElementById('chatRelationshipStageBar').classList.toggle('hidden', !!state.realismMode);
+
+      const activeWrap = document.getElementById('activeChatWrapper');
+      if (activeWrap) activeWrap.classList.toggle('adult-mode-active', !!cs.adultChatUnlocked);
+      const badge18 = document.getElementById('badge18PlusMode');
+      if (badge18) badge18.classList.toggle('hidden', !cs.adultChatUnlocked);
+
+      const dtBanner = document.getElementById('chatDatingTimeBanner');
+      if (dtBanner) {
+        dtBanner.classList.toggle('hidden', !cs.inDatingTime);
+        const dt18 = document.getElementById('dating18PlusActions');
+        if (dt18) dt18.classList.toggle('hidden', !(cs.inDatingTime && cs.adultChatUnlocked));
+        const bPub = document.getElementById('btnPublicTease18');
+        const bCor = document.getElementById('btnSecretCorner18');
+        const bClx = document.getElementById('btnHotelClimax18');
+        if (bPub) bPub.classList.toggle('hidden', !!cs.inHotelDatingTime);
+        if (bCor) bCor.classList.toggle('hidden', !!cs.inHotelDatingTime);
+        if (bClx) bClx.classList.toggle('hidden', !cs.inHotelDatingTime);
+      }
+
+      const stream = document.getElementById('chatMessagesStream');
+      stream.innerHTML = '';
+      cs.messages.forEach(m => {
+        const w = document.createElement('div');
+        if (m.sender === 'system') {
+          w.className = 'text-center my-1.5';
+          w.innerHTML = `<span class="inline-block px-3 py-1 rounded-full bg-slate-800 text-[11px] text-amber-300">${m.text}</span>`;
+        } else if (m.sender === 'me') {
+          w.className = 'flex justify-end msg-bubble';
+          w.innerHTML = `<div class="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tr-sm gradient-brand text-white text-xs sm:text-sm">${m.text}<div class="text-[9px] text-pink-100/80 text-right mt-1">${m.time || ''}</div></div>`;
+        } else {
+          w.className = 'flex justify-start items-end gap-2 msg-bubble';
+          w.innerHTML = `<div class="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-slate-800">${generateCharacterSVG(char, 0)}</div><div class="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm bg-slate-800 border border-slate-700 text-slate-100 text-xs sm:text-sm">${m.text}<div class="text-[9px] text-slate-400 mt-1">${char.name} • ${m.time || ''}</div></div>`;
+        }
+        stream.appendChild(w);
+      });
+      stream.scrollTop = stream.scrollHeight;
+
+      const banner = document.getElementById('chatScamActionBanner');
+      if (char.isScammer && char.scamOffer && cs.activeScamOfferStage > 0 && !cs.blocked) {
+        banner.classList.remove('hidden');
+        const stg1 = cs.activeScamOfferStage === 1;
+        document.getElementById('scamBannerTitle').textContent = `⚡ ${stg1 ? char.scamOffer.stage1Title : char.scamOffer.stage2Title}`;
+        document.getElementById('scamBannerDesc').textContent = stg1 ? char.scamOffer.stage1Desc : char.scamOffer.stage2Desc;
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      const cBox = document.getElementById('chatChoicesContainer');
+      cBox.innerHTML = '';
+      getDialogueOptionsForStage(char, cs).forEach(opt => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'w-full px-3 py-2 rounded-xl bg-slate-900 hover:bg-pink-500/20 border border-slate-700 text-left text-xs text-slate-100 transition';
+        b.textContent = opt.label;
+        b.onclick = () => selectDialogueBranch(opt);
+        cBox.appendChild(b);
+      });
+    }
+
+    function respondToScamFinancialOffer(accepted) {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs || !char.scamOffer) return;
+      const stg1 = cs.activeScamOfferStage === 1;
+      const amt = stg1 ? char.scamOffer.stage1Amount : char.scamOffer.stage2Amount;
+      const rew = stg1 ? (char.scamOffer.stage1Reward || 0) : 0;
+
+      if (!accepted) {
+        cs.activeScamOfferStage = 0;
+        cs.affection = Math.max(0, cs.affection - 18);
+        cs.messages.push({ sender: 'me', text: 'Mình từ chối chuyển tiền hay giao dịch tài chính qua app hẹn hò.', time: getSimTimeInfo().fullLabel });
+        cs.messages.push({ sender: 'them', text: 'Không tin tưởng nhau thì thôi vậy, chào nhé!', time: getSimTimeInfo().fullLabel });
+        showToast('🛡️ Bạn đã tỉnh táo từ chối yêu cầu chuyển tiền!', 'success');
+        saveState(); renderMessagesView(); return;
+      }
+
+      if (stg1 && rew > 0) {
+        cs.scamStage1Done = true; cs.activeScamOfferStage = 2;
+        state.player.balance += rew;
+        state.finance.ledger.unshift({ day: state.day, title: `[Mồi nhử] Lãi thử từ ${char.name}`, amount: rew, type: 'in' });
+        cs.messages.push({ sender: 'them', text: `Ting ting! Bạn nhận được +${formatVND(rew)} lãi thử rồi nhé! Giờ vào gói lớn: ${char.scamOffer.stage2Desc}`, time: getSimTimeInfo().fullLabel });
+        showToast(`⚠️ Bạn nhận được +${formatVND(rew)} mồi nhử! Đối phương tung bẫy lớn tiếp theo!`, 'warn');
+      } else {
+        const lost = Math.min(state.player.balance, amt);
+        state.player.balance -= lost;
+        state.finance.scamLost += lost;
+        state.finance.ledger.unshift({ day: state.day, title: `[Bị lừa đảo] ${char.name}`, amount: lost, type: 'scam' });
+        cs.activeScamOfferStage = 0;
+        playSfx('alert');
+        saveState(); updateTopBarStats();
+        triggerSpecificEnding('bad_investment_scam', char);
+        return;
+      }
+      saveState(); updateTopBarStats(); renderMessagesView();
+    }
+
+    // VIDEO CALL & INVESTIGATION
+    function triggerChatVideoCall() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      cs.videoCalled = true;
+      if (!char.isScammer) { cs.trust = Math.min(100, cs.trust + 15); cs.affection = Math.min(100, cs.affection + 10); }
+      openUniversalModal(`📹 Video Call Với ${char.name}`, `<div class="text-center space-y-3"><div class="w-32 h-40 mx-auto rounded-2xl overflow-hidden border-2 border-pink-500">${generateCharacterSVG(char, 0)}</div><p class="text-sm text-slate-200">${char.videoCallBehavior}</p></div>`);
+      saveState(); renderActiveChatRoom();
+    }
+
+    function triggerProfileInvestigation() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      cs.investigated = true;
+      const hs = char.hiddenStats;
+      openUniversalModal(`🔍 Soi Hồ Sơ & Metadata: ${char.name}`, `<div class="space-y-3 text-xs"><p class="p-3 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-200">${char.investigationClue}</p><div class="grid grid-cols-2 gap-2"><div>Chân thành: <strong class="text-emerald-400">${hs.sincerity}/100</strong></div><div>Nguy hiểm: <strong class="text-rose-400">${hs.danger}/100</strong></div><div>Thao túng: <strong class="text-amber-400">${hs.manipulation}/100</strong></div><div>Động cơ tiền: <strong class="text-purple-400">${hs.financialMotive}/100</strong></div></div></div>`);
+      saveState(); renderActiveChatRoom();
+    }
+
+    function openActiveCharProfileModal() {
+      const char = getCharById(state.activeChatCharId);
+      if (!char) return;
+      openUniversalModal(`📋 Hồ Sơ ${char.name}`, `<div class="space-y-2 text-xs"><p><strong>Nghề nghiệp:</strong> ${char.job} • ${char.location}</p><p><strong>Quan điểm tình yêu:</strong> ${char.loveView}</p><p><strong>Quan điểm tài chính:</strong> ${char.financeView}</p></div>`);
+    }
+
+    // IRL DATING, BILL PAYMENT & POST-DATE NEXT ACTIVITY
+    let currentActiveDateVenue = null;
+
+    function openIRLDateModal() {
+      const char = getCharById(state.activeChatCharId);
+      if (!char) return;
+      document.getElementById('irlModalTitle').textContent = `📅 Hẹn Hò Ngoài Đời Cùng ${char.name}`;
+      document.getElementById('irlVenueSelectionStep').classList.remove('hidden');
+      document.getElementById('irlEventOutcomeStep').classList.add('hidden');
+      const grid = document.getElementById('irlVenuesGrid');
+      grid.innerHTML = '';
+      IRL_VENUES.forEach(v => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'p-3 rounded-2xl bg-slate-950 hover:bg-pink-500/15 border border-slate-800 text-left space-y-1';
+        b.innerHTML = `<div class="flex justify-between font-bold text-xs text-white"><span>${v.icon} ${v.name}</span><span class="text-emerald-400">~${formatVND(v.cost)}</span></div><p class="text-[11px] text-slate-400">${v.desc}</p>`;
+        b.onclick = () => startDatingTimeSession(char, state.charStates[char.id], v);
+        grid.appendChild(b);
+      });
+      document.getElementById('modal-irl-date').classList.remove('hidden');
+    }
+    function closeIRLDateModal() { document.getElementById('modal-irl-date').classList.add('hidden'); }
+
+    function submitCustomDateVenue() {
+      const name = (document.getElementById('inpCustomDateVenue').value || '').trim();
+      if (!name) return;
+      const low = name.toLowerCase();
+      const cost = (low.includes('đà lạt') || low.includes('du lịch') || low.includes('resort')) ? 3500000 : (low.includes('khách sạn') || low.includes('homestay') ? 1200000 : 450000);
+      document.getElementById('inpCustomDateVenue').value = '';
+      const char = getCharById(state.activeChatCharId);
+      startDatingTimeSession(char, state.charStates[char.id], { id: 'custom', name, cost, icon: '📍' });
+    }
+
+    function startDatingTimeSession(char, cs, venue) {
+      if (venue.id === 'partner_choice') {
+        venue = char.archetype === 'scam_sextortion' ? IRL_VENUES.find(v => v.id === 'hotel') : IRL_VENUES[0];
+      }
+      currentActiveDateVenue = venue;
+      cs.inDatingTime = true;
+      cs.inHotelDatingTime = (venue.id === 'hotel');
+      if (cs.inHotelDatingTime) cs.adultChatUnlocked = true;
+      cs.datingTimeVenue = venue;
+      cs.datesCount = (cs.datesCount || 0) + 1;
+      closeIRLDateModal();
+      cs.messages.push({ sender: 'system', text: `🕯️ BẮT ĐẦU DATING TIME tại ${venue.icon} ${venue.name} (~${formatVND(venue.cost)})`, time: getSimTimeInfo().fullLabel });
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Gặp nhau ngoài đời tại ${venue.name} thích thật đấy ${state.player.name} 😊! Tụi mình gọi đồ rồi trò chuyện nha!`), time: getSimTimeInfo().fullLabel });
+      saveState(); navToScreen('messages'); renderMessagesView();
+    }
+
+    function performDatingPhysicalAction(type) {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      const map = {
+        hug: `[Hành động] Bạn ôm lấy ${char.name} thật ấm áp 🤗`,
+        kiss: `[Hành động] Bạn trao cho ${char.name} một nụ hôn ngọt ngào 💋`,
+        touch_18: `[Hành động 18+] Bạn áp sát vuốt ve eo và đùi ${char.name} đầy táo bạo 🔥`,
+        public_tease_18: `[Public 18+] Ngay tại chỗ hẹn đông người, bạn lén luồn tay dưới bàn chạm vào chỗ nhạy cảm của ${char.name} 🤫🔥`,
+        secret_corner_18: `[Góc khuất 18+] Bạn kéo ${char.name} vào góc tối khuất người, ép sát hôn ngấu nghiến đầy liều lĩnh 🔥🔞`,
+        hotel_climax_18: `[Phòng riêng 18+] Bạn đè ${char.name} xuống giường và làm tình cuồng nhiệt tới sáng 🔥🔞💦`
+      };
+      cs.messages.push({ sender: 'me', text: map[type] || map.hug, time: getSimTimeInfo().fullLabel });
+      cs.affection = Math.min(100, cs.affection + 15);
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Ưm... ${state.player.name} làm tim mình đập loạn nhịp luôn rồi nè... 🔥💋`), time: getSimTimeInfo().fullLabel });
+      saveState(); renderMessagesView();
+    }
+
+    function finishDatingTimeToBill() {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      const venue = cs.datingTimeVenue || currentActiveDateVenue || IRL_VENUES[0];
+      cs.inDatingTime = false;
+      cs.inHotelDatingTime = false;
+      saveState(); renderMessagesView();
+
+      document.getElementById('irlModalTitle').textContent = `🧾 Thanh Toán Hóa Đơn Tại ${venue.name}`;
+      document.getElementById('irlVenueSelectionStep').classList.add('hidden');
+      document.getElementById('irlEventOutcomeStep').classList.remove('hidden');
+      document.getElementById('irlOutcomeVisual').innerHTML = generateCharacterSVG(char, 0);
+
+      const billTotal = venue.cost || 300000;
+      const halfBill = Math.round(billTotal / 2);
+      const isMale = state.player.gender === 'Nam';
+
+      document.getElementById('irlOutcomeBadge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300';
+      document.getElementById('irlOutcomeBadge').textContent = `🧾 TỔNG HÓA ĐƠN: ${formatVND(billTotal)}`;
+      document.getElementById('irlOutcomeHeading').textContent = isMale
+        ? `Nhân viên mang hóa đơn ${formatVND(billTotal)} ra bàn — Bạn chọn ai trả tiền?`
+        : `${char.name} đang xử lý hóa đơn ${formatVND(billTotal)} — Bạn phản ứng thế nào?`;
+      document.getElementById('irlOutcomeStory').textContent = `Buổi hẹn tại ${venue.name} đã hoàn tất. Hãy chọn phương thức thanh toán hóa đơn trước khi quyết định đi đâu tiếp theo:`;
+
+      const choices = document.getElementById('irlOutcomeChoices');
+      choices.innerHTML = isMale ? `
+        <button onclick="resolveBillAndNext('pay_all', ${billTotal})" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💳 1. Trả hết 100% hóa đơn (${formatVND(billTotal)}) (+Tình cảm & Tin tưởng)</button>
+        <button onclick="resolveBillAndNext('split_50', ${halfBill})" class="p-3 rounded-xl bg-sky-600 text-white font-bold text-xs text-left">🤝 2. Chia đôi hóa đơn 50/50 (Mỗi người ${formatVND(halfBill)})</button>
+        <button onclick="resolveBillAndNext('partner_pay', 0)" class="p-3 rounded-xl bg-slate-800 text-amber-300 font-bold text-xs border border-amber-500/40 text-left">😬 3. Để đối phương trả hết 100% (Tốn 0đ, giảm mạnh thiện cảm)</button>
+      ` : `
+        <button onclick="resolveBillAndNext('partner_paid_thanks', 0)" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💕 1. Để ${char.name} mời 100% & Mỉm cười cảm ơn chân thành (Tốn 0đ)</button>
+        <button onclick="resolveBillAndNext('split_50', ${halfBill})" class="p-3 rounded-xl bg-sky-600 text-white font-bold text-xs text-left">🤝 2. Chủ động chuyển khoản chia đôi 50/50 (${formatVND(halfBill)})</button>
+        <button onclick="resolveBillAndNext('pay_all', ${billTotal})" class="p-3 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs border border-slate-700 text-left">💳 3. Chủ động trả toàn bộ hóa đơn (${formatVND(billTotal)})</button>
+      `;
+      document.getElementById('modal-irl-date').classList.remove('hidden');
+    }
+
+    function resolveBillAndNext(mode, paidAmt) {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+
+      if (paidAmt > 0) {
+        const ded = Math.min(state.player.balance, paidAmt);
+        state.player.balance -= ded;
+        state.finance.datingSpent += ded;
+        state.finance.ledger.unshift({ day: state.day, title: `Thanh toán hẹn hò với ${char.name}`, amount: ded, type: 'out' });
+      }
+      if (mode === 'pay_all' || mode === 'partner_paid_thanks') { cs.affection = Math.min(100, cs.affection + 15); cs.trust = Math.min(100, cs.trust + 12); }
+      else if (mode === 'split_50') { cs.affection = Math.min(100, cs.affection + 10); cs.trust = Math.min(100, cs.trust + 14); }
+      else { cs.affection = Math.max(0, cs.affection - 22); cs.trust = Math.max(0, cs.trust - 22); }
+      updateTopBarStats();
+
+      // Step 2: Rủ đi đâu tiếp!
+      document.getElementById('irlModalTitle').textContent = `✨ Sau Khi Thanh Toán — Bạn Muốn Rủ ${char.name} Đi Đâu Tiếp?`;
+      document.getElementById('irlOutcomeBadge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300';
+      document.getElementById('irlOutcomeBadge').textContent = `Tình cảm hiện tại: ${cs.affection}% • Tin tưởng: ${cs.trust}%`;
+      document.getElementById('irlOutcomeHeading').textContent = `Khoảnh khắc cuối buổi hẹn với ${char.name}`;
+      document.getElementById('irlOutcomeStory').textContent = `Hai bạn vừa bước ra khỏi quán dưới ánh đèn thành phố. Bạn muốn đề xuất hoạt động tiếp theo nào?`;
+
+      document.getElementById('irlOutcomeChoices').innerHTML = `
+        <button onclick="resolvePostDateNextStep('escort_home')" class="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-left">🚗 1. Đưa về tận nhà an toàn & Hẹn buổi gặp sau (+18 Tình cảm, +20 Tin tưởng)</button>
+        <button onclick="resolvePostDateNextStep('second_round')" class="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs text-left">🍸 2. Rủ đi Tăng 2 (Dạo phố đêm / Uống cocktail ngắm thành phố) — Tốn 350.000đ</button>
+        <button onclick="resolvePostDateNextStep('confess_love')" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💐 3. Nắm tay Tỏ Tình chính thức ngay tại chỗ!</button>
+        <button onclick="resolvePostDateNextStep('hotel_18')" class="p-3 rounded-xl bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-bold text-xs text-left">🏨 4. Rủ ghé Khách Sạn / Homestay riêng tư (18+)</button>
+        <button onclick="resolvePostDateNextStep('propose_marriage')" class="p-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs text-left">💍 5. Cầu Hôn & Gắn bó trọn đời (Khi tình cảm đã chín muồi)</button>
+        <button onclick="resolvePostDateNextStep('say_goodbye')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 text-left">👋 6. Chào tạm biệt & Kết thúc buổi hẹn</button>
+      `;
+    }
+
+    function resolvePostDateNextStep(step) {
+      const char = getCharById(state.activeChatCharId);
+      const cs = char ? state.charStates[char.id] : null;
+      closeIRLDateModal();
+      if (!char || !cs) return;
+      const t = getSimTimeInfo().fullLabel;
+
+      if (step === 'escort_home') {
+        cs.affection = Math.min(100, cs.affection + 18); cs.trust = Math.min(100, cs.trust + 20);
+        cs.messages.push({ sender: 'system', text: `🚗 Bạn đã đưa ${char.name} về nhà an toàn (+18 Tình cảm, +20 Tin tưởng).`, time: t });
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Cảm ơn ${state.player.name} đã đưa mình về tận nơi nhé 💕! Hôm nay vui lắm luôn!`), time: t });
+      } else if (step === 'second_round') {
+        const c2 = Math.min(state.player.balance, 350000);
+        state.player.balance -= c2; state.finance.datingSpent += c2;
+        cs.affection = Math.min(100, cs.affection + 22);
+        cs.messages.push({ sender: 'system', text: `🍸 Hai bạn đã đi Tăng 2 dạo phố đêm (+22 Tình cảm).`, time: t });
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Buổi đi tăng 2 tối nay lãng mạn quá đi mất ✨!`), time: t });
+      } else if (step === 'confess_love') {
+        if (char.isScammer) { triggerSpecificEnding('bad_emotional_exploited', char); return; }
+        if (cs.affection >= 55) {
+          cs.affection = 95; cs.relPhase = 5;
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Em đồng ý ❤️! Từ hôm nay tụi mình chính thức là người yêu của nhau nhé ${state.player.name}!`), time: t });
+          showToast(`💖 ${char.name} đã đồng ý lời tỏ tình của bạn!`, 'success');
+        } else {
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình cũng quý ${state.player.name} lắm, nhưng tụi mình tìm hiểu thêm chút nữa cho chắc chắn nhé 😊!`), time: t });
+        }
+      } else if (step === 'hotel_18') {
+        if (char.isScammer) { triggerSpecificEnding('bad_blackmailed', char); return; }
+        if (cs.affection < 55 && char.archetype !== 'casual_short') {
+          cs.affection = Math.max(0, cs.affection - 20);
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân để vào khách sạn đâu!`), time: t });
+          showToast(`${char.name} từ chối vào khách sạn!`, 'warn');
+        } else {
+          startDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'hotel'));
+          return;
+        }
+      } else if (step === 'propose_marriage') {
+        if (char.isScammer) { triggerSpecificEnding('bad_emotional_exploited', char); return; }
+        triggerSpecificEnding(cs.affection >= 75 ? 'good_marriage' : 'good_serious_rel', char);
+        return;
+      } else {
+        cs.messages.push({ sender: 'system', text: `👋 Buổi hẹn với ${char.name} đã khép lại vui vẻ.`, time: t });
+      }
+      saveState(); updateTopBarStats(); renderMessagesView();
+    }
+
+    // MOMENTS, FINANCE, REPORT, PROFILE, ENDINGS
+    function generateDailyMomentsForMatches() {
+      if (!state.momentsFeed) state.momentsFeed = [];
+      state.matchedIds.forEach(cid => {
+        if (state.momentsFeed.some(p => p.charId === cid && p.day === state.day)) return;
+        const c = getCharById(cid);
+        state.momentsFeed.unshift({ id: `mom_${cid}_${state.day}`, charId: cid, day: state.day, caption: c.bio, likes: 18 + Math.floor(Math.random() * 30) });
+      });
+      saveState(); updateTopBarStats();
+    }
+
+    function renderMomentsView() {
+      generateDailyMomentsForMatches();
+      const box = document.getElementById('momentsFeedContainer');
+      if (!box) return;
+      if (!state.momentsFeed.length) { box.innerHTML = `<div class="col-span-2 p-6 text-center text-xs text-slate-400">Hãy Match với ít nhất 1 người để xem Khoảnh Khắc!</div>`; return; }
+      box.innerHTML = state.momentsFeed.map(p => {
+        const c = getCharById(p.charId);
+        return `<div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5"><div class="flex items-center gap-2"><div class="w-9 h-9 rounded-full overflow-hidden">${generateCharacterSVG(c, 0)}</div><div><strong class="text-xs text-white">${c.name}</strong><span class="block text-[10px] text-slate-400">Ngày ${p.day}</span></div></div><p class="text-xs text-slate-200">${p.caption}</p><div class="h-40 rounded-xl overflow-hidden">${generateCharacterSVG(c, 0)}</div></div>`;
+      }).join('');
+    }
+
+    function renderFinanceView() {
+      document.getElementById('finBalanceVal').textContent = formatVND(state.player.balance);
+      document.getElementById('finIncomeVal').textContent = formatVND(state.player.income);
+      document.getElementById('finDatingSpentVal').textContent = formatVND(state.finance.datingSpent + state.finance.giftSpent);
+      document.getElementById('finScamLostVal').textContent = formatVND(state.finance.scamLost);
+
+      const sel = document.getElementById('selFinanceGiftTarget');
+      sel.innerHTML = state.matchedIds.length
+        ? state.matchedIds.map(cid => `<option value="${cid}">${getCharById(cid).name}</option>`).join('')
+        : `<option value="">-- Chưa có người Match --</option>`;
+
+      document.getElementById('financeGiftCatalog').innerHTML = GIFT_CATALOG.map(g => `
+        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+          <div><div class="text-xs font-bold text-white">${g.icon} ${g.name}</div><div class="text-xs text-emerald-400 font-bold mt-1">${formatVND(g.cost)} (+${g.affection}% ♥)</div></div>
+          <button onclick="sendGiftToSelectedChar('${g.id}')" class="w-full py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/40 text-xs font-bold text-pink-200">🎁 Tặng Ngay</button>
+        </div>
+      `).join('');
+
+      document.getElementById('financeLedgerList').innerHTML = (state.finance.ledger || []).map(l => `
+        <div class="py-2 flex justify-between"><span>${l.title} (Ngày ${l.day})</span><strong class="${l.type === 'in' ? 'text-emerald-400' : 'text-rose-400'}">${l.type === 'in' ? '+' : '-'}${formatVND(l.amount)}</strong></div>
+      `).join('');
+    }
+
+    function sendGiftToSelectedChar(gid) {
+      const tid = document.getElementById('selFinanceGiftTarget').value;
+      const g = GIFT_CATALOG.find(x => x.id === gid);
+      if (!tid || !g) { showToast('Hãy Match với ít nhất 1 người trước!', 'warn'); return; }
+      if (state.player.balance < g.cost) { showToast('Số dư không đủ!', 'danger'); return; }
+      const c = getCharById(tid);
+      const cs = state.charStates[tid];
+      state.player.balance -= g.cost;
+      state.finance.giftSpent += g.cost;
+      state.finance.ledger.unshift({ day: state.day, title: `Tặng ${g.name} cho ${c.name}`, amount: g.cost, type: 'out' });
+      cs.affection = Math.min(100, cs.affection + g.affection);
+      cs.messages.push({ sender: 'system', text: `🎁 Bạn đã tặng "${g.name}" cho ${c.name} (+${g.affection}% Tình cảm)`, time: getSimTimeInfo().fullLabel });
+      saveState(); updateTopBarStats(); renderFinanceView();
+      showToast(`🎁 Đã gửi tặng ${g.name} cho ${c.name}!`, 'success');
+    }
+
+    function triggerNextMonthCycle() {
+      state.month += 1; state.day += 30;
+      const net = state.player.income - state.player.livingCost;
+      state.player.balance += net;
+      state.finance.ledger.unshift({ day: state.day, title: `Nhận lương tháng ${state.month}`, amount: net, type: 'in' });
+      saveState(); updateTopBarStats(); renderFinanceView();
+      showToast(`📅 Sang tháng mới: +${formatVND(net)}`, 'success');
+    }
+
+    function openReportForActiveChar() {
+      navToScreen('report');
+      if (state.activeChatCharId) document.getElementById('selReportTargetChar').value = state.activeChatCharId;
+    }
+
+    function renderReportView() {
+      const sel = document.getElementById('selReportTargetChar');
+      sel.innerHTML = RAW_CHARACTERS.map(c => `<option value="${c.id}">${c.name} (${c.age}t - ${c.job})</option>`).join('');
+      if (state.activeChatCharId) sel.value = state.activeChatCharId;
+      document.getElementById('reportAccuracyBadge').textContent = `Đúng: ${state.scamDetectedCount} • Sai: ${state.falseReportCount || 0}/3`;
+      document.getElementById('reportedListContainer').innerHTML = (state.reportsLog || []).map(r => `
+        <div class="p-2.5 rounded-xl border ${r.correct ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-rose-500/10 border-rose-500/30 text-rose-200'}"><strong>${r.charName}:</strong> ${r.verdict}</div>
+      `).join('') || '<div class="text-slate-400">Chưa có báo cáo nào.</div>';
+    }
+
+    function submitCharacterReport() {
+      const tid = document.getElementById('selReportTargetChar').value;
+      const reason = document.getElementById('selReportReason').value;
+      const char = getCharById(tid);
+      const cs = state.charStates[tid];
+      if (!char || !cs || cs.reported) return;
+      cs.blocked = true; cs.reported = true;
+      if (reason === 'just_block') {
+        state.reportsLog.unshift({ charName: char.name, correct: false, verdict: 'Đã chặn liên lạc.' });
+      } else if (char.isScammer || char.isUnderage) {
+        state.scamDetectedCount += 1;
+        state.reportsLog.unshift({ charName: char.name, correct: true, verdict: `Xác nhận vi phạm (${char.scamType || char.trueMotive})!` });
+        showToast(`🛡️ Chính xác! Đã khóa tài khoản vi phạm ${char.name}!`, 'success');
+      } else {
+        state.falseReportCount = (state.falseReportCount || 0) + 1;
+        state.reportsLog.unshift({ charName: char.name, correct: false, verdict: `Report sai! ${char.name} là người dùng thật (${state.falseReportCount}/3).` });
+        if (state.falseReportCount > 3) { triggerSpecificEnding('bad_app_banned_false_reports', char); return; }
+        showToast(`⚠️ Bạn đã report sai (${state.falseReportCount}/3)!`, 'danger');
+      }
+      saveState(); updateTopBarStats(); renderReportView();
+    }
+
+    function renderProfileView() {
+      const p = state.player;
+      document.getElementById('profileViewAvatar').innerHTML = generateCharacterSVG({ id: 'p_v', name: p.name, avatarStyle: getPlayerAvatarStyle(p.avatarPresetIndex, p.gender), album: [{ title: p.name }] }, 0);
+      document.getElementById('profileViewNameAge').textContent = `${p.name}, ${p.age} (${p.gender})`;
+      document.getElementById('profileViewJobLoc').textContent = `💼 ${p.job} • 📍 ${p.location}`;
+      document.getElementById('profileViewGoal').textContent = `🎯 Tìm kiếm: ${p.targetGender}`;
+      document.getElementById('profileViewDetailsList').innerHTML = `<div><strong>Sở thích:</strong> ${p.hobbies.join(', ')}</div><div><strong>Tính cách:</strong> ${p.traits.join(', ')}</div><div><strong>Giới thiệu:</strong> “${p.bio}”</div>`;
+      const cand = document.getElementById('profileRelationshipCandidates');
+      cand.innerHTML = state.matchedIds.map(cid => {
+        const c = getCharById(cid); const cs = state.charStates[cid];
+        return `<div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2"><div class="font-bold text-xs text-white">${c.name} (${cs.affection}% ♥)</div><button onclick="triggerSpecificEnding('${c.isScammer ? 'bad_emotional_exploited' : (cs.affection >= 75 ? 'good_marriage' : 'good_serious_rel')}', getCharById('${c.id}'))" class="w-full py-1.5 rounded-xl gradient-brand text-white text-xs font-bold">💍 Chọn Kết Thúc Với ${c.name}</button></div>`;
+      }).join('');
+    }
+
+    function triggerManualSummaryEnding() {
+      let best = null, maxA = -1;
+      state.matchedIds.forEach(cid => {
+        const c = getCharById(cid); const cs = state.charStates[cid];
+        if (!c.isScammer && !cs.blocked && cs.affection > maxA) { maxA = cs.affection; best = c; }
+      });
+      if (state.finance.scamLost > 0) triggerSpecificEnding('bad_scammed_money', best);
+      else if (best && maxA >= 75) triggerSpecificEnding('good_marriage', best);
+      else if (state.scamDetectedCount >= 2) triggerSpecificEnding('neutral_learned_lesson', best);
+      else triggerSpecificEnding('neutral_no_match', best);
+    }
+
+    function triggerSpecificEnding(key, partnerChar) {
+      if (partnerChar && partnerChar.id === 'char_00_creator' && state.player.gender === 'Nữ' && key.startsWith('good_')) key = 'good_creator_date';
+      const end = ENDINGS_CATALOG[key] || ENDINGS_CATALOG.neutral_learned_lesson;
+      navToScreen('ending');
+      const b = document.getElementById('endingCategoryBadge');
+      b.className = `inline-block px-4 py-1 rounded-full text-xs font-black uppercase ${end.catClass}`;
+      b.textContent = end.category;
+      document.getElementById('endingTitleText').textContent = end.title;
+      document.getElementById('endingSubtitleText').textContent = end.desc;
+      document.getElementById('endingPartnerSpotlight').innerHTML = partnerChar
+        ? `<div class="w-24 h-32 rounded-2xl overflow-hidden border-2 border-pink-500 shrink-0">${generateCharacterSVG(partnerChar, 0)}</div><div class="text-left space-y-1"><h4 class="text-lg font-black text-white">${partnerChar.name}, ${partnerChar.age}</h4><p class="text-xs text-slate-300">${partnerChar.trueMotive}</p></div>`
+        : `<div class="text-center w-full text-xs text-slate-300">Bạn đã khép lại hành trình trên HeartLink!</div>`;
+      document.getElementById('sumMatched').textContent = state.matchedIds.length;
+      document.getElementById('sumDates').textContent = Object.values(state.charStates).reduce((a, x) => a + (x.datesCount || 0), 0);
+      document.getElementById('sumScamDetected').textContent = state.scamDetectedCount;
+      document.getElementById('sumFinalBalance').textContent = formatVND(state.player.balance);
+    }
+
+    function confirmRestartFromProfile() { restartAndShuffleGame(); }
+    function restartAndShuffleGame() {
+      try { localStorage.removeItem('heartlink_dating_sim_v2'); } catch (e) {}
+      state.started = false; state.matchedIds = []; state.charStates = {}; state.reportsLog = []; state.scamDetectedCount = 0; state.falseReportCount = 0;
+      state.finance = { datingSpent: 0, giftSpent: 0, scamLost: 0, ledger: [] };
+      quickStartGame();
+    }
+
+    function toggleRealismMode() {
+      state.realismMode = !state.realismMode;
+      document.getElementById('realismModeLabel').textContent = state.realismMode ? 'Khó' : 'Thường';
+      if (state.activeChatCharId) renderActiveChatRoom();
+    }
+    function openAchievementsModal() {
+      openUniversalModal('🏆 Huy Hiệu Thành Tựu', `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${ACHIEVEMENTS_CATALOG.map(a => `<div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><strong class="text-xs text-amber-300">${a.icon} ${a.title}</strong><p class="text-[11px] text-slate-400">${a.desc}</p></div>`).join('')}</div>`);
+    }
+    function openAIEngineModal() {
+      openUniversalModal('🤖 Hệ Thống AI & 150 Hồ Sơ', `<p class="text-xs text-slate-300">Hệ thống đã nạp trọn bộ <strong>${RAW_CHARACTERS.length} hồ sơ cân bằng</strong> (60 Nam, 60 Nữ, 30 LGBT) cùng 16 kịch bản lừa đảo và bộ chuyển đổi giọng điệu vùng miền!</p>`);
+    }
+
+    window.onload = function () {
+      const char14 = RAW_CHARACTERS.find(c => c.id === 'char_14') || RAW_CHARACTERS[0];
+      const splashSvg = document.getElementById('splashPreviewSvg');
+      if (splashSvg && char14) splashSvg.innerHTML = generateCharacterSVG(char14, 0);
+      const saved = loadSavedState();
+      if (saved && saved.started) document.getElementById('btnContinueSaved').classList.remove('hidden');
+      initCharRuntimeStates();
+    };
+  </script>
+</body>
+</html>
