@@ -1293,7 +1293,7 @@
 
     function getPlayerAvatarStyle(presetIdx = 0, genderVal = 'Nam') {
       if (state.player && state.player.customAvatar && presetIdx === -1) {
-        return { ...state.player.customAvatar, gender: genderVal === 'Nữ' ? 'female' : (genderVal === 'Phi nhị nguyên' ? 'nonbinary' : 'male') };
+        return { ...state.player.customAvatar, gender: genderVal === 'Nữ' ? 'female' : ((genderVal === 'Phi nhị nguyên' || genderVal === 'Song tính') ? 'nonbinary' : 'male') };
       }
       const isF = genderVal === 'Nữ';
       const isNB = genderVal === 'Phi nhị nguyên' || genderVal === 'Song tính';
@@ -1719,6 +1719,18 @@
     function closeMatchModal() { document.getElementById('modal-match').classList.add('hidden'); }
     function openChatFromMatchModal() { closeMatchModal(); navToScreen('messages'); }
 
+    // Con trai thường chủ động nhắn trước hơn: xác suất phụ thuộc giới của ĐỐI PHƯƠNG (không phải người chơi)
+    function shouldPartnerGreetProactively(c, cs) {
+      const real = (cs.messages || []).filter(m => m.sender !== 'system');
+      const n = real.length;
+      if (n >= 2 && real[n - 1].sender === 'them' && real[n - 2].sender === 'them') return false; // chưa được trả lời thì không nhắn dồn
+      let p;
+      if (c.gender === 'Nam') p = cs.affection >= 60 ? 0.9 : 0.7;
+      else if (c.gender === 'Nữ') p = cs.affection >= 70 ? 0.6 : (cs.affection >= 45 ? 0.35 : 0.2);
+      else p = cs.affection >= 60 ? 0.7 : 0.45;
+      return Math.random() < p;
+    }
+
     function advanceToNextPeriod() {
       state.simTime.totalMinutes += 300;
       state.day = Math.floor(state.simTime.totalMinutes / 1440) + 1;
@@ -1727,8 +1739,13 @@
         const c = getCharById(cid), cs = state.charStates[cid];
         if (!c || !cs || cs.blocked) return;
         cs.messages.push({ sender: 'system', text: `🕒 Đã sang ${ti.fullLabel}` });
-        if (state.player.gender !== 'Nam') {
-          cs.messages.push({ sender: 'them', text: applyDialectFlavor(c, `Sang ${ti.timeStr.toLowerCase()} rồi nè, hôm nay của bạn thế nào?`), time: ti.fullLabel });
+        if (shouldPartnerGreetProactively(c, cs)) {
+          const greets = [
+            `Sang ${ti.timeStr.toLowerCase()} rồi nè, hôm nay của bạn thế nào?`,
+            `${ti.period === 'Sáng' ? 'Chào buổi sáng' : (ti.period === 'Trưa' ? 'Trưa rồi, bạn ăn gì chưa' : (ti.period === 'Chiều' ? 'Buổi chiều vui vẻ nha' : 'Tối rồi, hôm nay bạn có mệt không'))} ${state.player.name}! 😊`,
+            `Đang rảnh nên nhắn hỏi thăm ${state.player.name} một chút, dạo này bạn sao rồi?`
+          ];
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(c, greets[Math.floor(Math.random() * greets.length)]), time: ti.fullLabel });
         }
       });
       saveState(); updateTopBarStats();
@@ -1893,7 +1910,7 @@
         method: 'POST', headers,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 1.0, responseMimeType: 'application/json', maxOutputTokens: 700 }
+          generationConfig: { temperature: 0.6, responseMimeType: 'application/json', maxOutputTokens: 900 }
         })
       });
       if (!resp.ok) return null;
@@ -1902,29 +1919,63 @@
       return JSON.parse(raw.replace(/```json|```/gi, '').trim());
     }
 
+    // Cách NGƯỜI CHƠI xưng hô (ngược với cách đối phương xưng hô trong getAgePronouns)
+    function getPlayerAddressRule(char) {
+      const pr = getAgePronouns(char);
+      if (pr.relation === 'equal') return 'Người chơi tự xưng "mình", gọi đối phương là "bạn" (hoặc gọi tên).';
+      const playerSelf = pr.partnerCallPlayer === 'bạn' ? 'mình' : pr.partnerCallPlayer; // đối phương gọi người chơi là gì thì người chơi tự xưng như vậy
+      const callPartner = pr.partnerSelf === 'mình' ? 'bạn' : pr.partnerSelf;
+      return `Người chơi tự xưng "${playerSelf}", gọi đối phương là "${callPartner}".`;
+    }
+
     function buildSuggestionPrompt(char, cs, phase) {
-      const hist = (cs.messages || []).filter(m => m.sender !== 'system').slice(-14)
-        .map(m => `${m.sender === 'me' ? state.player.name : char.name}: ${m.text}`).join('\n');
+      const lines = (cs.messages || []).slice(-14).map(m => {
+        if (m.sender === 'system') return `[Sự kiện] ${String(m.text).replace(/<[^>]*>/g, '')}`;
+        return `${m.sender === 'me' ? state.player.name + ' (NGƯỜI CHƠI)' : char.name + ' (ĐỐI PHƯƠNG)'}: ${m.text}`;
+      });
+      const lastThem = [...(cs.messages || [])].reverse().find(m => m.sender === 'them');
+      const lastMsgIsThem = (() => { const r = [...(cs.messages || [])].reverse().find(m => m.sender !== 'system'); return !!r && r.sender === 'them'; })();
+      const venue = cs.inDatingTime && cs.datingTimeVenue ? cs.datingTimeVenue.name : null;
+
       const phaseRule = phase === 'greeting'
-        ? 'GIAI ĐOẠN: vừa MATCH, chưa ai nói gì từ phía người chơi. CHỈ gợi ý lời chào / tự giới thiệu nhẹ nhàng / khen hồ sơ / đáp lại lời chào của đối phương. TUYỆT ĐỐI KHÔNG rủ gặp mặt, không gọi video, không hỏi chuyện tiền bạc.'
+        ? 'GIAI ĐOẠN: vừa MATCH. CHỈ gợi ý lời chào, tự giới thiệu nhẹ nhàng hoặc đáp lại lời chào của đối phương. KHÔNG rủ gặp mặt, không gọi video, không nhắc tiền bạc.'
         : phase === 'getting_to_know'
-        ? 'GIAI ĐOẠN: đang CHÀO HỎI & LÀM QUEN. Gợi ý hỏi han sở thích, công việc, ngày hôm nay, chia sẻ về bản thân. TUYỆT ĐỐI KHÔNG rủ đi chơi, không rủ gặp mặt, không gọi video.'
-        : 'GIAI ĐOẠN: đã qua chào hỏi. Có thể tiếp tục tâm sự; được phép có TỐI ĐA 1 gợi ý rủ đi hẹn ngoài đời (intent "invite_date") và TỐI ĐA 1 gợi ý gọi video (intent "video") nếu hợp ngữ cảnh.';
-      return `Bạn là trợ lý gợi ý câu trả lời cho NGƯỜI CHƠI trên app hẹn hò HeartLink (game mô phỏng, tiếng Việt).
-Người chơi: ${state.player.name}, ${state.player.age}t, ${state.player.gender}, nghề ${state.player.job}, sở thích: ${(state.player.hobbies || []).join(', ') || 'chưa rõ'}.
-Đối phương: ${char.name}, ${char.age}t, ${char.gender}, nghề ${char.job}, ở ${char.location}. Sở thích: ${(char.hobbies || []).join(', ')}. Tính cách: ${(char.personality || []).join(', ')}. Giọng điệu: ${char.speechStyle || 'tự nhiên'}.
-Thời điểm trong game: ${getSimTimeInfo().period}. Quan hệ tuổi tác: ${getAgePronouns(char).ruleText}
+        ? 'GIAI ĐOẠN: đang CHÀO HỎI & LÀM QUEN. KHÔNG rủ đi chơi, không rủ gặp mặt, không gọi video.'
+        : 'GIAI ĐOẠN: đã qua chào hỏi. Được phép có TỐI ĐA 1 gợi ý rủ đi hẹn ngoài đời (intent "invite_date") và TỐI ĐA 1 gợi ý gọi video (intent "video") nếu thật sự hợp ngữ cảnh.';
+      const sceneRule = venue
+        ? `BỐI CẢNH HIỆN TẠI: hai người ĐANG GẶP TRỰC TIẾP tại "${venue}". Lời người chơi phải như đang ngồi đối diện nhau (nói về không gian, đồ uống, món ăn, chuyện vừa nói...), KHÔNG nhắn tin kiểu từ xa và KHÔNG rủ "hẹn đi chơi" vì đang đi chơi rồi (không dùng intent invite_date).`
+        : 'BỐI CẢNH HIỆN TẠI: hai người đang nhắn tin qua app.';
+
+      return `Bạn viết GỢI Ý TIN NHẮN cho NGƯỜI CHƠI trong game hẹn hò HeartLink (tiếng Việt). Bạn viết lời của "${state.player.name}" (người chơi), TUYỆT ĐỐI KHÔNG viết lời của "${char.name}".
+${sceneRule}
 ${phaseRule}
-Lịch sử chat:
-${hist || '(chưa có tin nhắn nào)'}
-Nhiệm vụ: viết 4 câu người chơi có thể gửi TIẾP THEO, phản hồi đúng nội dung tin nhắn mới nhất của đối phương, mỗi câu ngắn (tối đa 25 từ), tự nhiên như người thật, KHÁC NHAU rõ rệt về sắc thái (vui vẻ, chân thành, tò mò, hài hước). Xưng hô phù hợp chênh lệch tuổi. Không nội dung tình dục hay nhạy cảm, không nhắc chuyển tiền.
-Chỉ trả về JSON: {"suggestions":[{"text":"...","intent":"greet|ask|share|compliment|joke|invite_date|video"}]}`;
+${getPlayerAddressRule(char)}
+
+NGƯỜI CHƠI: ${state.player.name}, ${state.player.age}t, ${state.player.gender}, nghề ${state.player.job}.
+ĐỐI PHƯƠNG: ${char.name}, ${char.age}t, ${char.gender}, nghề ${char.job}. Tính cách: ${(char.personality || []).join(', ')}.
+(Sở thích của hai người chỉ là thông tin nền: CHỈ nhắc tới khi liên quan trực tiếp tới nội dung đang trò chuyện, không tự bịa chủ đề mới.)
+
+LỊCH SỬ CHAT (cũ -> mới):
+${lines.join('\n') || '(chưa có tin nhắn nào)'}
+
+${lastMsgIsThem && lastThem
+  ? `TIN NHẮN MỚI NHẤT CỦA ĐỐI PHƯƠNG (người chơi sắp trả lời đúng tin này):\n"${lastThem.text}"`
+  : 'Người chơi vừa là người nói cuối cùng; hãy gợi ý một câu nối tiếp mạch chuyện đang có.'}
+
+QUY TẮC BẮT BUỘC:
+1. CẢ 4 câu đều phải TRẢ LỜI TRỰC TIẾP tin nhắn mới nhất ở trên: nhắc lại hoặc đáp lại ít nhất một chi tiết cụ thể trong đó (địa điểm, món, cảm xúc, câu hỏi, lời mời...). Nếu đối phương hỏi gì thì phải trả lời câu hỏi đó trước.
+2. KHÔNG đổi sang chủ đề không liên quan, KHÔNG khen/bịa những chi tiết chưa từng xuất hiện trong chat hoặc hồ sơ (ví dụ nhảy múa, nấu ăn, sếp...) trừ khi đối phương vừa nhắc tới.
+3. Mỗi câu ngắn (tối đa 25 từ), tự nhiên như người thật; 4 câu khác nhau về sắc thái (vui vẻ, chân thành, tò mò, hài hước) nhưng cùng bám một mạch chuyện.
+4. Không nội dung tình dục hay nhạy cảm, không nhắc chuyển tiền.
+Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câu ý chính tin nhắn mới nhất để bạn bám sát):
+{"latest_summary":"...","suggestions":[{"text":"...","intent":"greet|ask|share|compliment|joke|invite_date|video"}]}`;
     }
 
     function normalizeAISuggestions(arr, phase) {
       const dl = { greet: [7, 6], ask: [8, 8], share: [7, 8], compliment: [9, 5], joke: [8, 5], invite_date: [0, 0], video: [0, 0] };
       return (arr || []).filter(s => s && typeof s.text === 'string' && s.text.trim())
         .filter(s => phase === 'open' || !['invite_date', 'video'].includes(s.intent)) // chặn rủ đi chơi/video khi còn chào hỏi
+        .filter(s => !(s._onDate && s.intent === 'invite_date'))
         .slice(0, 4).map(s => {
           const text = s.text.trim(), d = dl[s.intent] || [7, 6];
           const o = { label: text, playerText: text, aff: d[0], tru: d[1], ai: true };
@@ -1935,16 +1986,19 @@ Chỉ trả về JSON: {"suggestions":[{"text":"...","intent":"greet|ask|share|c
     }
 
     async function fetchAISuggestedChoices(char, cs, force) {
-      const key = `${char.id}:${cs.messages.length}`;
+      const reqLen = cs.messages.length;            // độ dài chat lúc gửi yêu cầu
+      const key = `${char.id}:${reqLen}`;
       if (aiChoicePending[key]) return;
       aiChoicePending[key] = true;
       const tag = document.getElementById('choicesSourceTag');
       if (tag) tag.textContent = '⏳ AI đang nghĩ...';
       try {
         const phase = getChatSuggestPhase(cs);
+        const onDate = !!(cs.inDatingTime && cs.datingTimeVenue);
         const json = await callGeminiSuggestionJSON(buildSuggestionPrompt(char, cs, phase));
-        const opts = normalizeAISuggestions(json && json.suggestions, phase);
-        if (opts.length >= 2) { cs.aiChoices = opts; cs.aiChoicesKey = cs.messages.length; saveState(); }
+        const opts = normalizeAISuggestions(json && json.suggestions, phase).filter(o => !(onDate && o.action === 'date'));
+        if (cs.messages.length !== reqLen) return;  // chat đã có tin mới trong lúc chờ -> bỏ kết quả cũ, không gắn nhầm gợi ý
+        if (opts.length >= 2) { cs.aiChoices = opts; cs.aiChoicesKey = reqLen; saveState(); }
         else { aiChoiceFailed[key] = true; if (tag) tag.textContent = '📋 Gợi ý mẫu'; }
       } catch (e) {
         aiChoiceFailed[key] = true;
@@ -1952,7 +2006,7 @@ Chỉ trả về JSON: {"suggestions":[{"text":"...","intent":"greet|ask|share|c
       } finally {
         delete aiChoicePending[key];
         // chỉ vẽ lại nếu vẫn đang ở đúng cuộc chat và chưa có tin nhắn mới
-        if (state.activeChatCharId === char.id && cs.messages.length === (cs.aiChoicesKey ?? -1)) renderChoicesBox(char, cs);
+        if (state.activeChatCharId === char.id) renderChoicesBox(char, cs); // vẽ lại: dùng gợi ý AI nếu khớp, hoặc gọi lại cho tin mới nhất
       }
     }
 
@@ -2388,40 +2442,61 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
 
       const bill = venue.cost || 300000;
       const half = Math.round(bill / 2);
-      const isMale = state.player.gender === 'Nam';
+      const isFemalePlayer = state.player.gender === 'Nữ';
       document.getElementById('irlModalTitle').textContent = `🧾 Thanh Toán Hóa Đơn Tại ${venue.name}`;
       document.getElementById('irlOutcomeBadge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300';
       document.getElementById('irlOutcomeBadge').textContent = `🧾 TỔNG HÓA ĐƠN: ${formatVND(bill)}`;
 
       const choices = document.getElementById('irlOutcomeChoices');
-      if (isMale) {
-        document.getElementById('irlOutcomeHeading').textContent = `Nhân viên mang hóa đơn ${formatVND(bill)} ra bàn — Bạn chọn ai trả tiền?`;
-        document.getElementById('irlOutcomeStory').textContent = `Buổi hẹn tại ${venue.name} vừa kết thúc. Bạn muốn thanh toán như thế nào?`;
-        choices.innerHTML = `
-          <button onclick="resolveBillPaymentStep('male_pay_all', ${bill})" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💳 1. Trả hết 100% hóa đơn (${formatVND(bill)}) — Ga-lăng, hào phóng</button>
-          <button onclick="resolveBillPaymentStep('male_split', ${half})" class="p-3 rounded-xl bg-sky-600 text-white font-bold text-xs text-left">🤝 2. Chia đôi 50/50 (Mỗi người ${formatVND(half)}) — Sòng phẳng</button>
-          <button onclick="resolveBillPaymentStep('male_force', 0)" class="p-3 rounded-xl bg-slate-800 text-amber-300 font-bold text-xs border border-amber-500/40 text-left">😬 3. Để đối phương trả hết 100% (Tốn 0đ)</button>
-        `;
+      document.getElementById('irlOutcomeHeading').textContent = `Nhân viên mang hóa đơn ${formatVND(bill)} ra bàn — Bạn chọn ai trả tiền?`;
+      document.getElementById('irlOutcomeStory').textContent = `Buổi hẹn tại ${venue.name} vừa kết thúc. Bạn muốn thanh toán như thế nào?`;
+      const btnPayAll = `<button onclick="resolveBillPaymentStep('pay_all', ${bill})" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💳 1. Trả hết 100% hóa đơn (${formatVND(bill)}) — Chủ động, hào phóng</button>`;
+      const btnSplit = `<button onclick="resolveBillPaymentStep('split', ${half})" class="p-3 rounded-xl bg-sky-600 text-white font-bold text-xs text-left">🤝 2. Chia đôi 50/50 (Mỗi người ${formatVND(half)}) — Sòng phẳng</button>`;
+      if (!isFemalePlayer) {
+        // Nam / Song tính / Phi nhị nguyên: để đối phương trả hết luôn bị đánh giá là vô duyên
+        choices.innerHTML = btnPayAll + btnSplit + `
+          <button onclick="resolveBillPaymentStep('male_force', 0)" class="p-3 rounded-xl bg-slate-800 text-amber-300 font-bold text-xs border border-amber-500/40 text-left">😬 3. Để đối phương trả hết 100% (Tốn 0đ)</button>`;
       } else {
-        document.getElementById('irlOutcomeHeading').textContent = `${char.name} đề nghị thanh toán hóa đơn ${formatVND(bill)} — Bạn phản ứng sao?`;
-        document.getElementById('irlOutcomeStory').textContent = `Đối phương chủ động rút thẻ thanh toán hóa đơn ${formatVND(bill)}.`;
-        choices.innerHTML = `
-          <button onclick="resolveBillPaymentStep('female_sweet', 0)" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💕 1. Cảm ơn chân thành & Hẹn mời lại chầu nước sau (Tốn 0đ, +15% Tình cảm)</button>
-          <button onclick="resolveBillPaymentStep('female_split', ${half})" class="p-3 rounded-xl bg-sky-600 text-white font-bold text-xs text-left">🤝 2. Chuyển khoản chia đôi 50% (${formatVND(half)}) cho sòng phẳng</button>
-        `;
+        // Nữ: lựa chọn 3 là "chờ xem" — phản ứng của đối phương phụ thuộc mức độ yêu thích
+        choices.innerHTML = btnPayAll + btnSplit + `
+          <button onclick="resolveBillPaymentStep('female_wait', ${bill})" class="p-3 rounded-xl bg-slate-800 text-pink-200 font-bold text-xs border border-pink-500/40 text-left">🙈 3. Chờ xem đối phương xử lý thế nào (có thể được mời, bị đề nghị chia đôi, hoặc phải trả hết)</button>`;
       }
     }
+
+    // Ngưỡng tình cảm quyết định cách đối phương xử lý hóa đơn khi người chơi Nữ chọn "chờ xem"
+    const BILL_TREAT_AFFECTION = 75; // >= : đối phương mời trả hết
+    const BILL_SPLIT_AFFECTION = 45; // >= : đối phương chủ động đề nghị chia đôi; thấp hơn: "quên ví"
 
     function resolveBillPaymentStep(act, paidAmt) {
       const char = getCharById(state.activeChatCharId), cs = state.charStates[char.id];
       if (!char || !cs) return;
-      if (paidAmt > 0) {
-        const d = Math.min(state.player.balance, paidAmt);
+      let pay = paidAmt, dAff = 15, dTru = 12;
+
+      if (act === 'male_force') { dAff = -25; dTru = -25; }
+      else if (act === 'female_wait') {
+        const bill = paidAmt;
+        if (!char.isScammer && cs.affection >= BILL_TREAT_AFFECTION) {
+          pay = 0; dAff = 15; dTru = 12;
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Hôm nay để mình mời ${state.player.name} nhé, bạn cứ ngồi đó đi 😊💕`) });
+          cs.messages.push({ sender: 'system', text: `💖 ${char.name} rất quý bạn nên đã trả hết ${formatVND(bill)} (+${dAff}% Tình cảm).` });
+        } else if (!char.isScammer && cs.affection >= BILL_SPLIT_AFFECTION) {
+          pay = Math.round(bill / 2); dAff = 3; dTru = 3;
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình chia đôi cho thoải mái nhé ${state.player.name}, mỗi người ${formatVND(pay)} 😊`) });
+          cs.messages.push({ sender: 'system', text: `🤝 ${char.name} chủ động đề nghị chia đôi hóa đơn — bạn trả ${formatVND(pay)}.` });
+        } else {
+          pay = bill; dAff = -10; dTru = -12;
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Ối chết, mình quên mang ví mất rồi! ${state.player.name} thanh toán giúp mình nha 😅`) });
+          cs.messages.push({ sender: 'system', text: `🙈 ${char.name} "quên ví" nên bạn phải trả hết ${formatVND(bill)}. Có vẻ họ không mặn mà với bạn${char.isScammer ? ' — hoặc đây là một dấu hiệu đáng ngờ!' : '.'}` });
+        }
+      }
+
+      if (pay > 0) {
+        const d = Math.min(state.player.balance, pay);
         state.player.balance -= d; state.finance.datingSpent += d;
         state.finance.ledger.unshift({ day: state.day, title: `Hẹn hò cùng ${char.name}`, amount: d, type: 'out' });
       }
-      if (act === 'male_force') { cs.affection = Math.max(0, cs.affection - 25); cs.trust = Math.max(0, cs.trust - 25); }
-      else { cs.affection = Math.min(100, cs.affection + 15); cs.trust = Math.min(100, cs.trust + 12); }
+      cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + dTru));
       saveState(); updateTopBarStats();
       triggerPostDateNextActivityMenu(char, cs);
     }
