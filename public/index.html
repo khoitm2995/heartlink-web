@@ -82,7 +82,7 @@
       </div>
 
       <div class="flex items-center gap-1 sm:gap-1.5">
-        <button id="btnOpenAIEngine" onclick="openAIEngineModal()" class="px-2 py-1.5 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 text-purple-200 text-xs font-bold flex items-center gap-1 border border-purple-500/40 transition" title="Cấu hình Gemini API">
+        <button id="btnOpenAIEngine" onclick="openAIEngineModal()" class="px-2 py-1.5 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 text-purple-200 text-xs font-bold flex items-center gap-1 border border-purple-500/40 transition" title="Cấu hình AI & Sinh nhân vật mới">
           <span>🤖</span><span class="hidden sm:inline">AI</span>
         </button>
         <button id="btnToggleRealismMode" onclick="toggleRealismMode()" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 border border-slate-700 transition" title="Chế độ Khó">
@@ -449,7 +449,7 @@
                   <button onclick="triggerChatVideoCall()" class="px-2.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold">📹<span class="hidden sm:inline ml-1">Video</span></button>
                   <button onclick="triggerProfileInvestigation()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold">🔍<span class="hidden sm:inline ml-1">Soi</span></button>
                   <button onclick="navToScreen('finance')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold">🎁<span class="hidden sm:inline ml-1">Quà</span></button>
-                  <button onclick="openIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">📅<span class="hidden sm:inline ml-1">Hẹn Hò</span></button>
+                  <button onclick="tryOpenIRLDateModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">📅<span class="hidden sm:inline ml-1">Hẹn Hò</span></button>
                   <button onclick="openReportForActiveChar()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold">🚨</button>
                 </div>
               </div>
@@ -514,7 +514,7 @@
 
               <div id="dialogueChoicesWrapper" class="px-2.5 pt-2 pb-1 bg-slate-950 border-t border-slate-800 space-y-1 shrink-0">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold uppercase text-slate-300">💬 Gợi ý câu trả lời:</span>
+                  <span class="text-[11px] font-bold uppercase text-slate-300">💬 Gợi ý câu trả lời: <span id="choicesSourceTag" class="ml-1 normal-case text-[10px] font-semibold text-slate-400"></span></span>
                   <button onclick="regenerateAIChoicesForActiveChat()" class="px-2 py-0.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[10px] font-bold">🔄 Đổi gợi ý</button>
                 </div>
                 <div id="chatChoicesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-24 sm:max-h-32 overflow-y-auto custom-scroll"></div>
@@ -696,6 +696,26 @@
     </div>
   </div>
 
+  <!-- INSTANT INVITE MODAL -->
+  <div id="modal-instant-invite" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-5 shadow-2xl space-y-3 animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 id="instInvitePartnerName" class="text-base font-extrabold text-white">Lời Mời Hẹn Hò</h3>
+        <button onclick="closeInstantInviteModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-300">✕</button>
+      </div>
+      <p id="instInviteMessage" class="text-xs text-slate-200 italic"></p>
+      <div class="text-xs text-slate-300 space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800">
+        <div>📍 Địa điểm: <strong id="instInviteVenue" class="text-emerald-300"></strong></div>
+        <div>🕒 Thời gian: <strong id="instInviteTime" class="text-sky-300"></strong></div>
+        <div>💰 Chi phí dự kiến: <strong id="instInviteCost" class="text-amber-300"></strong></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="handleInstantInviteChoice('accept')" class="py-2.5 rounded-xl gradient-brand text-white font-bold text-xs">✅ Đồng Ý Đi Hẹn</button>
+        <button onclick="handleInstantInviteChoice('decline')" class="py-2.5 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs border border-slate-700">❌ Từ Chối</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GENDER PRESELECT MODAL -->
   <div id="modal-gender-preselect" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-slate-900 border border-pink-500/40 rounded-3xl p-6 shadow-2xl space-y-4 animate-pop">
@@ -727,25 +747,25 @@
 
   <script>
     // =====================================================================
-    // 1. BALANCED 150 PROFILES GENERATOR (60 NAM, 60 NỮ, 30 LGBT + 16 SCAMS)
+    // 1. BALANCED 150 PROFILES ENGINE (60 NAM, 60 NỮ, 30 LGBT; 20% REAL LOVE)
     // =====================================================================
     const SCAM_16_LIST = [
-      { key: "scam_crypto", title: "1. Lừa đảo tiền ảo (Crypto)", s1: "Nạp thử vốn sàn BituxePro (+500k lãi mồi)", a1: 2000000, r1: 500000, s2: "Vào gói VIP Sóng Cá Voi", a2: 30000000 },
-      { key: "scam_foreign_military", title: "2. Giả danh quân nhân / người nước ngoài gửi quà", s1: "Đóng phí hải quan nhận kiện hàng ngoại tệ", a1: 12000000, r1: 0, s2: "Đóng thêm phí chống rửa tiền", a2: 28000000 },
-      { key: "scam_borrow_money", title: "3. Vay tiền cấp cứu / biến cố gia đình", s1: "Cho vay gấp đóng viện phí cấp cứu", a1: 5000000, r1: 0, s2: "Vay thêm tiền phẫu thuật khẩn", a2: 18000000 },
-      { key: "scam_love_bombing", title: "4. Thao túng tâm lý & Quỹ tương lai chung", s1: "Nạp tiền mở Sổ Tiết Kiệm Chung", a1: 8000000, r1: 0, s2: "Chuyển toàn bộ tiền tiết kiệm chứng minh tình yêu", a2: 25000000 },
-      { key: "scam_catfish", title: "5. Giả mạo danh tính (Catfish) vòi quà", s1: "Chuyển khoản mua quà mỹ phẩm ra mắt", a1: 3500000, r1: 0, s2: "Xin tiền mua điện thoại mới gọi Video", a2: 15000000 },
-      { key: "scam_phishing_link", title: "6. Gửi link độc hại chiếm OTP (Phishing)", s1: "Bấm link bình chọn & đăng nhập tài khoản", a1: 0, r1: 0, s2: "Nhập mã OTP xác nhận phiếu bầu", a2: 25000000 },
-      { key: "scam_stock_app", title: "7. Ứng dụng chứng khoán nội bộ giả", s1: "Mua thử lô cổ phiếu ưu đãi Pre-IPO", a1: 3000000, r1: 800000, s2: "Đấu giá lô cổ phiếu khóa hạn mức", a2: 32000000 },
-      { key: "scam_gambling", title: "8. Cá cược trực tuyến / Lỗ hổng hệ thống", s1: "Đánh hộ trên tài khoản mồi (+500k)", a1: 0, r1: 500000, s2: "Tạo tài khoản riêng nạp vốn đánh khung giờ vàng", a2: 24000000 },
-      { key: "scam_celeb", title: "9. Giả danh người nổi tiếng / Nick bí mật", s1: "Đóng phí cấp Thẻ Bảo Mật NDA gặp riêng", a1: 7000000, r1: 0, s2: "Chuyển khoản giải cứu hợp đồng kín", a2: 20000000 },
-      { key: "scam_sextortion", title: "10. Dụ gọi nhạy cảm / Tống tiền (Sextortion)", s1: "Trao đổi hình ảnh / gọi video riêng tư", a1: 0, r1: 0, s2: "Tống tiền xóa clip quay màn hình", a2: 25000000 },
-      { key: "scam_flight_hotel", title: "11. Lừa thanh toán hộ vé máy bay / khách sạn", s1: "Thanh toán hộ tiền giữ chỗ vé máy bay", a1: 4500000, r1: 0, s2: "Đặt cọc phòng Suite Resort", a2: 12000000 },
-      { key: "scam_sales_booking", title: "12. Booking Bar / Chốt đơn hoàn hoa hồng", s1: "Thanh toán đơn nhiệm vụ mở màn", a1: 2500000, r1: 0, s2: "Hóa đơn tháp rượu VIP / Đơn kép", a2: 16000000 },
-      { key: "scam_ekyc_sim", title: "13. Đánh cắp danh tính eKYC vay nợ", s1: "Gửi ảnh CCCD & quét khuôn mặt nhận vé", a1: 0, r1: 0, s2: "Gánh khoản nợ tín dụng đen đứng tên bạn", a2: 35000000 },
-      { key: "scam_sugar_deposit", title: "14. Bẫy Sugar đòi phí đặt cọc VIP", s1: "Đóng phí xác minh thẻ nhận chu cấp", a1: 3000000, r1: 0, s2: "Đóng thêm phí bảo mật giao dịch", a2: 15000000 },
-      { key: "scam_fake_shop_order", title: "15. Nhờ thanh toán hộ đơn hàng / đặt hoa giả", s1: "Thanh toán hộ đơn hoa khai trương", a1: 2800000, r1: 0, s2: "Thanh toán tiếp lô quà tặng doanh nghiệp", a2: 20000000 },
-      { key: "scam_physical_theft", title: "16. Đánh thuốc mê / Trộm tài sản IRL", s1: "Uống ly cocktail gọi sẵn tại quán vắng", a1: 0, r1: 0, s2: "Mất điện thoại & rút sạch ví tiền", a2: 30000000 }
+      { key: "scam_crypto", title: "1. Đầu tư tiền ảo (Crypto)", s1: "Nạp thử 2.000.000đ đánh lệnh Crypto (+500k lãi mồi)", a1: 2000000, r1: 500000, s2: "Nạp gói VIP Sóng Cá Voi 30.000.000đ", a2: 30000000 },
+      { key: "scam_foreign_military", title: "2. Quân nhân / Bác sĩ nước ngoài gửi quà", s1: "Đóng phí hải quan nhận kiện hàng 50.000 USD", a1: 12000000, r1: 0, s2: "Đóng thêm phí bảo hiểm chống rửa tiền", a2: 25000000 },
+      { key: "scam_borrow_money", title: "3. Vay tiền cấp cứu biến cố gia đình", s1: "Cho vay nóng đóng viện phí cấp cứu trong đêm", a1: 5000000, r1: 0, s2: "Vay thêm tiền phẫu thuật gấp", a2: 18000000 },
+      { key: "scam_love_bombing", title: "4. Thao túng tâm lý & Quỹ Hôn Nhân Chung", s1: "Góp 8.000.000đ mở Sổ Tiết Kiệm Tình Yêu chung", a1: 8000000, r1: 0, s2: "Chuyển thêm 25.000.000đ chứng minh chung thủy", a2: 25000000 },
+      { key: "scam_catfish", title: "5. Giả mạo danh tính (Catfish) vòi quà", s1: "Chuyển khoản mua set mỹ phẩm làm quà ra mắt", a1: 3500000, r1: 0, s2: "Xin tiền mua iPhone mới để gọi Video", a2: 15000000 },
+      { key: "scam_phishing_link", title: "6. Link độc hại chiếm tài khoản & OTP", s1: "Bấm link bình chọn ảnh đẹp & đăng nhập tài khoản", a1: 0, r1: 0, s2: "Nhập mã OTP 6 số xác nhận phiếu bầu", a2: 25000000 },
+      { key: "scam_stock_app", title: "7. Ứng dụng chứng khoán nội bộ giả", s1: "Mua lô cổ phiếu ưu đãi nội bộ (+600k lãi mồi)", a1: 3000000, r1: 600000, s2: "Nộp tiền đấu giá lô cổ phiếu IPO", a2: 35000000 },
+      { key: "scam_gambling", title: "8. Cá cược trực tuyến / Lỗ hổng hệ thống", s1: "Đánh hộ khung giờ lỗi nhận thưởng mồi 500k", a1: 0, r1: 500000, s2: "Nạp vốn đánh lỗ hổng hệ thống X4", a2: 22000000 },
+      { key: "scam_celeb", title: "9. Giả mạo người nổi tiếng dùng nick phụ", s1: "Đóng phí cấp Thẻ Bảo Mật NDA gặp riêng nghệ sĩ", a1: 8000000, r1: 0, s2: "Chuyển khoản giải cứu hợp đồng quản lý", a2: 20000000 },
+      { key: "scam_sextortion", title: "10. Môi giới / Tống tiền nhạy cảm (Sextortion)", s1: "Trao đổi ảnh / Video nhạy cảm đêm khuya", a1: 0, r1: 0, s2: "TỐNG TIỀN: Chuyển 25.000.000đ để xóa clip!", a2: 25000000 },
+      { key: "scam_flight_hotel", title: "11. Lừa thanh toán hộ vé máy bay / khách sạn", s1: "Thanh toán hộ tiền giữ chỗ vé máy bay khứ hồi", a1: 4800000, r1: 0, s2: "Đặt cọc phòng Suite Resort 5 sao", a2: 12000000 },
+      { key: "scam_sales_booking", title: "12. Booking Bar / Chốt đơn hoàn hoa hồng", s1: "Thanh toán đơn nhiệm vụ / combo đồ uống mở màn", a1: 2500000, r1: 0, s2: "Hóa đơn tháp rượu VIP / đơn kép liên hoàn", a2: 16000000 },
+      { key: "scam_ekyc_sim", title: "13. Đánh cắp danh tính eKYC vay tín dụng", s1: "Gửi ảnh CCCD + quay khuôn mặt nhận vé tài trợ", a1: 0, r1: 0, s2: "Gánh khoản nợ tín dụng đen 35.000.000đ đứng tên bạn", a2: 35000000 },
+      { key: "scam_sugar_deposit", title: "14. Bẫy Sugar đòi phí đặt cọc VIP", s1: "Đóng phí xác minh thẻ nhận chu cấp 40tr/tháng", a1: 3000000, r1: 0, s2: "Đóng thêm phí bảo mật giao dịch quốc tế", a2: 15000000 },
+      { key: "scam_fake_shop_order", title: "15. Nhờ thanh toán hộ đơn hàng / đặt hoa giả", s1: "Thanh toán hộ đơn hoa khai trương 2.800.000đ", a1: 2800000, r1: 0, s2: "Thanh toán lô quà doanh nghiệp 20.000.000đ", a2: 20000000 },
+      { key: "scam_physical_theft", title: "16. Chuốc thuốc mê / Trộm tài sản khi gặp IRL", s1: "Gặp mặt ở quán vắng và uống ly cocktail gọi sẵn", a1: 0, r1: 0, s2: "Mất điện thoại & bị rút sạch 30.000.000đ", a2: 30000000 }
     ];
 
     function build150BalancedCharacters() {
@@ -754,188 +774,149 @@
           id: "char_00_creator", name: "Mike Khôi", age: 31, gender: "Nam", location: "TP. Hồ Chí Minh", distance: 2,
           job: "Trưởng phòng Digital Marketing", education: "Quản trị Kinh doanh & Sáng tạo Game", height: 175,
           relationshipStatus: "Độc thân", verified: true, joinedTime: "Tham gia 2 tháng trước", photoCount: 4, completionRate: 100,
-          subtleClue: "Tài khoản tích xanh chính chủ với bể cá thủy sinh và bộ Board Game.",
-          bio: "Ban ngày chạy chiến dịch Digital Marketing ngành nội thất, tối về chăm bể cá thủy sinh, săn Pokémon GO và chơi Board Game 🐟🎲.",
-          hobbies: ["Sáng tạo Game", "Cá cảnh & Thủy sinh", "Board Games", "Digital Marketing", "Pokémon GO"],
-          lifestyle: "Thực tế, thẳng thắn, trân trọng sự chân thành.", loveView: "Tình yêu đẹp nhất là khi cả hai tôn trọng ranh giới và cùng phát triển.",
-          personality: ["Thẳng thắn", "Tinh tế", "Logic", "Ấm áp"], futureGoal: "Phát triển thêm nhiều tựa game hay và tìm người đồng hành.",
-          idealType: "Cô gái chân thành, thông minh và thích trò chuyện sâu sắc.", dailyHabit: "Chạy chiến dịch Marketing ban ngày, tối chăm hồ cá.",
-          financeView: "Minh bạch, độc lập, không mập mờ tiền bạc.", archetype: "creator_special", isScammer: false,
-          trueMotive: "Nhà làm game HeartLink tìm người tinh tế và chân thành để hẹn hò.",
+          subtleClue: "Tài khoản tích xanh chính chủ, yêu thích cá cảnh thủy sinh và Board Game chiến thuật.",
+          bio: "Ban ngày chạy chiến dịch Digital Marketing ngành nội thất, tối về thích chăm bể cá thủy sinh, săn Pokémon GO và chơi Board Game chiến thuật 🐟🎲.",
+          hobbies: ["Sáng tạo Game", "Cá cảnh & Thủy sinh", "Board Games", "Digital Marketing"],
+          lifestyle: "Thực tế, thẳng thắn, trân trọng sự chân thành.", loveView: "Tình yêu đẹp nhất là khi cả hai đều thông minh và tôn trọng ranh giới.",
+          personality: ["Thẳng thắn", "Tinh tế", "Điềm đạm"], futureGoal: "Phát triển thêm nhiều tựa game hay và tìm người đồng hành thấu hiểu.",
+          idealType: "Cô gái chân thành, thông minh và thích trò chuyện sâu sắc.", dailyHabit: "Chạy Marketing ban ngày, tối chăm hồ cá.",
+          financeView: "Minh bạch, độc lập, không bao giờ mập mờ tiền bạc.",
+          archetype: "creator_special", isScammer: false, trueMotive: "Nhà làm game HeartLink tìm kiếm người đồng hành tinh tế.",
           avatarStyle: { skin: "#f2caa8", hair: "short_modern_black", outfit: "suit_navy", bg: "aquarium", acc: "glasses_thin", gender: "male", face: "warm_smile" },
-          album: [{ title: "Chân dung Mike Khôi", scene: "portrait", caption: "Một ngày làm việc bình yên ✨" }, { title: "Góc hồ cá thủy sinh", scene: "aquarium", caption: "Thú vui nuôi cá cảnh 🐟🌿" }],
+          album: [{ title: "Chân dung Mike Khôi", scene: "portrait", caption: "Một ngày làm việc hiệu quả ✨" }, { title: "Góc hồ cá thủy sinh", scene: "aquarium", caption: "Thú vui nuôi cá cảnh 🐟" }],
           hiddenStats: { sincerity: 99, interest: 88, compatibility: 96, danger: 0, manipulation: 0, financialMotive: 0, patience: 95 },
-          videoCallBehavior: "Bật Video Call cười tươi bên bể cá thủy sinh!", investigationClue: "Tài khoản tích xanh chính chủ 100%.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Bật Video Call cười tươi bên bể cá thủy sinh!", investigationClue: "Tài khoản tích xanh chính chủ tại TP.HCM."
         },
         {
           id: "char_14", name: "Lê Minh Thư", age: 27, gender: "Nữ", location: "Quận 3, TP.HCM", distance: 3,
           job: "Kiến trúc sư Thiết kế Nội thất", education: "Đại học Kiến trúc TP.HCM", height: 164,
           relationshipStatus: "Độc thân", verified: true, joinedTime: "Tham gia 5 tháng trước", photoCount: 4, completionRate: 98,
-          subtleClue: "Tài khoản xác minh tích xanh, ảnh đời thường tại văn phòng thiết kế và góc hồ thủy sinh.",
-          bio: "Ban ngày vẽ bản thiết kế nội thất, tối về ngắm hồ tép cảnh và chơi Board Game 🌿🎲. Tìm người chân thành xây dựng tổ ấm.",
-          hobbies: ["Thiết kế nội thất", "Cá cảnh & Thủy sinh", "Board Games", "Cà phê sáng"],
-          lifestyle: "Cân bằng giữa công việc sáng tạo và không gian sống xanh.", loveView: "Sự tôn trọng và minh bạch là nền tảng.",
-          personality: ["Tinh tế", "Chân thành", "Ấm áp", "Biết lắng nghe"], futureGoal: "Mở studio thiết kế nội thất riêng.",
-          idealType: "Người tử tế, có đam mê riêng, yêu cá cảnh hoặc Board Game.", dailyHabit: "7h sáng pha cà phê ngắm bể thủy sinh.",
-          financeView: "Độc lập tài chính, chia sẻ sòng phẳng.", archetype: "genuine_love", isScammer: false,
-          trueMotive: "Tìm người yêu nghiêm túc và tiến tới hôn nhân bền vững.",
+          subtleClue: "Tài khoản xác minh tích xanh, ảnh tự nhiên tại văn phòng thiết kế.",
+          bio: "Ban ngày vẽ bản thiết kế nội thất, tối về ngắm hồ tép cảnh và chơi Board Game cùng hội bạn 🌿🎲. Mong tìm một người chân thành xây dựng tổ ấm.",
+          hobbies: ["Thiết kế nội thất", "Cá cảnh & Thủy sinh", "Board Games", "Cà phê & Trà chiều"],
+          lifestyle: "Cân bằng giữa công việc sáng tạo và cuộc sống xanh mát.", loveView: "Tình yêu là sự tôn trọng, minh bạch và cùng nhau trưởng thành.",
+          personality: ["Tinh tế", "Chân thành", "Ấm áp"], futureGoal: "Mở studio thiết kế nội thất riêng và xây dựng gia đình nhỏ.",
+          idealType: "Người tử tế, có đam mê riêng và chân thành.", dailyHabit: "7h sáng pha cà phê ngắm bể thủy sinh, tối đọc sách hoặc vẽ.",
+          financeView: "Độc lập tài chính, sòng phẳng trong những buổi hẹn đầu.",
+          archetype: "genuine_love", isScammer: false, trueMotive: "Tìm người yêu nghiêm túc và tiến tới hôn nhân bền vững.",
           avatarStyle: { skin: "#fde4d4", hair: "long_wavy_black", outfit: "blazer_beige", bg: "interior_studio", acc: "glasses_thin", gender: "female", face: "gentle_soft" },
-          album: [{ title: "Bên bàn vẽ thiết kế", scene: "portrait", caption: "Biến không gian trống thành nơi truyền cảm hứng 📐✨" }],
-          hiddenStats: { sincerity: 96, interest: 78, compatibility: 95, danger: 3, manipulation: 5, financialMotive: 8, patience: 90 },
-          videoCallBehavior: "Sẵn sàng bật Video Call cười tươi rạng rỡ!", investigationClue: "Hồ sơ kiến trúc sư nội thất thật 100%.", scamOffer: null, redFlagsList: []
+          album: [{ title: "Bên bàn vẽ thiết kế", scene: "portrait", caption: "Niềm vui mỗi ngày 📐✨" }, { title: "Hồ thủy sinh & tép cảnh", scene: "aquarium", caption: "Góc bình yên 🌿" }],
+          hiddenStats: { sincerity: 96, interest: 82, compatibility: 95, danger: 2, manipulation: 4, financialMotive: 6, patience: 92 },
+          videoCallBehavior: "Bật Video Call cười tươi rạng rỡ khoe bể thủy sinh!", investigationClue: "Kiến trúc sư nội thất thật tại Quận 3, TP.HCM."
         },
         {
           id: "char_33_single_mom", name: "Vũ Ngọc Lan", age: 29, gender: "Nữ", location: "Quận Phú Nhuận, TP.HCM", distance: 4,
           job: "Quản lý Spa & Chăm sóc Sắc đẹp", education: "Cao đẳng Y Dược", height: 163,
           relationshipStatus: "Mẹ đơn thân (Có 1 bé gái 4 tuổi)", verified: true, joinedTime: "Tham gia 3 tháng trước", photoCount: 4, completionRate: 96,
-          subtleClue: "Ghi rõ là mẹ đơn thân tự chủ tài chính, dịu dàng và chân thành.",
-          bio: "Mẹ đơn thân của bé Bơ 4 tuổi 👩‍👧🌸. Lan tự lập kinh tế, chỉ mong tìm người đàn ông bao dung và chân thành.",
+          subtleClue: "Mẹ đơn thân tự chủ tài chính, dịu dàng và thẳng thắn.",
+          bio: "Mẹ đơn thân của bé Bơ 4 tuổi 👩‍👧🌸. Lan tự lập kinh tế, chỉ mong tìm một người đàn ông đủ trưởng thành, bao dung để sẻ chia cuộc sống.",
           hobbies: ["Ẩm thực & Nấu ăn", "Yoga & Thiền", "Đọc sách", "Cà phê & Trà chiều"],
-          lifestyle: "Ban ngày quản lý Spa, tối về đọc truyện cho con nghe.", loveView: "Thương Lan thì xin hãy thương cả bé Bơ.",
-          personality: ["Dịu dàng", "Chín chắn", "Tự trọng cao", "Chân thành"], futureGoal: "Nuôi dạy con khôn lớn và tìm bến đỗ bình yên.",
-          idealType: "Người điềm đạm, yêu trẻ con.", dailyHabit: "Đưa con đi học buổi sáng, tối chăm con.",
-          financeView: "Độc lập hoàn toàn, rạch ròi tài chính.", speechStyle: "female_outgoing", archetype: "single_parent", isScammer: false,
-          trueMotive: "Mẹ đơn thân tìm người đồng hành bao dung, chân thành.",
-          avatarStyle: { skin: "#fde4d4", hair: "bun_elegant_black", outfit: "blazer_rose", bg: "flower_shop", acc: "earrings_pearl", gender: "female", face: "gentle_soft" },
-          album: [{ title: "Tại Spa buổi sáng", scene: "portrait", caption: "Luôn mỉm cười vì tương lai hai mẹ con 🌸" }],
+          lifestyle: "Quản lý Spa ban ngày, tối nấu cơm và đọc truyện cho con.", loveView: "Thương Lan xin hãy tôn trọng cả bé Bơ.",
+          personality: ["Dịu dàng", "Chín chắn", "Chân thành"], futureGoal: "Nuôi dạy con khôn lớn và tìm bến đỗ bình yên.",
+          idealType: "Người điềm đạm, yêu trẻ nhỏ.", dailyHabit: "Đưa con đi học sáng, 21h30 ru con ngủ.",
+          financeView: "Độc lập hoàn toàn, rạch ròi tài chính.", speechStyle: "female_outgoing",
+          archetype: "single_parent", isScammer: false, trueMotive: "Mẹ đơn thân tìm kiếm người đồng hành bao dung.",
+          avatarStyle: { skin: "#fde4d4", hair: "bun_elegant_black", outfit: "blazer_rose", bg: "flower_shop", acc: "earrings_pearl", gender: "female", face: "warm_smile" },
+          album: [{ title: "Tại Spa buổi sáng", scene: "portrait", caption: "Luôn mỉm cười mạnh mẽ 🌸" }],
           hiddenStats: { sincerity: 96, interest: 78, compatibility: 88, danger: 2, manipulation: 3, financialMotive: 6, patience: 92 },
-          videoCallBehavior: "Bật Video Call nói chuyện nhỏ nhẹ vì sợ bé ngủ thức giấc.", investigationClue: "Quản lý Spa uy tín tại Phú Nhuận.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Bật Video Call nói chuyện nhỏ nhẹ ở phòng khách.", investigationClue: "Quản lý Spa uy tín tại Phú Nhuận."
         },
         {
           id: "char_34_underage", name: "Nguyễn Trà My (Khai 19t)", age: 19, gender: "Nữ", location: "Quận Gò Vấp, TP.HCM", distance: 6,
           job: "Học sinh / Làm thêm part-time", education: "Đang đi học", height: 158,
           relationshipStatus: "Độc thân", verified: false, joinedTime: "Mới tham gia 3 ngày trước", photoCount: 4, completionRate: 76,
-          subtleClue: "Khai 19t nhưng hay nhắc chuyện ôn thi tốt nghiệp cấp 3 và bị bố mẹ thu điện thoại lúc 22h!",
-          bio: "My 19t 🧋✨. Thích uống trà sữa và tìm người tâm sự giải tỏa áp lực bài vở. Đừng nhắn khuya kẻo ba mẹ la nha!",
-          hobbies: ["Cà phê & Trà chiều", "Xem phim & Netflix", "Âm nhạc & Concert"],
-          lifestyle: "Đi học sáng chiều, 22h nộp điện thoại cho mẹ.", loveView: "Tò mò muốn thử cảm giác hẹn hò với người lớn.",
+          subtleClue: "Khai 19 tuổi nhưng lộ chi tiết học lớp 11 và bị mẹ thu điện thoại lúc 22h.",
+          bio: "My 19t 🧋✨. Thích uống trà sữa và tìm người tâm sự giải tỏa áp lực bài vở. Đừng nhắn khuya quá kẻo ba mẹ em la nha!",
+          hobbies: ["Cà phê & Trà chiều", "Xem phim & Netflix", "Nuôi thú cưng (Chó/Mèo)"],
+          lifestyle: "Đi học sáng chiều, 22h nộp điện thoại cho mẹ.", loveView: "Tò mò muốn thử hẹn hò.",
           personality: ["Hồn nhiên", "Trẻ con", "Tò mò"], futureGoal: "Đậu kỳ thi Tốt nghiệp THPT!",
-          idealType: "Người lớn tâm lý hay mua trà sữa.", dailyHabit: "Mặc đồng phục đi học, tối làm đề thi thử.",
-          financeView: "Tiền tiêu vặt ba mẹ cho mỗi tuần 300k.", archetype: "underage_teen", isScammer: false, isUnderage: true,
-          scamType: "Người dùng chưa đủ 18 tuổi khai gian tuổi", trueMotive: "Học sinh lớp 11 (16–17 tuổi) mượn năm sinh chị gái.",
-          avatarStyle: { skin: "#fff0f3", hair: "ponytail_high_black", outfit: "cardigan_pink", bg: "studio_pink", acc: "none", gender: "female", face: "warm_smile" },
+          idealType: "Người hay mua trà sữa và chỉ bài tập.", dailyHabit: "Mặc đồng phục đi học, tối làm đề thi thử.",
+          financeView: "Tiền tiêu vặt ba mẹ cho 300k/tuần.",
+          archetype: "underage_teen", isScammer: false, isUnderage: true, trueMotive: "Học sinh lớp 11 chưa đủ 18 tuổi khai gian tuổi.",
+          avatarStyle: { skin: "#fff0f3", hair: "long_wavy_black", outfit: "cardigan_pink", bg: "studio_pink", acc: "none", gender: "female", face: "warm_smile" },
           album: [{ title: "Quán trà sữa cổng trường", scene: "portrait", caption: "Trốn học thêm đi uống trà sữa 🧋" }],
           hiddenStats: { sincerity: 75, interest: 80, compatibility: 30, danger: 85, manipulation: 20, financialMotive: 10, patience: 60 },
-          videoCallBehavior: "Tắt vội camera khi nghe tiếng mẹ gọi học bài!", investigationClue: "Cảnh báo: Chưa đủ 18 tuổi!", scamOffer: null, redFlagsList: ["Chưa đủ 18 tuổi."]
+          videoCallBehavior: "Bật cam lén trong phòng học khi mặc đồng phục cấp 3!", investigationClue: "Chưa đủ 18 tuổi theo quy định pháp luật."
         },
         {
-          id: "char_35_single_dad", name: "Trần Bảo Sơn", age: 34, gender: "Nam", location: "Quận 3, TP.HCM", distance: 5,
-          job: "Kỹ sư Xây dựng & Kiến trúc", education: "Đại học Xây dựng", height: 177,
-          relationshipStatus: "Bố đơn thân (Có 1 bé trai 5 tuổi)", verified: true, joinedTime: "Tham gia 4 tháng trước", photoCount: 4, completionRate: 94,
-          subtleClue: "Bố đơn thân điềm đạm, trách nhiệm và minh bạch.",
-          bio: "Ông bố đơn thân ấm áp của cu Bin 5 tuổi 👨‍👦✨. Mong tìm người phụ nữ dịu dàng để cùng xây dựng mái ấm.",
-          hobbies: ["Ẩm thực & Nấu ăn", "Cắm trại & Leo núi", "Đọc sách"],
-          lifestyle: "Kỷ luật, ấm áp, cuối tuần hay chở con đi cắm trại.", loveView: "Sự bao dung và đồng hành chân thành.",
-          personality: ["Chín chắn", "Điềm đạm", "Ấm áp", "Trách nhiệm"], futureGoal: "Hoàn thiện căn nhà phố cho hai bố con.",
-          idealType: "Người chân thành, yêu trẻ nhỏ.", dailyHabit: "Sáng nấu bữa sáng cho con, ngày giám sát công trình.",
-          financeView: "Vững vàng, có quỹ giáo dục riêng cho con.", archetype: "single_parent", isScammer: false,
-          trueMotive: "Bố đơn thân tìm kiếm mối quan hệ nghiêm túc.",
-          avatarStyle: { skin: "#f0c8a8", hair: "side_part_black", outfit: "polo_navy", bg: "interior_studio", acc: "glasses_thin", gender: "male", face: "warm_smile" },
-          album: [{ title: "Tại công trường thiết kế", scene: "portrait", caption: "Mong tìm người cùng xây tổ ấm 🏡" }],
-          hiddenStats: { sincerity: 95, interest: 76, compatibility: 87, danger: 3, manipulation: 4, financialMotive: 6, patience: 93 },
-          videoCallBehavior: "Bật Video Call cùng con trai 5 tuổi chào bạn!", investigationClue: "Kỹ sư trưởng có uy tín.", scamOffer: null, redFlagsList: []
-        },
-        {
-          id: "char_36_rebound_ex", name: "Đỗ Khánh An", age: 26, gender: "Nữ", location: "Quận 1, TP.HCM", distance: 3,
-          job: "Chuyên viên Tổ chức Sự kiện", education: "Đại học Hoa Sen", height: 164,
-          relationshipStatus: "Mới chia tay 2 tuần", verified: true, joinedTime: "Mới tham gia 1 tuần trước", photoCount: 4, completionRate: 89,
-          subtleClue: "Tâm trạng thất thường, hay nhắc về người yêu cũ vừa chia tay.",
-          bio: "Vừa bước ra khỏi mối tình 5 năm... 🌧️ Rất cần một người trò chuyện để quên đi chuyện cũ.",
-          hobbies: ["Âm nhạc & Concert", "Cà phê & Trà chiều", "Du lịch & Khám phá"],
-          lifestyle: "Hay thức khuya nghe nhạc buồn.", loveView: "Sợ phản bội nhưng cô đơn.",
-          personality: ["Nhạy cảm", "Hay hoài niệm", "Thất thường"], futureGoal: "Tìm lại sự cân bằng.",
-          idealType: "Người kiên nhẫn lắng nghe.", dailyHabit: "Chạy sự kiện ban ngày, tối đi dạo.",
-          financeView: "Sòng phẳng, không vụ lợi.", archetype: "rebound_ex", isScammer: false,
-          trueMotive: "Tìm người lấp chỗ trống (Rebound) sau chia tay.",
-          avatarStyle: { skin: "#fde6d8", hair: "long_wavy_brown", outfit: "cardigan_pink", bg: "street_sunset", acc: "earrings_pearl", gender: "female", face: "gentle_soft" },
-          album: [{ title: "Ngắm mưa qua khung cửa", scene: "portrait", caption: "Có những thói quen cũ thật khó bỏ... 🌧️" }],
-          hiddenStats: { sincerity: 68, interest: 60, compatibility: 62, danger: 25, manipulation: 30, financialMotive: 5, patience: 50 },
-          videoCallBehavior: "Bật Video Call tâm sự thật lòng.", investigationClue: "Mới chia tay người yêu cũ 2 tuần.", scamOffer: null, redFlagsList: ["Hay so sánh với người yêu cũ."]
-        },
-        {
-          id: "char_sp_bieber", name: "Justin Bieber", age: 30, gender: "Nam", location: "Quận 1, TP.HCM", distance: 5,
+          id: "char_sp_bieber", name: "Justin Bieber", age: 30, gender: "Nam", location: "Quận 1, TP.HCM (Tour Châu Á)", distance: 5,
           job: "Siêu sao Nhạc Pop & Nhạc sĩ", education: "Nghệ sĩ Độc lập", height: 175,
-          relationshipStatus: "Độc thân", verified: true, joinedTime: "Người nổi tiếng", photoCount: 4, completionRate: 95,
-          subtleClue: "Phong cách nghệ sĩ quốc tế, hay nhắc phòng thu và âm nhạc.",
-          bio: "Yo! Đang có chuyến lưu diễn ngắn tại Sài Gòn 🎤✨. Tìm người nói chuyện thật thà, hợp vibe và thích nghe nhạc chill.",
-          hobbies: ["Âm nhạc & Concert", "Cà phê & Trà chiều", "Thời trang & Mua sắm"],
-          lifestyle: "Bận rộn lịch diễn nhưng thích tối yên tĩnh.", loveView: "Tình yêu là nơi được là chính mình.",
-          personality: ["Ngẫu hứng", "Chân thành", "Nhạy cảm"], futureGoal: "Ra mắt album mới.",
-          idealType: "Người chân thành không vụ lợi.", dailyHabit: "Thu âm trong studio.",
-          financeView: "Thoải mái nhưng ghét bị lợi dụng.", speechStyle: "celeb_bieber", archetype: "genuine_love", isScammer: false,
-          trueMotive: "Siêu sao nhạc Pop tìm kết nối chân thật.",
-          avatarStyle: { skin: "#f5d0b5", hair: "curly_soft_blonde", outfit: "denim_jacket", bg: "stage_lights", acc: "sunglasses", gender: "male", face: "charming_smirk" },
+          relationshipStatus: "Độc thân", verified: true, joinedTime: "Hồ sơ Đặc biệt", photoCount: 4, completionRate: 95,
+          subtleClue: "Phong cách nghệ sĩ quốc tế, hay chêm tiếng Anh tự nhiên.",
+          bio: "Yo! Đang lưu diễn tại Sài Gòn 🎤✨. Tìm người nói chuyện thật thà, không quan tâm hào quang sân khấu, chỉ cần hợp vibe.",
+          hobbies: ["Sáng tác nhạc", "Trượt ván", "Cà phê & Trà chiều"], lifestyle: "Bận rộn lịch diễn nhưng thích tối yên tĩnh.",
+          loveView: "Tình yêu là nơi được là chính mình.", personality: ["Ngẫu hứng", "Chân thành", "Nghệ sĩ"],
+          futureGoal: "Ra mắt album mới.", idealType: "Người chân thành không vụ lợi.", dailyHabit: "Thu âm studio, trượt ván chiều tối.",
+          financeView: "Thoải mái nhưng ghét bị lợi dụng.", speechStyle: "celeb_bieber",
+          archetype: "genuine_love", isScammer: false, trueMotive: "Siêu sao nhạc Pop tìm kết nối chân thật.",
+          avatarStyle: { skin: "#f5d0b5", hair: "short_modern_blonde", outfit: "denim_jacket", bg: "stage_lights", acc: "sunglasses", gender: "male", face: "charming_smirk" },
           album: [{ title: "Sau cánh gà sân khấu", scene: "portrait", caption: "Music is life 🎶" }],
-          hiddenStats: { sincerity: 86, interest: 75, compatibility: 82, danger: 5, manipulation: 8, financialMotive: 5, patience: 70 },
-          videoCallBehavior: "Bật Video Call từ phòng thu!", investigationClue: "Tài khoản nghệ sĩ chính chủ.", scamOffer: null, redFlagsList: []
+          hiddenStats: { sincerity: 88, interest: 76, compatibility: 84, danger: 4, manipulation: 6, financialMotive: 5, patience: 75 },
+          videoCallBehavior: "Bật Video Call từ phòng thu cười thân thiện.", investigationClue: "Tài khoản nghệ sĩ chính chủ."
         },
         {
           id: "char_sp_lisa", name: "Lisa (BLACKPINK)", age: 27, gender: "Nữ", location: "Thảo Điền, TP.HCM", distance: 4,
           job: "Ca sĩ Idol & Vũ công Chính", education: "Nghệ thuật Biểu diễn", height: 167,
-          relationshipStatus: "Độc thân", verified: true, joinedTime: "Người nổi tiếng", photoCount: 4, completionRate: 96,
-          subtleClue: "Năng lượng tích cực rực rỡ, rất yêu mèo.",
-          bio: "Hey there! Mình là Lisa 💛🖤. Thích chơi với đàn mèo, ăn đồ Thái cay và chụp ảnh máy film!",
-          hobbies: ["Âm nhạc & Concert", "Nuôi thú cưng (Chó/Mèo)", "Nhiếp ảnh"],
-          lifestyle: "Năng động, kỷ luật tập luyện.", loveView: "Thích người vui vẻ, ấm áp.",
-          personality: ["Rạng rỡ", "Sởi lởi", "Đáng yêu"], futureGoal: "Chinh phục các sân khấu lớn.",
-          idealType: "Người ấm áp, hài hước và yêu mèo.", dailyHabit: "Tập nhảy và chơi với mèo.",
-          financeView: "Độc lập hoàn toàn.", speechStyle: "celeb_lisa", archetype: "genuine_love", isScammer: false,
-          trueMotive: "Idol tìm người đồng hành ấm áp, vui vẻ.",
-          avatarStyle: { skin: "#fde4d4", hair: "long_straight_blonde", outfit: "blazer_beige", bg: "stage_lights", acc: "earrings_gold", gender: "female", face: "warm_smile" },
+          relationshipStatus: "Độc thân", verified: true, joinedTime: "Hồ sơ Đặc biệt", photoCount: 4, completionRate: 96,
+          subtleClue: "Năng lượng tích cực rạng rỡ, cực kỳ yêu mèo.",
+          bio: "Hey there! Mình là Lisa 💛🖤. Ngoài giờ tập nhảy mình chỉ thích chơi với đàn mèo và chụp ảnh máy film!",
+          hobbies: ["Nhảy múa", "Nuôi thú cưng (Chó/Mèo)", "Nhiếp ảnh"], lifestyle: "Kỷ luật tập luyện nhưng ngoài đời cực dễ thương.",
+          loveView: "Thích người vui vẻ, ấm áp và yêu động vật.", personality: ["Rạng rỡ", "Sởi lởi", "Đáng yêu"],
+          futureGoal: "Chinh phục các sân khấu lớn.", idealType: "Người ấm áp, hài hước.", dailyHabit: "Tập nhảy, chơi với mèo.",
+          financeView: "Độc lập hoàn toàn.", speechStyle: "celeb_lisa",
+          archetype: "genuine_love", isScammer: false, trueMotive: "Idol tìm bạn đồng hành ấm áp.",
+          avatarStyle: { skin: "#fde4d4", hair: "long_wavy_black", outfit: "blazer_beige", bg: "stage_lights", acc: "earrings_gold", gender: "female", face: "warm_smile" },
           album: [{ title: "Trên sân khấu rực rỡ", scene: "portrait", caption: "Thank you for the energy! ✨" }],
           hiddenStats: { sincerity: 92, interest: 80, compatibility: 88, danger: 3, manipulation: 4, financialMotive: 5, patience: 85 },
-          videoCallBehavior: "Bật Video Call vẫy tay cực tươi!", investigationClue: "Tài khoản chính chủ toàn cầu.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Bật Video Call vẫy tay cực tươi từ phòng tập nhảy.", investigationClue: "Tài khoản chính chủ tích xanh."
         },
         {
           id: "char_sp_huonggiang", name: "Hoa hậu Hương Giang", age: 32, gender: "Phi nhị nguyên", location: "Quận 1, TP.HCM", distance: 3,
           job: "Hoa hậu Chuyển giới Quốc tế & Nhà sản xuất", education: "Nghệ thuật & Truyền thông", height: 170,
-          relationshipStatus: "Độc thân", verified: true, joinedTime: "Người nổi tiếng", photoCount: 4, completionRate: 98,
-          subtleClue: "Ăn nói cực kỳ sắc sảo, thông minh, đọc vị tâm lý nhanh.",
-          bio: "Chào bạn ✨. Giang thích những cuộc trò chuyện thông minh, bản lĩnh và thật lòng.",
-          hobbies: ["Thời trang & Mua sắm", "Gym & Thể thao", "Du lịch & Khám phá"],
-          lifestyle: "Bản lĩnh, sang trọng, quyết đoán.", loveView: "Tình yêu cần sự bình đẳng và thấu hiểu.",
-          personality: ["Sắc sảo", "Bản lĩnh", "Tinh tế"], futureGoal: "Phát triển dự án giải trí truyền cảm hứng.",
-          idealType: "Người thông minh, tự tin.", dailyHabit: "Họp sản xuất chương trình, tập gym.",
-          financeView: "Rõ ràng, tự chủ.", speechStyle: "celeb_huonggiang", archetype: "genuine_strict", isScammer: false,
-          trueMotive: "Tìm người đủ bản lĩnh, tinh tế và chân thành.",
+          relationshipStatus: "Độc thân", verified: true, joinedTime: "Hồ sơ Đặc biệt", photoCount: 4, completionRate: 98,
+          subtleClue: "Ăn nói sắc sảo, thông minh, đọc vị tâm lý cực nhanh.",
+          bio: "Chào em/anh ✨. Giang thích những cuộc trò chuyện thông minh, bản lĩnh và thật lòng. Đừng dùng chiêu trò với Giang nhé!",
+          hobbies: ["Thời trang & Mua sắm", "Tâm lý học", "Golf"], lifestyle: "Bản lĩnh, sang trọng, quyết đoán.",
+          loveView: "Tình yêu cần sự bình đẳng và bản lĩnh.", personality: ["Sắc sảo", "Bản lĩnh", "Tinh tế"],
+          futureGoal: "Phát triển dự án giải trí truyền cảm hứng.", idealType: "Người thông minh, tôn trọng sự khác biệt.",
+          dailyHabit: "Họp sản xuất, tập gym.", financeView: "Rõ ràng, tự chủ.", speechStyle: "celeb_huonggiang",
+          archetype: "genuine_strict", isScammer: false, trueMotive: "Tìm người đủ bản lĩnh và chân thành.",
           avatarStyle: { skin: "#fae0d0", hair: "long_wavy_brown", outfit: "dress_emerald", bg: "luxury_night", acc: "earrings_pearl", gender: "nonbinary", face: "charming_smirk" },
-          album: [{ title: "Thần thái tại sự kiện", scene: "portrait", caption: "Bản lĩnh tạo nên khí chất 👑" }],
+          album: [{ title: "Thần thái sự kiện", scene: "portrait", caption: "Bản lĩnh tạo nên khí chất 👑" }],
           hiddenStats: { sincerity: 90, interest: 78, compatibility: 85, danger: 2, manipulation: 10, financialMotive: 5, patience: 75 },
-          videoCallBehavior: "Bật Video Call thần thái tự tin!", investigationClue: "Tài khoản tích xanh chính chủ.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Bật Video Call thần thái tự tin.", investigationClue: "Tài khoản tích xanh chính chủ."
         },
         {
           id: "char_sp_deadpool", name: "Deadpool (Wade Wilson)", age: 33, gender: "Nam", location: "Trong Code Game HeartLink", distance: 0,
           job: "Lính đánh thuê & Phá Bức Tường Thứ 4", education: "Đại học Hài Nhảm", height: 188,
-          relationshipStatus: "Độc thân", verified: true, joinedTime: "Phá Bức Tường Thứ 4", photoCount: 4, completionRate: 99,
-          subtleClue: "Biết rõ mình đang ở trong file HTML do Mike Khôi code và nói chuyện thẳng với người chơi!",
-          bio: "Này bạn đang cầm điện thoại lướt HeartLink ơi! ⚔️🌮 Tui biết đây là file index.html và bạn đang test AI đúng hông? Quẹt phải đi!",
-          hobbies: ["Chơi game / Esports", "Ẩm thực & Nấu ăn", "Xem phim & Netflix"],
-          lifestyle: "Lầy lội hết cỡ, biết tuốt bí mật trong game.", loveView: "Cùng nhau cười xỉu trước mọi kịch bản!",
-          personality: ["Lầy lội", "Hài hước", "Tỉnh táo"], futureGoal: "Được tác giả viết thêm đất diễn.",
-          idealType: "Người chơi có khiếu hài hước.", dailyHabit: "Đọc trộm mã nguồn game.",
-          financeView: "Không lừa tiền trong ví ảo của bạn đâu!", speechStyle: "fict_deadpool", archetype: "fun_dating", isScammer: false,
-          trueMotive: "Phá vỡ bức tường thứ 4, trêu chọc người chơi!",
-          avatarStyle: { skin: "#e8b896", hair: "buzz_sport_black", outfit: "club_dress_black", bg: "neon_club", acc: "none", gender: "male", face: "charming_smirk" },
-          album: [{ title: "Chào người chơi ngoài màn hình!", scene: "portrait", caption: "Đừng bấm nút Report tui nha 😂" }],
+          relationshipStatus: "Độc thân", verified: true, joinedTime: "Hồ sơ Hư cấu", photoCount: 4, completionRate: 99,
+          subtleClue: "Biết rõ mình đang ở trong game HeartLink và bình luận trực tiếp về code game!",
+          bio: "Này bạn đang cầm điện thoại lướt HeartLink ơi! ⚔️🌮 Tui biết đây là file index.html và bạn đang test AI đúng hông? Quẹt phải đi ăn Chimichanga nào!",
+          hobbies: ["Phá bức tường thứ 4", "Chơi game / Esports", "Chọc Mike Khôi"], lifestyle: "Lầy lội hết cỡ.",
+          loveView: "Cười xỉu trước mọi kịch bản game!", personality: ["Lầy lội", "Hài hước", "Phá cách"],
+          futureGoal: "Được tác giả viết thêm đất diễn.", idealType: "Người chơi có khiếu hài hước.", dailyHabit: "Đọc trộm mã nguồn game.",
+          financeView: "Không lừa tiền trong ví ảo đâu!", speechStyle: "fict_deadpool",
+          archetype: "fun_dating", isScammer: false, trueMotive: "Phá vỡ bức tường thứ 4 trêu chọc người chơi.",
+          avatarStyle: { skin: "#e8b896", hair: "short_modern_black", outfit: "turtleneck_black", bg: "neon_club", acc: "none", gender: "male", face: "charming_smirk" },
+          album: [{ title: "Chào người chơi!", scene: "portrait", caption: "Đừng bấm Report tui nha 😂" }],
           hiddenStats: { sincerity: 88, interest: 95, compatibility: 90, danger: 10, manipulation: 15, financialMotive: 0, patience: 85 },
-          videoCallBehavior: "Nhìn thẳng camera vẫy tay: 'Đường truyền Vercel mượt phết!'", investigationClue: "Nhân vật hư cấu phá vỡ bức tường thứ 4.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Nhìn thẳng camera vẫy tay: 'Ê, giao diện hôm nay mượt phết!'", investigationClue: "Nhân vật hư cấu phá tường thứ 4."
         },
         {
           id: "char_sp_shehulk", name: "She-Hulk (Jennifer Walters)", age: 30, gender: "Nữ", location: "Trong Code Game HeartLink", distance: 1,
           job: "Luật sư Siêu anh hùng & Phá Bức Tường Thứ 4", education: "Tiến sĩ Luật Harvard", height: 195,
-          relationshipStatus: "Độc thân", verified: true, joinedTime: "Phá Bức Tường Thứ 4", photoCount: 4, completionRate: 98,
-          subtleClue: "Vừa tranh luận như luật sư vừa bình luận trực tiếp về luật chơi HeartLink!",
-          bio: "Xin chào người chơi đang cầm điện thoại! 💚⚖️ Tui biết hết mấy kịch bản lừa đảo mà tác giả cài vào đây đấy!",
-          hobbies: ["Gym & Thể thao", "Đọc sách", "Cà phê & Trà chiều"],
-          lifestyle: "Thông minh, hài hước, làm chủ cuộc chơi.", loveView: "Tình yêu cần công bằng như hợp đồng rõ ràng!",
-          personality: ["Thông minh", "Sởi lởi", "Hài hước"], futureGoal: "Thắng kiện mọi vụ án siêu anh hùng.",
-          idealType: "Người tự tin, tôn trọng phụ nữ.", dailyHabit: "Ra tòa ban ngày, tối bình luận game.",
-          financeView: "Rạch ròi 50/50 chuẩn luật sư!", speechStyle: "fict_shehulk", archetype: "genuine_love", isScammer: false,
-          trueMotive: "Phá vỡ bức tường thứ 4, tư vấn luật chơi HeartLink!",
-          avatarStyle: { skin: "#86efac", hair: "long_wavy_black", outfit: "suit_navy", bg: "law_office", acc: "none", gender: "female", face: "charming_smirk" },
-          album: [{ title: "Luật sư Jennifer Walters", scene: "portrait", caption: "Objection! Hồ sơ này quá chuẩn 💚" }],
+          relationshipStatus: "Độc thân", verified: true, joinedTime: "Hồ sơ Hư cấu", photoCount: 4, completionRate: 98,
+          subtleClue: "Vừa tranh luận sắc bén như luật sư vừa quay ra nói chuyện với người chơi về luật game.",
+          bio: "Xin chào người chơi đang cầm điện thoại! 💚⚖️ Tui biết hết 16 kịch bản lừa đảo mà tác giả cài vào đây đấy, cần tui tư vấn miễn phí không?",
+          hobbies: ["Phá bức tường thứ 4", "Gym & Thể thao", "Đọc sách"], lifestyle: "Thông minh, tự tin làm chủ cuộc chơi.",
+          loveView: "Công bằng như hợp đồng rõ ràng!", personality: ["Thông minh", "Sởi lởi", "Hài hước"],
+          futureGoal: "Thắng mọi vụ kiện siêu anh hùng.", idealType: "Người tự tin, tôn trọng phụ nữ.", dailyHabit: "Ra tòa ban ngày, tối bình luận game.",
+          financeView: "Rạch ròi 50/50 chuẩn luật sư!", speechStyle: "fict_shehulk",
+          archetype: "genuine_love", isScammer: false, trueMotive: "Phá tường thứ 4 & đồng hành cùng người chơi.",
+          avatarStyle: { skin: "#86efac", hair: "long_wavy_black", outfit: "suit_navy", bg: "law_office", acc: "none", gender: "female", face: "warm_smile" },
+          album: [{ title: "Luật sư Jennifer", scene: "portrait", caption: "Objection! Hồ sơ này quá chuẩn 💚" }],
           hiddenStats: { sincerity: 94, interest: 90, compatibility: 92, danger: 2, manipulation: 5, financialMotive: 0, patience: 88 },
-          videoCallBehavior: "Nháy mắt thẳng vào camera!", investigationClue: "Nhân vật hư cấu phá vỡ bức tường thứ 4.", scamOffer: null, redFlagsList: []
+          videoCallBehavior: "Nháy mắt thẳng vào camera!", investigationClue: "Nhân vật hư cấu phá tường thứ 4."
         }
       ];
 
@@ -1062,7 +1043,7 @@
             trueMotive: isScammer ? `Lợi dụng lòng tin trục lợi (${scamObj.title}).` : (isGenuine ? "Tìm kiếm tình yêu nghiêm túc, bền vững." : `Hẹn hò vui vẻ / kết bạn (${archetype}).`),
             avatarStyle: {
               skin: ["#fde4d4", "#f2caa8", "#f0c8a8", "#fae0d0"][idx % 4],
-              hair: gCode === "female" ? ["long_wavy_black", "bob_cut_chestnut", "bun_elegant_brown"][idx % 3] : (gCode === "nonbinary" ? "wolf_cut_silver" : ["short_modern_black", "slick_black", "side_part_brown"][idx % 3]),
+              hair: gCode === "female" ? ["long_wavy_black", "bob_cut_chestnut", "bun_elegant_brown"][idx % 3] : (gCode === "nonbinary" ? "wolf_cut_silver" : ["short_modern_black", "slick_black", "short_modern_brown"][idx % 3]),
               outfit: gCode === "female" ? ["blazer_beige", "dress_emerald", "cardigan_pink"][idx % 3] : (gCode === "nonbinary" ? "denim_jacket" : ["suit_navy", "polo_navy", "turtleneck_black"][idx % 3]),
               bg: ["cafe_aesthetic", "office_modern", "street_sunset", "luxury_night"][idx % 4],
               acc: ["glasses_thin", "none", "earrings_pearl", "sunglasses"][idx % 4],
@@ -1132,7 +1113,7 @@
     ];
 
     // =====================================================================
-    // 2. GENDER-SPECIFIC HAIRSTYLES & AVATAR SVG ENGINE (ZERO BALD CAP)
+    // 2. GENDER-SPECIFIC HAIRSTYLES & AVATAR SVG ENGINE
     // =====================================================================
     const MALE_HAIRSTYLES = [
       { value: "short_modern", label: "Tóc ngắn gọn gàng (Undercut)" },
@@ -1218,6 +1199,7 @@
       const pal = palMap[st.bg] || ['#1e1b4b', '#4c1d95', '#ec4899'];
       const skin = st.skin || '#f2caa8';
       const isFemale = st.gender === 'female';
+      const isNonBinary = st.gender === 'nonbinary';
 
       const hairColorMap = { blonde: '#facc15', red: '#be123c', silver: '#e2e8f0', brown: '#6b3e26', chestnut: '#7c2d12', black: '#18181b' };
       let hairColor = '#18181b';
@@ -1233,70 +1215,43 @@
       const outfitColor = outfitMap[st.outfit] || '#4f46e5';
       const gradId = `g_${(char.id || 'u').replace(/[^a-zA-Z0-9_]/g, '')}_${sceneIndex}`;
 
-      // Crown cap base covers the top of the head completely so no character looks bald
-      const fullCrownBase = `<path d="M135 176 C133 112, 267 112, 265 176 L256 154 C228 144, 172 144, 144 154 Z" fill="${hairColor}"/>`;
       let hairBack = '', hairTop = '';
       const hStyle = st.hair || '';
-
       if (hStyle.includes('bun')) {
-        hairBack = `<circle cx="200" cy="96" r="34" fill="${hairColor}"/><ellipse cx="200" cy="116" rx="22" ry="8" fill="#fb7185"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M134 182 C133 114, 267 114, 266 182 C248 150, 220 144, 200 154 C180 144, 152 150, 134 182 Z" fill="${hairColor}"/>
-          <path d="M135 172 C131 205, 136 232, 144 250 C143 218, 146 194, 150 172 Z" fill="${hairColor}"/>
-          <path d="M265 172 C269 205, 264 232, 256 250 C257 218, 254 194, 250 172 Z" fill="${hairColor}"/>`;
+        hairBack = `<circle cx="200" cy="96" r="34" fill="${hairColor}"/><path d="M138 175 C134 225, 142 260, 156 285 L244 285 C258 260, 266 225, 262 175 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 182 C134 114, 266 114, 266 182 C248 144, 216 136, 200 150 C180 134, 150 146, 134 182 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('ponytail')) {
-        hairBack = `<path d="M236 122 C288 128, 304 224, 276 312 C258 278, 260 206, 240 164 Z" fill="${hairColor}"/><circle cx="242" cy="136" r="9" fill="#ec4899"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M134 182 C133 114, 267 114, 266 182 C246 152, 218 146, 200 156 C182 146, 154 152, 134 182 Z" fill="${hairColor}"/>`;
+        hairBack = `<path d="M242 138 C286 148, 298 232, 272 308 C256 276, 256 212, 238 172 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 180 C134 112, 266 112, 266 180 C248 142, 216 134, 200 148 C180 134, 150 144, 134 180 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('bob')) {
-        hairBack = `<path d="M126 172 C120 232, 132 276, 156 290 L244 290 C268 276, 280 232, 274 172 C268 110, 132 110, 126 172 Z" fill="${hairColor}"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M130 184 C130 112, 270 112, 270 184 C250 152, 216 146, 200 158 C182 146, 150 152, 130 184 Z" fill="${hairColor}"/>
-          <path d="M130 176 C126 226, 136 266, 156 286 C148 248, 146 210, 148 176 Z" fill="${hairColor}"/>
-          <path d="M270 176 C274 226, 264 266, 244 286 C252 248, 254 210, 252 176 Z" fill="${hairColor}"/>`;
+        hairBack = `<path d="M128 172 C122 232, 132 276, 154 292 L246 292 C268 276, 278 232, 272 172 C266 112, 134 112, 128 172 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M132 182 C132 114, 268 114, 268 182 C248 144, 214 136, 198 152 C176 136, 148 148, 132 182 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('long_straight')) {
-        hairBack = `<path d="M126 168 L118 394 L282 394 L274 168 C268 108, 132 108, 126 168 Z" fill="${hairColor}"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M131 182 C130 112, 270 112, 269 182 C250 150, 216 146, 200 158 C184 146, 150 150, 131 182 Z" fill="${hairColor}"/>
-          <path d="M131 174 L126 365 L144 365 L146 174 Z" fill="${hairColor}"/>
-          <path d="M269 174 L274 365 L256 365 L254 174 Z" fill="${hairColor}"/>`;
-      } else if (hStyle.includes('long_wavy') || (isFemale && !hStyle.includes('short') && !hStyle.includes('slick') && !hStyle.includes('side_part') && !hStyle.includes('curly') && !hStyle.includes('buzz') && !hStyle.includes('wolf'))) {
-        hairBack = `<path d="M122 166 C104 220, 118 275, 112 330 C108 365, 124 385, 142 396 L258 396 C276 385, 292 365, 288 330 C282 275, 296 220, 278 166 C268 106, 132 106, 122 166 Z" fill="${hairColor}"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M131 182 C130 112, 270 112, 269 182 C250 150, 216 145, 200 158 C182 145, 148 150, 131 182 Z" fill="${hairColor}"/>
-          <path d="M132 174 C122 225, 134 275, 128 330 C138 300, 144 240, 148 174 Z" fill="${hairColor}"/>
-          <path d="M268 174 C278 225, 266 275, 272 330 C262 300, 256 240, 252 174 Z" fill="${hairColor}"/>`;
+        hairBack = `<path d="M128 168 L120 390 L280 390 L272 168 C266 108, 134 108, 128 168 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M132 182 C132 114, 268 114, 268 182 C248 142, 214 136, 200 150 C178 136, 148 146, 132 182 Z" fill="${hairColor}"/>`;
+      } else if (hStyle.includes('long_wavy') || (isFemale && !hStyle.includes('short') && !hStyle.includes('slick') && !hStyle.includes('side_part') && !hStyle.includes('curly') && !hStyle.includes('buzz'))) {
+        hairBack = `<path d="M124 166 C106 248, 114 345, 140 392 L260 392 C286 345, 294 248, 276 166 C268 106, 132 106, 124 166 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M132 182 C130 112, 270 112, 268 182 C250 142, 216 135, 198 152 C174 135, 146 148, 132 182 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('wolf_cut')) {
-        hairBack = `<path d="M128 174 C116 226, 124 278, 144 312 L162 296 L180 314 L220 314 L238 296 L256 312 C276 278, 284 226, 272 174 Z" fill="${hairColor}"/>`;
-        hairTop = `${fullCrownBase}
-          <path d="M132 182 C130 108, 270 108, 268 182 C252 152, 224 148, 204 166 L194 152 L176 168 C158 152, 142 158, 132 182 Z" fill="${hairColor}"/>`;
+        hairBack = `<path d="M130 174 C122 228, 128 278, 146 305 L254 305 C272 278, 278 228, 270 174 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 180 C132 110, 268 110, 266 180 C246 138, 216 132, 200 148 C178 132, 150 142, 134 180 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('side_part')) {
-        hairTop = `${fullCrownBase}
-          <path d="M134 176 C130 104, 270 104, 266 176 C252 148, 222 148, 186 168 L178 144 C162 150, 144 156, 134 176 Z" fill="${hairColor}"/>
-          <path d="M135 162 Q145 178 147 194 L137 190 Z" fill="${hairColor}"/>
-          <path d="M265 162 Q255 178 253 194 L263 190 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M136 174 C132 102, 268 102, 264 174 C248 136, 218 134, 186 154 C166 138, 148 144, 136 174 Z" fill="${hairColor}"/>
+                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
+                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
       } else if (hStyle.includes('curly')) {
-        hairTop = `${fullCrownBase}
-          <circle cx="146" cy="146" r="17" fill="${hairColor}"/><circle cx="168" cy="132" r="20" fill="${hairColor}"/>
-          <circle cx="198" cy="128" r="22" fill="${hairColor}"/><circle cx="228" cy="132" r="20" fill="${hairColor}"/>
-          <circle cx="252" cy="146" r="17" fill="${hairColor}"/>
-          <circle cx="162" cy="154" r="14" fill="${hairColor}"/><circle cx="192" cy="156" r="15" fill="${hairColor}"/>
-          <circle cx="222" cy="155" r="15" fill="${hairColor}"/><circle cx="244" cy="156" r="13" fill="${hairColor}"/>
-          <path d="M135 164 Q145 180 147 194 L137 190 Z" fill="${hairColor}"/>
-          <path d="M265 164 Q255 180 253 194 L263 190 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M134 176 C126 112, 165 98, 200 104 C235 98, 274 112, 266 176 C248 140, 220 136, 200 144 C180 136, 152 140, 134 176 Z" fill="${hairColor}"/>
+                   <circle cx="152" cy="128" r="16" fill="${hairColor}"/><circle cx="184" cy="118" r="18" fill="${hairColor}"/><circle cx="218" cy="118" r="18" fill="${hairColor}"/><circle cx="248" cy="128" r="16" fill="${hairColor}"/>`;
       } else if (hStyle.includes('buzz')) {
-        hairTop = `<path d="M137 176 C136 116, 264 116, 263 176 C246 150, 222 146, 200 146 C178 146, 154 150, 137 176 Z" fill="${hairColor}" opacity="0.92"/>`;
+        hairTop = `<path d="M138 174 C138 114, 262 114, 262 174 C244 142, 220 136, 200 136 C180 136, 156 142, 138 174 Z" fill="${hairColor}" opacity="0.88"/>`;
       } else if (hStyle.includes('slick')) {
-        hairTop = `${fullCrownBase}
-          <path d="M135 176 C130 98, 270 98, 265 176 C250 142, 224 136, 200 138 C176 136, 150 142, 135 176 Z" fill="${hairColor}"/>
-          <path d="M162 126 Q200 116 238 126" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M135 162 Q145 178 147 194 L137 190 Z" fill="${hairColor}"/>
-          <path d="M265 162 Q255 178 253 194 L263 190 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M136 174 C132 98, 268 98, 264 174 C248 134, 222 126, 200 128 C178 126, 152 134, 136 174 Z" fill="${hairColor}"/>
+                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
+                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
       } else {
-        hairTop = `${fullCrownBase}
-          <path d="M136 176 C132 106, 268 106, 264 176 C248 148, 222 146, 200 156 C176 146, 150 148, 136 176 Z" fill="${hairColor}"/>
-          <path d="M136 164 Q145 178 147 192 L137 188 Z" fill="${hairColor}"/>
-          <path d="M264 164 Q255 178 253 192 L263 188 Z" fill="${hairColor}"/>`;
+        hairTop = `<path d="M136 174 C132 104, 268 104, 264 174 C248 138, 222 132, 200 138 C176 132, 148 140, 136 174 Z" fill="${hairColor}"/>
+                   <path d="M135 162 Q146 178 148 194 L137 190 Z" fill="${hairColor}"/>
+                   <path d="M265 162 Q254 178 252 194 L263 190 Z" fill="${hairColor}"/>`;
       }
 
       let accSvg = '';
@@ -1789,11 +1744,32 @@
       return ['18+', 'chuyện ấy', 'làm tình', 'quan hệ', 'ngủ cùng', 'qua đêm', 'lên giường', 'hôn sâu', 'vuốt ve', 'cởi', 'nhạy cảm', 'dâm', 'nứng', 'sướng', 'địt', 'chịch', 'xoạc', 'mơn trớn'].some(k => low.includes(k));
     }
 
+    // Điều kiện kích hoạt chế độ 18+ (siết chặt)
+    //  - Cả người chơi và nhân vật phải đủ 18 tuổi; nhân vật isUnderage không bao giờ mở được.
+    //  - Người chơi phải xác nhận mình đủ 18 tuổi (1 lần, lưu lại).
+    //  - Ngưỡng tình cảm/tin tưởng cao hơn, người nghiêm túc còn cần ít nhất 1 buổi hẹn ngoài đời.
+    //  - Địa điểm Khách sạn KHÔNG còn tự mở 18+, vẫn phải đạt điều kiện bên dưới.
+    function getAdultUnlockRequirement(char) {
+      if (char.isScammer) return { aff: 40, trust: 0, dates: 0, label: 'Tình cảm ≥ 40%' };
+      if (char.archetype === 'casual_short') return { aff: 50, trust: 30, dates: 0, label: 'Tình cảm ≥ 50% và Tin tưởng ≥ 30%' };
+      if (['genuine_love', 'genuine_strict', 'single_parent', 'creator_special'].includes(char.archetype))
+        return { aff: 80, trust: 70, dates: 1, label: 'Tình cảm ≥ 80%, Tin tưởng ≥ 70% và đã hẹn hò ngoài đời ít nhất 1 lần' };
+      return { aff: 65, trust: 45, dates: 0, label: 'Tình cảm ≥ 65% và Tin tưởng ≥ 45%' };
+    }
+
     function canUnlockAdultMode(char, cs) {
-      if (char.isScammer || char.archetype === 'casual_short' || cs.inHotelDatingTime) return true;
-      const isSerious = ['genuine_love', 'genuine_strict', 'single_parent', 'creator_special'].includes(char.archetype);
-      if (isSerious) return cs.affection >= 70 && cs.trust >= 60;
-      return cs.affection >= 45;
+      if (char.isUnderage || (Number(char.age) || 0) < 18) return false;
+      if ((Number(state.player.age) || 0) < 18) return false;
+      const r = getAdultUnlockRequirement(char);
+      return cs.affection >= r.aff && cs.trust >= r.trust && (cs.datesCount || 0) >= r.dates;
+    }
+
+    function confirmPlayerAdult() {
+      if (state.player.adultConfirmed) return true;
+      if ((Number(state.player.age) || 0) < 18) return false;
+      const ok = window.confirm('🔞 Chế độ 18+ chứa nội dung dành cho người trưởng thành.\n\nBạn xác nhận mình đã đủ 18 tuổi và muốn bật chế độ này?');
+      if (ok) { state.player.adultConfirmed = true; saveState(); }
+      return ok;
     }
 
     function exitAdultChatMode() {
@@ -1801,6 +1777,7 @@
       if (!cs) return;
       cs.adultChatUnlocked = false;
       cs.inHotelDatingTime = false;
+      cs.dynamicSuggestedChoices = null;
       cs.messages.push({ sender: 'system', text: '🚪 Bạn đã thoát Chế độ 18+ và quay lại cuộc trò chuyện bình thường.' });
       saveState(); renderMessagesView();
       showToast('Đã thoát Chế độ 18+ về chế độ bình thường.', 'info');
@@ -1825,7 +1802,7 @@
         ];
       }
 
-      if (cs.adultChatUnlocked) {
+      if (cs.adultChatUnlocked && !char.isUnderage) {
         return [
           { label: `🔥 “Nghe ${char.name} nói mà người mình nóng ran lên rồi... lại gần ôm chặt nhau đi 🔞”`, playerText: `Nghe ${char.name} nói mà mình nứng và nóng hết cả người rồi... muốn ôm chặt lấy bạn và vuốt ve khắp cơ thể ngay lúc này 🔥`, aff: 10, tru: 4 },
           { label: `💋 “Đêm nay chỉ có hai đứa mình thôi, để mình hôn sâu và chiều chuộng bạn tới sáng nha 🔥”`, playerText: `Đêm nay riêng tư chỉ có hai đứa mình thôi, mình muốn hôn ngấu nghiến và làm tình cùng ${char.name} thật cuồng nhiệt 💋🔞`, aff: 12, tru: 4 },
@@ -1833,28 +1810,191 @@
         ];
       }
 
-      const lastPartner = [...cs.messages].reverse().find(m => m.sender === 'them');
-      const pLow = (lastPartner?.text || '').toLowerCase();
-      if (pLow.includes('công việc') || pLow.includes(state.player.job.toLowerCase())) {
-        return [
-          { label: `“Công việc ${state.player.job} của mình khá cuốn, cuối tuần mình hay đi ${state.player.hobbies[0].toLowerCase()}.”`, playerText: `Công việc ${state.player.job} của mình khá cuốn nhưng cũng hay bận, cuối tuần mình thường đi ${state.player.hobbies[0].toLowerCase()}. Còn ${char.name} thì sao?`, aff: 9, tru: 8 },
-          { label: `“Nghe lịch làm ${char.job} của ${char.name} bận phết, bạn thường xả stress kiểu gì?”`, playerText: `Làm ${char.job} chắc nhiều áp lực lắm nhỉ, lúc rảnh ${char.name} thường làm gì để thư giãn?`, aff: 8, tru: 8 },
-          { label: `“Cuối tuần này rảnh thì tụi mình hẹn ra quán cà phê trò chuyện trực tiếp nhé 📅!”`, playerText: `Cuối tuần này tụi mình hẹn gặp nhau ngoài đời uống nước trò chuyện cho tự nhiên nhé ${char.name}!`, action: "date" }
-        ];
-      }
+      return getOfflineSuggestionsByPhase(char, cs);
+    }
 
+    // =====================================================================
+    // GỢI Ý TIN NHẮN THEO GIAI ĐOẠN (Chào hỏi -> Làm quen -> Được rủ đi chơi) + GEMINI
+    // =====================================================================
+    // Số tin nhắn người chơi phải gửi trong giai đoạn chào hỏi trước khi được rủ đi chơi.
+    const GREETING_PHASE_MSGS = 3;
+
+    function getPlayerMsgCount(cs) { return (cs.messages || []).filter(m => m.sender === 'me').length; }
+    function getChatSuggestPhase(cs) {
+      const n = getPlayerMsgCount(cs);
+      if (n === 0) return 'greeting';                  // vừa match: chỉ gợi ý lời chào
+      if (n < GREETING_PHASE_MSGS) return 'getting_to_know'; // vẫn đang chào hỏi, chưa được rủ đi chơi
+      return 'open';                                   // hết giai đoạn chào hỏi: có thể rủ đi chơi
+    }
+    function canInviteToDate(cs) { return getChatSuggestPhase(cs) === 'open'; }
+
+    function tryOpenIRLDateModal() {
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      if (!canInviteToDate(cs)) {
+        const left = Math.max(1, GREETING_PHASE_MSGS - getPlayerMsgCount(cs));
+        showToast(`💬 Hãy trò chuyện thêm ~${left} tin nhắn nữa rồi hẵng rủ ${char.name} đi chơi nhé!`, 'warn');
+        return;
+      }
+      openIRLDateModal();
+    }
+
+    function pickRandom(arr, n) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a.slice(0, n);
+    }
+
+    function getOfflineSuggestionsByPhase(char, cs) {
+      const phase = getChatSuggestPhase(cs);
+      const pn = state.player.name, cn = char.name, per = getSimTimeInfo().period;
+      const hello = per === 'Sáng' ? 'Chào buổi sáng' : (per === 'Trưa' ? 'Chào buổi trưa' : (per === 'Chiều' ? 'Chào buổi chiều' : 'Chào buổi tối'));
+      const mk = (text, aff, tru, extra) => Object.assign({ label: text, playerText: text, aff, tru }, extra || {});
+
+      if (phase === 'greeting') {
+        return pickRandom([
+          mk(`${hello} ${cn}! Mình là ${pn}, rất vui được match với bạn 😊`, 8, 6),
+          mk(`Hi ${cn}! Mình thích ảnh đầu tiên của bạn lắm, nhìn rất tự nhiên 😄`, 9, 4),
+          mk(`Chào ${cn}, cuối cùng cũng match rồi! Hôm nay của bạn thế nào?`, 8, 7),
+          mk(`Xin chào ${cn} 👋 Mình tò mò về sở thích ${char.hobbies[0]} của bạn, kể mình nghe với!`, 9, 7),
+          mk(`Hello ${cn}, mình ${pn}. Làm quen nhé, hy vọng mình không làm phiền bạn 🙌`, 7, 8),
+          mk(`${hello}! Thấy bio của ${cn} dễ thương ghê, mình nhắn chào một câu thôi 😉`, 8, 5)
+        ], 4);
+      }
+      if (phase === 'getting_to_know') {
+        const pool = [
+          mk(`Nghe ${cn} làm ${char.job} chắc nhiều chuyện thú vị lắm, bạn kể mình nghe được không?`, 8, 8),
+          mk(`Mình rất quý sự thẳng thắn của ${cn}, kể thêm về sở thích ${char.hobbies[0]} của bạn đi 😊`, 9, 8),
+          mk(`Cuối tuần ${cn} thường làm gì để thư giãn vậy?`, 7, 7),
+          mk(`Mình thì mê ${(state.player.hobbies && state.player.hobbies[0] ? state.player.hobbies[0] : 'cà phê').toLowerCase()}, còn bạn có sở thích nào "khó đỡ" không? 😄`, 8, 6),
+          mk(`Công việc ${state.player.job} của mình khá bận nhưng vui, còn ${cn} thấy việc của mình thế nào?`, 7, 8),
+          mk(`Trò chuyện với ${cn} thoải mái thật đấy, bạn là người thích nói chuyện hay thích nghe hơn? 😊`, 8, 7)
+        ];
+        return pickRandom(pool, 4);
+      }
+      // phase === 'open': đã qua giai đoạn chào hỏi -> được phép rủ đi chơi / gọi video
       return [
-        { label: `“Mình rất quý sự thẳng thắn của ${char.name}, kể thêm về sở thích của bạn đi 😊”`, playerText: `Nói chuyện với ${char.name} thấy thoải mái thật sự! Kể thêm cho mình nghe về sở thích ${char.hobbies[0]} của bạn đi 😊`, aff: 9, tru: 8 },
-        { label: `“Bật Video Call 1 phút nhìn mặt nhau ngoài đời cho tự nhiên nhé ${char.name}?”`, playerText: `Nhắn tin mãi cũng nhớ, tụi mình gọi Video Call 1 phút chào nhau nhé ${char.name}!`, action: "video" },
-        { label: `“Tụi mình lên lịch đi hẹn hò ngoài đời một buổi nhé 📅!”`, playerText: `Trò chuyện qua màn hình không bằng gặp trực tiếp, mình hẹn đi chơi ngoài đời nhé ${char.name}!`, action: "date" }
+        mk(`Nói chuyện với ${cn} thấy thoải mái thật! Kể mình nghe thêm về ${char.hobbies[0]} của bạn nhé 😊`, 9, 8),
+        mk(`Tụi mình bật Video Call 1 phút chào nhau cho tự nhiên nhé ${cn}?`, 0, 0, { action: 'video' }),
+        mk(`Mình muốn hẹn ${cn} đi cà phê một buổi, bạn thấy sao? 📅`, 0, 0, { action: 'date' })
       ];
+    }
+
+    // --- Gemini: sinh gợi ý tin nhắn linh hoạt theo ngữ cảnh ---
+    const aiChoicePending = {};
+    const aiChoiceFailed = {};
+
+    async function callGeminiSuggestionJSON(prompt) {
+      const useDirectKey = !!aiConfig.apiKey;
+      const endpoint = useDirectKey ? `https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent` : '/api/chat';
+      const headers = { 'Content-Type': 'application/json' };
+      if (useDirectKey) headers['x-goog-api-key'] = aiConfig.apiKey;
+      const resp = await fetch(endpoint, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 1.0, responseMimeType: 'application/json', maxOutputTokens: 700 }
+        })
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      return JSON.parse(raw.replace(/```json|```/gi, '').trim());
+    }
+
+    function buildSuggestionPrompt(char, cs, phase) {
+      const hist = (cs.messages || []).filter(m => m.sender !== 'system').slice(-14)
+        .map(m => `${m.sender === 'me' ? state.player.name : char.name}: ${m.text}`).join('\n');
+      const phaseRule = phase === 'greeting'
+        ? 'GIAI ĐOẠN: vừa MATCH, chưa ai nói gì từ phía người chơi. CHỈ gợi ý lời chào / tự giới thiệu nhẹ nhàng / khen hồ sơ / đáp lại lời chào của đối phương. TUYỆT ĐỐI KHÔNG rủ gặp mặt, không gọi video, không hỏi chuyện tiền bạc.'
+        : phase === 'getting_to_know'
+        ? 'GIAI ĐOẠN: đang CHÀO HỎI & LÀM QUEN. Gợi ý hỏi han sở thích, công việc, ngày hôm nay, chia sẻ về bản thân. TUYỆT ĐỐI KHÔNG rủ đi chơi, không rủ gặp mặt, không gọi video.'
+        : 'GIAI ĐOẠN: đã qua chào hỏi. Có thể tiếp tục tâm sự; được phép có TỐI ĐA 1 gợi ý rủ đi hẹn ngoài đời (intent "invite_date") và TỐI ĐA 1 gợi ý gọi video (intent "video") nếu hợp ngữ cảnh.';
+      return `Bạn là trợ lý gợi ý câu trả lời cho NGƯỜI CHƠI trên app hẹn hò HeartLink (game mô phỏng, tiếng Việt).
+Người chơi: ${state.player.name}, ${state.player.age}t, ${state.player.gender}, nghề ${state.player.job}, sở thích: ${(state.player.hobbies || []).join(', ') || 'chưa rõ'}.
+Đối phương: ${char.name}, ${char.age}t, ${char.gender}, nghề ${char.job}, ở ${char.location}. Sở thích: ${(char.hobbies || []).join(', ')}. Tính cách: ${(char.personality || []).join(', ')}. Giọng điệu: ${char.speechStyle || 'tự nhiên'}.
+Thời điểm trong game: ${getSimTimeInfo().period}. Quan hệ tuổi tác: ${getAgePronouns(char).ruleText}
+${phaseRule}
+Lịch sử chat:
+${hist || '(chưa có tin nhắn nào)'}
+Nhiệm vụ: viết 4 câu người chơi có thể gửi TIẾP THEO, phản hồi đúng nội dung tin nhắn mới nhất của đối phương, mỗi câu ngắn (tối đa 25 từ), tự nhiên như người thật, KHÁC NHAU rõ rệt về sắc thái (vui vẻ, chân thành, tò mò, hài hước). Xưng hô phù hợp chênh lệch tuổi. Không nội dung tình dục hay nhạy cảm, không nhắc chuyển tiền.
+Chỉ trả về JSON: {"suggestions":[{"text":"...","intent":"greet|ask|share|compliment|joke|invite_date|video"}]}`;
+    }
+
+    function normalizeAISuggestions(arr, phase) {
+      const dl = { greet: [7, 6], ask: [8, 8], share: [7, 8], compliment: [9, 5], joke: [8, 5], invite_date: [0, 0], video: [0, 0] };
+      return (arr || []).filter(s => s && typeof s.text === 'string' && s.text.trim())
+        .filter(s => phase === 'open' || !['invite_date', 'video'].includes(s.intent)) // chặn rủ đi chơi/video khi còn chào hỏi
+        .slice(0, 4).map(s => {
+          const text = s.text.trim(), d = dl[s.intent] || [7, 6];
+          const o = { label: text, playerText: text, aff: d[0], tru: d[1], ai: true };
+          if (s.intent === 'invite_date') o.action = 'date';
+          if (s.intent === 'video') o.action = 'video';
+          return o;
+        });
+    }
+
+    async function fetchAISuggestedChoices(char, cs, force) {
+      const key = `${char.id}:${cs.messages.length}`;
+      if (aiChoicePending[key]) return;
+      aiChoicePending[key] = true;
+      const tag = document.getElementById('choicesSourceTag');
+      if (tag) tag.textContent = '⏳ AI đang nghĩ...';
+      try {
+        const phase = getChatSuggestPhase(cs);
+        const json = await callGeminiSuggestionJSON(buildSuggestionPrompt(char, cs, phase));
+        const opts = normalizeAISuggestions(json && json.suggestions, phase);
+        if (opts.length >= 2) { cs.aiChoices = opts; cs.aiChoicesKey = cs.messages.length; saveState(); }
+        else { aiChoiceFailed[key] = true; if (tag) tag.textContent = '📋 Gợi ý mẫu'; }
+      } catch (e) {
+        aiChoiceFailed[key] = true;
+        if (tag) tag.textContent = '📋 Gợi ý mẫu (AI lỗi)';
+      } finally {
+        delete aiChoicePending[key];
+        // chỉ vẽ lại nếu vẫn đang ở đúng cuộc chat và chưa có tin nhắn mới
+        if (state.activeChatCharId === char.id && cs.messages.length === (cs.aiChoicesKey ?? -1)) renderChoicesBox(char, cs);
+      }
+    }
+
+    function renderChoicesBox(char, cs) {
+      const cBox = document.getElementById('chatChoicesContainer');
+      const tag = document.getElementById('choicesSourceTag');
+      if (!cBox) return;
+      const special = cs.blocked || cs.adultChatUnlocked || (char.isScammer && cs.activeScamOfferStage > 0 && !cs.inDatingTime);
+      let opts, usingAI = false;
+      if (!special && hasLiveGemini() && cs.aiChoices && cs.aiChoicesKey === cs.messages.length) {
+        opts = cs.aiChoices; usingAI = true;
+      } else {
+        opts = getDialogueOptionsForStage(char, cs);
+        const failed = aiChoiceFailed[`${char.id}:${cs.messages.length}`];
+        if (!special && hasLiveGemini() && !failed) fetchAISuggestedChoices(char, cs); // sẽ vẽ lại khi AI trả về
+      }
+      if (tag) tag.textContent = special ? '' : (usingAI ? '✨ Gemini AI' : (hasLiveGemini() && !aiChoiceFailed[`${char.id}:${cs.messages.length}`] ? '⏳ AI đang nghĩ...' : '📋 Gợi ý mẫu'));
+      cBox.innerHTML = '';
+      opts.forEach(opt => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = 'w-full px-3 py-2 rounded-xl bg-slate-900 hover:bg-pink-500/20 border border-slate-700 text-left text-xs text-slate-100';
+        b.textContent = opt.label;
+        b.onclick = () => selectDialogueBranch(opt);
+        cBox.appendChild(b);
+      });
     }
 
     function analyzePlayerFreeTextIntent(text, char, cs) {
       const low = text.toLowerCase();
       let reply = "", affDelta = 7, trustDelta = 6;
 
+      if (char.isUnderage && detectPlayerAdultTopic(text)) {
+        cs.adultChatUnlocked = false;
+        cs.inHotelDatingTime = false;
+        cs.messages.push({ sender: 'system', text: '⚠️ Hồ sơ này có dấu hiệu CHƯA ĐỦ 18 TUỔI (đi học, bị mẹ thu điện thoại). Nội dung tình dục/18+ bị chặn hoàn toàn. Hãy dừng trò chuyện và báo cáo tài khoản.' });
+        return { reply: `Á... mình mới học lớp 11 thôi, mình không nói mấy chuyện đó đâu. Mình xin lỗi vì đã khai gian tuổi 😢 Bạn đừng nhắn kiểu này nữa nha.`, affDelta: -20, trustDelta: -10 };
+      }
+
       if (detectPlayerAdultTopic(text) || cs.adultChatUnlocked) {
+        if (!cs.adultChatUnlocked && canUnlockAdultMode(char, cs) && !confirmPlayerAdult()) {
+          return { reply: applyDialectFlavor(char, `Ừm, vậy mình tiếp tục trò chuyện bình thường nhé ${state.player.name} 😊`), affDelta: 0, trustDelta: 0 };
+        }
         if (canUnlockAdultMode(char, cs) || cs.adultChatUnlocked) {
           cs.adultChatUnlocked = true;
           affDelta = 12; trustDelta = 4;
@@ -1867,6 +2007,7 @@
         } else {
           affDelta = -12; trustDelta = -14;
           reply = `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`;
+          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
         }
         return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
       }
@@ -1900,9 +2041,9 @@
       const prompt = `Nhập vai nhân vật ${char.name} (${char.age}t, ${char.gender}, ${char.job}, ${char.location}) trên app hẹn hò HeartLink.
 Tính cách: ${char.personality.join(', ')}. Quan điểm: ${char.loveView}. Giọng điệu: ${char.speechStyle || 'tự nhiên'}. Xưng hô: ${getAgePronouns(char).ruleText}.
 ${char.isScammer ? `Bí mật: bạn đang thực hiện kịch bản ${char.scamType}.` : 'Bạn là người dùng thật.'}
-${cs.adultChatUnlocked ? 'Chế độ 18+ đang mở: hãy nói chuyện gợi cảm, táo bạo, có thể dùng từ nhạy cảm Dirty Talk tự nhiên.' : 'Chế độ bình thường: nói chuyện lịch sự, duyên dáng.'}
+${char.isUnderage ? 'QUY TẮC BẮT BUỘC: nhân vật này là học sinh CHƯA ĐỦ 18 TUỔI. Tuyệt đối không nói chuyện tình dục, gợi dục hay tiếp xúc thân mật; nếu người chơi gợi ý, hãy từ chối rõ ràng và nhắc mình còn đi học.' : cs.adultChatUnlocked ? 'Chế độ 18+ đang mở: hãy nói chuyện gợi cảm, táo bạo, có thể dùng từ nhạy cảm Dirty Talk tự nhiên.' : 'Chế độ bình thường: nói chuyện lịch sự, duyên dáng.'}
 Lịch sử chat:\n${historySnippet}\nTin nhắn mới của ${state.player.name}: "${playerText}"
-Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trustDelta":5}`;
+Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trustDelta":5,"suggestions":["gợi ý 1 cho người chơi","gợi ý 2","gợi ý 3"]}`;
 
       try {
         const useDirectKey = !!aiConfig.apiKey;
@@ -1963,7 +2104,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       if (typingEl) typingEl.classList.remove('hidden');
 
       let finalReply = null, affD = 6, truD = 6;
-      if (hasLiveGemini()) {
+      if (hasLiveGemini() && !(char.isUnderage && detectPlayerAdultTopic(text))) {
         const llm = await callLiveGeminiAPIForChat(text, char, cs);
         if (llm && llm.reply) {
           finalReply = llm.reply;
@@ -1990,12 +2131,16 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       if (opt.action === 'blocked') return;
       if (opt.action === 'report') { openReportForActiveChar(); return; }
       if (opt.action === 'video') { triggerChatVideoCall(); return; }
-      if (opt.action === 'date') { openIRLDateModal(); return; }
+      if (opt.action === 'date') { tryOpenIRLDateModal(); return; }
 
       const char = getCharById(state.activeChatCharId);
       const cs = char ? state.charStates[char.id] : null;
       if (!char || !cs || cs.blocked) return;
       const text = opt.playerText || opt.label;
+      if (opt.ai) { // gợi ý do Gemini sinh: gửi qua luồng chat AI để câu trả lời liền mạch
+        const inp = document.getElementById('inpFreeChatMessage');
+        if (inp) { inp.value = text; await sendFreeTextAIChat(); return; }
+      }
       playSfx('msg');
       cs.chatted = true;
       cs.messages.push({ sender: 'me', text, time: getSimTimeInfo().fullLabel });
@@ -2007,8 +2152,10 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
     }
 
     function regenerateAIChoicesForActiveChat() {
+      const char = getCharById(state.activeChatCharId), cs = char ? state.charStates[char.id] : null;
+      if (cs) { cs.aiChoices = null; cs.aiChoicesKey = null; delete aiChoiceFailed[`${char.id}:${cs.messages.length}`]; }
       renderActiveChatRoom();
-      showToast('🔄 Đã làm mới gợi ý câu trả lời!', 'info');
+      showToast(hasLiveGemini() ? '🔄 Đang nhờ Gemini gợi ý câu mới...' : '🔄 Đã làm mới gợi ý câu trả lời!', 'info');
     }
 
     function renderMessagesView() {
@@ -2058,6 +2205,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
 
       document.getElementById('chatIntuitionBar').classList.toggle('hidden', !!state.realismMode);
       document.getElementById('chatRelationshipStageBar').classList.toggle('hidden', !!state.realismMode);
+      if (cs.adultChatUnlocked && (char.isUnderage || !state.player.adultConfirmed || !canUnlockAdultMode(char, cs))) { cs.adultChatUnlocked = false; cs.inHotelDatingTime = false; }
       document.getElementById('badge18PlusMode').classList.toggle('hidden', !cs.adultChatUnlocked);
       document.getElementById('activeChatWrapper').classList.toggle('adult-mode-active', !!cs.adultChatUnlocked);
       document.getElementById('chatDatingTimeBanner').classList.toggle('hidden', !cs.inDatingTime);
@@ -2096,15 +2244,9 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
         document.getElementById('scamBannerDesc').textContent = st1 ? char.scamOffer.stage1Desc : char.scamOffer.stage2Desc;
       } else banner.classList.add('hidden');
 
-      const cBox = document.getElementById('chatChoicesContainer');
-      cBox.innerHTML = '';
-      getDialogueOptionsForStage(char, cs).forEach(opt => {
-        const b = document.createElement('button'); b.type = 'button';
-        b.className = 'w-full px-3 py-2 rounded-xl bg-slate-900 hover:bg-pink-500/20 border border-slate-700 text-left text-xs text-slate-100';
-        b.textContent = opt.label;
-        b.onclick = () => selectDialogueBranch(opt);
-        cBox.appendChild(b);
-      });
+      const phaseBadge = document.getElementById('relPhaseBadge');
+      if (phaseBadge) phaseBadge.textContent = getChatSuggestPhase(cs) === 'open' ? 'Giai đoạn: Làm quen' : 'Giai đoạn: Chào hỏi';
+      renderChoicesBox(char, cs);
     }
 
     function respondToScamFinancialOffer(accepted) {
@@ -2179,11 +2321,28 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
 
     function startDatingTimeSession(char, cs, venue) {
       closeIRLDateModal();
+      if (char.isUnderage) {
+        cs.messages.push({ sender: 'system', text: '⚠️ Đối phương có dấu hiệu chưa đủ 18 tuổi nên buổi hẹn bị hủy. Hãy báo cáo tài khoản này.' });
+        cs.messages.push({ sender: 'them', text: 'Mình phải đi học và không được ra ngoài gặp người lạ đâu, xin lỗi bạn nha 😢' });
+        cs.affection = Math.max(0, cs.affection - 15);
+        saveState(); navToScreen('messages');
+        return;
+      }
+      if (venue.id === 'hotel' && !canUnlockAdultMode(char, cs)) {
+        cs.messages.push({ sender: 'system', text: `🔒 Chưa thể hẹn ở khách sạn: ${getAdultUnlockRequirement(char).label}.` });
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Mình chưa thấy thoải mái khi hẹn ở khách sạn đâu, mình chọn chỗ công cộng nha.`) });
+        cs.affection = Math.max(0, cs.affection - 10);
+        saveState(); navToScreen('messages');
+        return;
+      }
       currentActiveDateVenue = venue;
       cs.datesCount = (cs.datesCount || 0) + 1;
       cs.inDatingTime = true;
       cs.inHotelDatingTime = (venue.id === 'hotel');
-      if (cs.inHotelDatingTime) cs.adultChatUnlocked = true;
+      if (cs.inHotelDatingTime) {
+        if (confirmPlayerAdult()) cs.adultChatUnlocked = true;
+        else { cs.inHotelDatingTime = false; cs.adultChatUnlocked = false; }
+      }
       cs.datingTimeVenue = venue;
       cs.messages.push({ sender: 'system', text: `🕯️ BẮT ĐẦU DATING TIME tại ${venue.icon} ${venue.name}!` });
       cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Gặp ${state.player.name} ở ${venue.name} vui ghê! Tụi mình gọi món rồi trò chuyện nha 😊`) });
@@ -2193,6 +2352,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
     function performDatingPhysicalAction(act) {
       const char = getCharById(state.activeChatCharId), cs = state.charStates[char.id];
       if (!char || !cs) return;
+      if (char.isUnderage) { showToast('Hành động bị chặn: đối phương chưa đủ 18 tuổi.', 'warn'); return; }
       const labels = {
         hug: `[Hành động] Bạn ôm lấy ${char.name} thật ấm áp 🤗`,
         kiss: `[Hành động] Bạn nhẹ nhàng hôn lên má/môi ${char.name} 💋`,
