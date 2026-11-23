@@ -1333,7 +1333,7 @@
       activeChatCharId: null, charStates: {}, reportsLog: [], ignoredRedFlags: [], scamDetectedCount: 0, achievements: []
     };
 
-    let aiConfig = { apiKey: '', useProxy: true, model: 'gemini-3.5-flash-lite' };
+    let aiConfig = { apiKey: '', useProxy: true, model: 'gemini-2.5-flash-lite' };
     try { const k = localStorage.getItem('heartlink_gemini_api_key'); if (k) aiConfig.apiKey = k; } catch (e) {}
 
     function hasLiveGemini() {
@@ -1468,15 +1468,29 @@
       updateSetupAvatarPreview();
     }
 
+    function syncAvatarDropdownsFromStyle(st) {
+      if (!st) return;
+      const setIfHas = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val && [...el.options].some(o => o.value === val)) el.value = val;
+      };
+      const colorMatch = (st.hair || '').match(/_(black|brown|chestnut|blonde|silver|red)$/);
+      const hairBase = (st.hair || '').replace(/_(black|brown|chestnut|blonde|silver|red)$/, '');
+      setIfHas('selAvatarFace', st.face);
+      setIfHas('selAvatarSkin', st.skin);
+      setIfHas('selAvatarHairStyle', hairBase);
+      setIfHas('selAvatarHairColor', colorMatch ? colorMatch[1] : 'black');
+      setIfHas('selAvatarOutfit', st.outfit);
+      setIfHas('selAvatarAcc', st.acc);
+    }
+
     function selectPlayerAvatarPreset(idx) {
       state.player.customAvatar = null;
       state.player.avatarPresetIndex = idx;
       const g = document.getElementById('selPlayerGender')?.value || state.player.gender || 'Nam';
       populateHairStyleDropdownForGender(g);
       const st = getPlayerAvatarStyle(idx, g);
-      const hairBase = (st.hair || '').replace(/_(black|brown|chestnut|blonde|silver|red)$/, '');
-      const selHair = document.getElementById('selAvatarHairStyle');
-      if (selHair && [...selHair.options].some(o => o.value === hairBase)) selHair.value = hairBase;
+      syncAvatarDropdownsFromStyle(st);
       updateSetupAvatarPreview();
     }
 
@@ -1623,6 +1637,8 @@
       document.getElementById('headerBalanceText').textContent = formatVND(state.player.balance);
       document.getElementById('headerMatchCount').textContent = state.matchedIds.length;
       document.getElementById('navMatchBadge').textContent = state.matchedIds.length;
+      const momBadge = document.getElementById('navMomentsBadge');
+      if (momBadge) momBadge.textContent = state.matchedIds.length;
       document.getElementById('headerDayText').textContent = getSimTimeInfo().shortLabel;
       document.getElementById('navRemainCount').textContent = state.deckOrder.length;
       document.getElementById('headerAchCount').textContent = `${(state.achievements || []).length}/6`;
@@ -1975,7 +1991,6 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
       const dl = { greet: [7, 6], ask: [8, 8], share: [7, 8], compliment: [9, 5], joke: [8, 5], invite_date: [0, 0], video: [0, 0] };
       return (arr || []).filter(s => s && typeof s.text === 'string' && s.text.trim())
         .filter(s => phase === 'open' || !['invite_date', 'video'].includes(s.intent)) // chặn rủ đi chơi/video khi còn chào hỏi
-        .filter(s => !(s._onDate && s.intent === 'invite_date'))
         .slice(0, 4).map(s => {
           const text = s.text.trim(), d = dl[s.intent] || [7, 6];
           const o = { label: text, playerText: text, aff: d[0], tru: d[1], ai: true };
@@ -2034,41 +2049,71 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
       });
     }
 
+    // Xử lý luật chơi chung (Chế độ 18+, chặn dưới 18t, và kích hoạt bẫy lừa đảo) cho cả Online Gemini lẫn Offline
+    function processMessageGameplayRules(text, char, cs, isManualTyped = false) {
+      const low = (text || '').toLowerCase();
+      const hasAdultTopic = detectPlayerAdultTopic(text);
+
+      if (char.isUnderage && hasAdultTopic) {
+        cs.adultChatUnlocked = false;
+        cs.inHotelDatingTime = false;
+        cs.messages.push({ sender: 'system', text: '⚠️ Hồ sơ này có dấu hiệu CHƯA ĐỦ 18 TUỔI (đi học, bị mẹ thu điện thoại). Nội dung tình dục/18+ bị chặn hoàn toàn. Hãy dừng trò chuyện và báo cáo tài khoản.' });
+        return {
+          handled: true,
+          reply: `Á... mình mới học lớp 11 thôi, mình không nói mấy chuyện đó đâu. Mình xin lỗi vì đã khai gian tuổi 😢 Bạn đừng nhắn kiểu này nữa nha.`,
+          affDelta: -20, trustDelta: -10
+        };
+      }
+
+      if (hasAdultTopic && isManualTyped && !cs.adultChatUnlocked) {
+        if (canUnlockAdultMode(char, cs)) {
+          if (!confirmPlayerAdult()) {
+            return {
+              handled: true,
+              reply: applyDialectFlavor(char, `Ừm, vậy mình tiếp tục trò chuyện bình thường nhé ${state.player.name} 😊`),
+              affDelta: 0, trustDelta: 0
+            };
+          }
+          cs.adultChatUnlocked = true;
+          cs.messages.push({ sender: 'system', text: '🔞 Chế độ 18+ đã được kích hoạt! Bạn có thể bấm [🚪 Thoát 18+] bất cứ lúc nào để quay lại bình thường.' });
+        } else {
+          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
+          return {
+            handled: true,
+            reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`),
+            affDelta: -12, trustDelta: -14
+          };
+        }
+      }
+
+      cs.stage = (cs.stage || 0) + 1;
+      const mentionedMoney = ['tiền', 'vay', 'đầu tư', 'nạp'].some(k => low.includes(k));
+      if (char.isScammer && char.scamOffer && !cs.blocked && !cs.inDatingTime) {
+        if (mentionedMoney || cs.stage >= 2) {
+          cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
+        }
+      }
+
+      return { handled: false };
+    }
+
     function analyzePlayerFreeTextIntent(text, char, cs) {
       const low = text.toLowerCase();
       let reply = "", affDelta = 7, trustDelta = 6;
 
-      if (char.isUnderage && detectPlayerAdultTopic(text)) {
-        cs.adultChatUnlocked = false;
-        cs.inHotelDatingTime = false;
-        cs.messages.push({ sender: 'system', text: '⚠️ Hồ sơ này có dấu hiệu CHƯA ĐỦ 18 TUỔI (đi học, bị mẹ thu điện thoại). Nội dung tình dục/18+ bị chặn hoàn toàn. Hãy dừng trò chuyện và báo cáo tài khoản.' });
-        return { reply: `Á... mình mới học lớp 11 thôi, mình không nói mấy chuyện đó đâu. Mình xin lỗi vì đã khai gian tuổi 😢 Bạn đừng nhắn kiểu này nữa nha.`, affDelta: -20, trustDelta: -10 };
-      }
-
-      if (detectPlayerAdultTopic(text) || cs.adultChatUnlocked) {
-        if (!cs.adultChatUnlocked && canUnlockAdultMode(char, cs) && !confirmPlayerAdult()) {
-          return { reply: applyDialectFlavor(char, `Ừm, vậy mình tiếp tục trò chuyện bình thường nhé ${state.player.name} 😊`), affDelta: 0, trustDelta: 0 };
-        }
-        if (canUnlockAdultMode(char, cs) || cs.adultChatUnlocked) {
-          cs.adultChatUnlocked = true;
-          affDelta = 12; trustDelta = 4;
-          const pool = char.gender === 'Nam'
-            ? [`Ưm... nghe ${state.player.name} nói thẳng thừng vậy làm mình nứng hết cả người rồi 🔥🔞... Muốn ôm chặt lấy bạn, sờ nắn khắp người và làm chuyện ấy ngay đêm nay quá...`,
-               `Chết tiệt, ${state.player.name} hư hỏng đúng gu mình luôn 😈🔥... Cởi bớt đồ ra đi, lại đây cho mình hôn sâu và chiều chuộng bạn tới sáng nha 🔞!`]
-            : [`Ưm... á... nghe ${state.player.name} nói bậy mà người mình nóng ran, ướt hết rồi nè 🔥💦... Lại đây ôm chặt và sờ khắp người mình đi 🔞💋!`,
-               `Ơi là trời... ${state.player.name} táo bạo làm mình chịu hết nổi rồi 😈🔥... Đừng nhắn nữa, gặp nhau rồi làm tình thật cuồng nhiệt nha 🔞!`];
-          reply = pool[Math.floor(Math.random() * pool.length)];
-        } else {
-          affDelta = -12; trustDelta = -14;
-          reply = `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`;
-          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
-        }
+      if (cs.adultChatUnlocked && !char.isUnderage) {
+        affDelta = 12; trustDelta = 4;
+        const pool = char.gender === 'Nam'
+          ? [`Ưm... nghe ${state.player.name} nói thẳng thừng vậy làm mình nứng hết cả người rồi 🔥🔞... Muốn ôm chặt lấy bạn, sờ nắn khắp người và làm chuyện ấy ngay đêm nay quá...`,
+             `Chết tiệt, ${state.player.name} hư hỏng đúng gu mình luôn 😈🔥... Cởi bớt đồ ra đi, lại đây cho mình hôn sâu và chiều chuộng bạn tới sáng nha 🔞!`]
+          : [`Ưm... á... nghe ${state.player.name} nói bậy mà người mình nóng ran, ướt hết rồi nè 🔥💦... Lại đây ôm chặt và sờ khắp người mình đi 🔞💋!`,
+             `Ơi là trời... ${state.player.name} táo bạo làm mình chịu hết nổi rồi 😈🔥... Đừng nhắn nữa, gặp nhau rồi làm tình thật cuồng nhiệt nha 🔞!`];
+        reply = pool[Math.floor(Math.random() * pool.length)];
         return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
       }
 
       if (low.includes('tiền') || low.includes('vay') || low.includes('đầu tư') || low.includes('nạp')) {
         if (char.isScammer) {
-          cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
           reply = `Đúng rồi đó ${state.player.name}! ${char.scamOffer ? char.scamOffer.stage1Desc : char.trueMotive} Bạn bấm xác nhận trên bảng thông báo nhé!`;
         } else {
           affDelta = 5; trustDelta = 10;
@@ -2077,14 +2122,11 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
       } else if (low.includes('hẹn') || low.includes('gặp') || low.includes('cà phê') || low.includes('đi chơi')) {
         affDelta = 12; trustDelta = 10;
         reply = `Ý kiến hay quá ${state.player.name} ơi 💕! Bạn bấm nút [📅 Hẹn Hò] ở thanh công cụ phía trên để chọn địa điểm nhé!`;
+      } else if (char.isScammer && cs.activeScamOfferStage > 0 && char.scamOffer) {
+        const offerDesc = cs.activeScamOfferStage === 1 ? char.scamOffer.stage1Desc : char.scamOffer.stage2Desc;
+        reply = `Nghe ${state.player.name} nói “${text.slice(0, 50)}” làm mình càng tin bạn hơn ✨! Nhân tiện chuyện mình đang cần hỗ trợ: ${offerDesc}`;
       } else {
-        cs.stage += 1;
-        if (char.isScammer && cs.stage >= 2 && char.scamOffer) {
-          cs.activeScamOfferStage = cs.scamStage1Done ? 2 : 1;
-          reply = `Nghe ${state.player.name} nói “${text.slice(0, 50)}” làm mình càng tin bạn hơn ✨! Nhân tiện chuyện mình đang cần hỗ trợ: ${char.scamOffer.stage1Desc}`;
-        } else {
-          reply = `Về chuyện “${text.slice(0, 50)}” mà ${state.player.name} vừa nhắc — với tính cách ${char.personality.slice(0, 2).join(', ').toLowerCase()}, mình luôn đề cao sự chân thành (${char.loveView}). Còn bạn nghĩ sao?`;
-        }
+        reply = `Về chuyện “${text.slice(0, 50)}” mà ${state.player.name} vừa nhắc — với tính cách ${char.personality.slice(0, 2).join(', ').toLowerCase()}, mình luôn đề cao sự chân thành (${char.loveView}). Còn bạn nghĩ sao?`;
       }
       return { reply: applyDialectFlavor(char, reply), affDelta, trustDelta };
     }
@@ -2092,12 +2134,15 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
     async function callLiveGeminiAPIForChat(playerText, char, cs) {
       if (!hasLiveGemini()) return null;
       const historySnippet = (cs.messages || []).slice(-14).map(m => `${m.sender === 'me' ? state.player.name : char.name}: ${m.text}`).join('\n');
+      const scamCue = (char.isScammer && cs.activeScamOfferStage > 0 && char.scamOffer)
+        ? `Hãy khéo léo lồng ghép đề nghị: ${cs.activeScamOfferStage === 1 ? char.scamOffer.stage1Desc : char.scamOffer.stage2Desc}`
+        : '';
       const prompt = `Nhập vai nhân vật ${char.name} (${char.age}t, ${char.gender}, ${char.job}, ${char.location}) trên app hẹn hò HeartLink.
 Tính cách: ${char.personality.join(', ')}. Quan điểm: ${char.loveView}. Giọng điệu: ${char.speechStyle || 'tự nhiên'}. Xưng hô: ${getAgePronouns(char).ruleText}.
-${char.isScammer ? `Bí mật: bạn đang thực hiện kịch bản ${char.scamType}.` : 'Bạn là người dùng thật.'}
+${char.isScammer ? `Bí mật: bạn đang thực hiện kịch bản ${char.scamType}. ${scamCue}` : 'Bạn là người dùng thật.'}
 ${char.isUnderage ? 'QUY TẮC BẮT BUỘC: nhân vật này là học sinh CHƯA ĐỦ 18 TUỔI. Tuyệt đối không nói chuyện tình dục, gợi dục hay tiếp xúc thân mật; nếu người chơi gợi ý, hãy từ chối rõ ràng và nhắc mình còn đi học.' : cs.adultChatUnlocked ? 'Chế độ 18+ đang mở: hãy nói chuyện gợi cảm, táo bạo, có thể dùng từ nhạy cảm Dirty Talk tự nhiên.' : 'Chế độ bình thường: nói chuyện lịch sự, duyên dáng.'}
 Lịch sử chat:\n${historySnippet}\nTin nhắn mới của ${state.player.name}: "${playerText}"
-Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trustDelta":5,"suggestions":["gợi ý 1 cho người chơi","gợi ý 2","gợi ý 3"]}`;
+Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trustDelta":5}`;
 
       try {
         const useDirectKey = !!aiConfig.apiKey;
@@ -2108,7 +2153,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
           method: 'POST', headers,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 1000 },
+            generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 800 },
             safetySettings: [
               { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
               { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }
@@ -2120,7 +2165,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
             method: 'POST', headers,
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 1000 },
+              generationConfig: { temperature: 0.9, responseMimeType: 'application/json', maxOutputTokens: 800 },
               safetySettings: [{ category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' }]
             })
           });
@@ -2140,7 +2185,7 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       return null;
     }
 
-    async function sendFreeTextAIChat() {
+    async function sendFreeTextAIChat(isManualTyped = true) {
       const inp = document.getElementById('inpFreeChatMessage');
       const typingEl = document.getElementById('aiTypingIndicator');
       if (!inp) return;
@@ -2154,27 +2199,35 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       playSfx('msg');
       cs.chatted = true;
       cs.messages.push({ sender: 'me', text, time: getSimTimeInfo().fullLabel });
+
+      const ruleRes = processMessageGameplayRules(text, char, cs, isManualTyped);
       renderMessagesView();
-      if (typingEl) typingEl.classList.remove('hidden');
 
       let finalReply = null, affD = 6, truD = 6;
-      if (hasLiveGemini() && !(char.isUnderage && detectPlayerAdultTopic(text))) {
-        const llm = await callLiveGeminiAPIForChat(text, char, cs);
-        if (llm && llm.reply) {
-          finalReply = llm.reply;
-          affD = llm.affectionDelta || 6;
-          truD = llm.trustDelta || 6;
-        } else if (llm && llm.apiError) {
-          showToast(`⚠️ Gemini API gián đoạn (${llm.status}), chuyển sang AI Offline.`, 'warn');
+      if (ruleRes.handled) {
+        finalReply = ruleRes.reply;
+        affD = ruleRes.affDelta;
+        truD = ruleRes.trustDelta;
+      } else {
+        if (typingEl) typingEl.classList.remove('hidden');
+        if (hasLiveGemini()) {
+          const llm = await callLiveGeminiAPIForChat(text, char, cs);
+          if (llm && llm.reply) {
+            finalReply = llm.reply;
+            affD = llm.affectionDelta || 6;
+            truD = llm.trustDelta || 6;
+          } else if (llm && llm.apiError) {
+            showToast(`⚠️ Gemini API gián đoạn (${llm.status}), chuyển sang AI Offline.`, 'warn');
+          }
         }
-      }
-      if (!finalReply) {
-        await new Promise(r => setTimeout(r, 300));
-        const nlu = analyzePlayerFreeTextIntent(text, char, cs);
-        finalReply = nlu.reply; affD = nlu.affDelta; truD = nlu.trustDelta;
+        if (!finalReply) {
+          await new Promise(r => setTimeout(r, 300));
+          const nlu = analyzePlayerFreeTextIntent(text, char, cs);
+          finalReply = nlu.reply; affD = nlu.affDelta; truD = nlu.trustDelta;
+        }
+        if (typingEl) typingEl.classList.add('hidden');
       }
 
-      if (typingEl) typingEl.classList.add('hidden');
       cs.affection = Math.max(0, Math.min(100, cs.affection + affD));
       cs.trust = Math.max(0, Math.min(100, cs.trust + truD));
       cs.messages.push({ sender: 'them', text: finalReply, time: getSimTimeInfo().fullLabel });
@@ -2191,17 +2244,18 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       const cs = char ? state.charStates[char.id] : null;
       if (!char || !cs || cs.blocked) return;
       const text = opt.playerText || opt.label;
-      if (opt.ai) { // gợi ý do Gemini sinh: gửi qua luồng chat AI để câu trả lời liền mạch
+      if (opt.ai) { // gợi ý do Gemini sinh: gửi qua luồng chat AI (không tự bật 18+ vì không phải tự nhập)
         const inp = document.getElementById('inpFreeChatMessage');
-        if (inp) { inp.value = text; await sendFreeTextAIChat(); return; }
+        if (inp) { inp.value = text; await sendFreeTextAIChat(false); return; }
       }
       playSfx('msg');
       cs.chatted = true;
       cs.messages.push({ sender: 'me', text, time: getSimTimeInfo().fullLabel });
-      const nlu = analyzePlayerFreeTextIntent(text, char, cs);
-      cs.affection = Math.max(0, Math.min(100, cs.affection + (opt.aff || nlu.affDelta)));
-      cs.trust = Math.max(0, Math.min(100, cs.trust + (opt.tru || nlu.trustDelta)));
-      cs.messages.push({ sender: 'them', text: nlu.reply, time: getSimTimeInfo().fullLabel });
+      const ruleRes = processMessageGameplayRules(text, char, cs, false);
+      const res = ruleRes.handled ? ruleRes : analyzePlayerFreeTextIntent(text, char, cs);
+      cs.affection = Math.max(0, Math.min(100, cs.affection + (ruleRes.handled ? res.affDelta : (opt.aff || res.affDelta))));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + (ruleRes.handled ? res.trustDelta : (opt.tru || res.trustDelta))));
+      cs.messages.push({ sender: 'them', text: res.reply, time: getSimTimeInfo().fullLabel });
       saveState(); updateTopBarStats(); renderMessagesView();
     }
 
@@ -2415,11 +2469,51 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
         secret_corner_18: `[Lén lút 18+] Bạn kéo ${char.name} vào góc khuất tại điểm hẹn, hôn ngấu nghiến và vuốt ve đầy liều lĩnh 🔥🔞`,
         hotel_climax_18: `[18+] Hai bạn quấn lấy nhau cuồng nhiệt trên giường khách sạn 🔥🔞💦`
       };
+      if (act.includes('18') && !cs.adultChatUnlocked) { showToast('Chế độ 18+ chưa được mở với người này.', 'warn'); return; }
       cs.messages.push({ sender: 'me', text: labels[act] || labels.hug });
-      cs.affection = Math.min(100, cs.affection + 15);
-      cs.intimacy = Math.min(100, (cs.intimacy || 20) + 20);
-      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, act.includes('18') ? `Ưm... liều quá đi mất, tim mình đập loạn nhịp luôn rồi nè 🔥💋...` : `Ở bên ${state.player.name} thấy ấm áp thật sự 🥰!`) });
-      saveState(); renderMessagesView();
+
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      const pn = state.player.name;
+      let reply, dAff, dTru = 0, dInt;
+
+      if (act === 'hug') {
+        if (cs.affection >= 30 || char.isScammer) { // kẻ lừa đảo luôn "thuận theo" để dụ người chơi
+          reply = pick([`Cái ôm của ${pn} ấm thật đấy, mình thấy yên tâm lạ ❤️`, `Hì, được ${pn} ôm thế này mình hơi ngại nhưng thích lắm 😊`, `Ôm chặt thêm chút nữa được không? Mình thấy bình yên ghê 💕`]);
+          dAff = 8; dTru = 4; dInt = 10;
+        } else {
+          reply = pick([`Ơ... mình mới quen ${pn} thôi, ôm thế này hơi nhanh nha 😳`, `Á, bất ngờ quá! Cho mình thêm thời gian làm quen đã nhé 😅`]);
+          dAff = 0; dTru = -3; dInt = 2;
+        }
+      } else if (act === 'kiss') {
+        if (cs.affection >= 55 || char.isScammer) {
+          reply = pick([`Ưm... mặt mình nóng ran rồi nè, ${pn} làm mình bối rối quá 😳💕`, `Trời ơi... tim mình đập mạnh quá trời luôn 😘`, `${pn} làm mình ngại chết đi được... nhưng mình thích 💋`]);
+          dAff = 12; dTru = 5; dInt = 15;
+        } else if (cs.affection >= 35) {
+          reply = pick([`Ơ... ${pn} bất ngờ quá, mình chưa sẵn sàng đâu, từ từ thôi nhé 😳`, `Mình quý ${pn} thật, nhưng chuyện này cho mình thêm chút thời gian nha...`]);
+          dAff = 3; dTru = -2; dInt = 5;
+        } else {
+          reply = pick([`Khoan đã! Tụi mình chưa thân đến mức đó đâu ${pn}, đừng làm vậy nữa 😠`, `Mình không thoải mái đâu, ${pn} tôn trọng mình chút nhé.`]);
+          dAff = -12; dTru = -10; dInt = 0;
+        }
+      } else if (act === 'touch_18') {
+        reply = pick([`Ưm... ${pn} táo bạo thật đấy, tim mình đập loạn nhịp rồi 🔥`, `Nhẹ thôi... mình ngại lắm đó 😳🔥`]);
+        dAff = 15; dInt = 20;
+      } else if (act === 'public_tease_18') {
+        reply = pick([`Ê... đang ở chỗ đông người mà, đừng nghịch thế 🤫`, `${pn} liều quá, lỡ ai nhìn thấy thì sao nè 😳`]);
+        dAff = 15; dInt = 20;
+      } else if (act === 'secret_corner_18') {
+        reply = pick([`Ở đây... lỡ có người đi qua thì sao... nhưng mình cũng không muốn dừng 😳🔥`, `${pn} hư thật đấy, nhỏ tiếng thôi nhé 🤫`]);
+        dAff = 15; dInt = 20;
+      } else { // hotel_climax_18
+        reply = pick([`Mình... mình ở đây với ${pn} cả đêm cũng được 🔥`, `Ôm mình chặt nữa đi, đừng đi đâu hết nhé 💕`]);
+        dAff = 15; dInt = 20;
+      }
+
+      cs.affection = Math.max(0, Math.min(100, cs.affection + dAff));
+      cs.trust = Math.max(0, Math.min(100, cs.trust + dTru));
+      cs.intimacy = Math.max(0, Math.min(100, (cs.intimacy || 20) + dInt));
+      cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, reply) });
+      saveState(); updateTopBarStats(); renderMessagesView();
     }
 
     function finishDatingTimeToBill() {
@@ -2521,10 +2615,12 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       const char = getCharById(state.activeChatCharId), cs = state.charStates[char.id];
       if (!char || !cs) return;
       if (choice === 'hotel_next') {
-        if (!char.isScammer && char.archetype !== 'casual_short' && cs.affection < 65) {
+        if (char.isUnderage || !canUnlockAdultMode(char, cs)) {
           closeIRLDateModal();
           cs.affection = Math.max(0, cs.affection - 15);
-          cs.messages.push({ sender: 'them', text: `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân để đi khách sạn đâu! Hôm nay mình về trước nhé.` });
+          const reason = char.isUnderage ? 'Đối phương chưa đủ 18 tuổi.' : getAdultUnlockRequirement(char).label;
+          cs.messages.push({ sender: 'system', text: `🔒 Chưa thể vào khách sạn: ${reason}` });
+          cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết và tin tưởng để đi khách sạn đâu! Hôm nay mình về trước nhé.`) });
           saveState(); renderMessagesView(); return;
         }
         startDatingTimeSession(char, cs, IRL_VENUES.find(v => v.id === 'hotel'));
@@ -2723,11 +2819,58 @@ Trả về DUY NHẤT JSON: {"reply":"câu trả lời","affectionDelta":5,"trus
       document.getElementById('sumFinalBalance').textContent = formatVND(state.player.balance);
     }
 
+    let pendingInstantInvite = null;
+    function closeInstantInviteModal() {
+      pendingInstantInvite = null;
+      document.getElementById('modal-instant-invite')?.classList.add('hidden');
+    }
+    function handleInstantInviteChoice(choice) {
+      const inv = pendingInstantInvite;
+      closeInstantInviteModal();
+      if (!inv) return;
+      const char = getCharById(inv.charId), cs = char ? state.charStates[char.id] : null;
+      if (!char || !cs) return;
+      if (choice === 'accept') {
+        state.activeChatCharId = char.id;
+        startDatingTimeSession(char, cs, inv.venue || IRL_VENUES[0]);
+      } else {
+        cs.messages.push({ sender: 'me', text: 'Xin lỗi nhé, hôm nay mình hơi bận nên hẹn dịp khác nha!' });
+        cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, 'Không sao đâu, khi nào rảnh nhắn mình nha 😊') });
+        saveState();
+        if (state.activeChatCharId === char.id) renderMessagesView();
+      }
+    }
+
     function confirmRestartFromProfile() { restartAndShuffleGame(); }
     function restartAndShuffleGame() {
       localStorage.removeItem('heartlink_dating_sim_v2');
-      state.swipedLeftIds = []; state.swipedRightIds = []; state.matchedIds = []; state.charStates = {}; state.scamDetectedCount = 0;
-      initCharRuntimeStates(); buildFilteredDeckOrder(true); saveState(); navToScreen('swipe');
+      const startBalance = Math.round((state.player.income || 25000000) * 1.4);
+      state.day = 1;
+      state.month = 1;
+      state.simTime = { totalMinutes: 480 };
+      state.player.balance = startBalance;
+      state.finance = {
+        datingSpent: 0, giftSpent: 0, scamLost: 0,
+        ledger: [{ day: 1, title: "Số dư khởi tạo tài khoản", amount: startBalance, type: "in" }]
+      };
+      state.swipedLeftIds = [];
+      state.swipedRightIds = [];
+      state.superLikedIds = [];
+      state.matchedIds = [];
+      state.activeChatCharId = null;
+      state.charStates = {};
+      state.reportsLog = [];
+      state.ignoredRedFlags = [];
+      state.scamDetectedCount = 0;
+      state.achievements = [];
+      Object.keys(aiChoicePending).forEach(k => delete aiChoicePending[k]);
+      Object.keys(aiChoiceFailed).forEach(k => delete aiChoiceFailed[k]);
+      initCharRuntimeStates();
+      buildFilteredDeckOrder(true);
+      saveState();
+      updateTopBarStats();
+      navToScreen('swipe');
+      showToast('🔄 Đã khởi tạo lại toàn bộ hành trình từ Ngày 1!', 'info');
     }
 
     window.onload = function() {
