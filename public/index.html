@@ -1135,6 +1135,47 @@
       addUntilGenderCount("Nam", 60, maleFirst);
       addUntilGenderCount("Nữ", 60, femaleFirst);
       addUntilGenderCount("Phi nhị nguyên", 30, nbNames);
+
+      // Làm phong phú Album 4 ảnh đa bối cảnh cho toàn bộ 150 hồ sơ
+      result.forEach((c, idx) => {
+        const existing = Array.isArray(c.album) ? c.album.slice() : [];
+        const hasAqua = (c.hobbies || []).some(h => /cá|thủy sinh/i.test(h)) || c.avatarStyle?.bg === 'aquarium';
+        const hasStage = c.avatarStyle?.bg === 'stage_lights' || /ca sĩ|nhạc|idol|nghệ sĩ/i.test(c.job || '');
+        const hasPet = (c.hobbies || []).some(h => /thú cưng|mèo|chó/i.test(h));
+
+        const defaults = [
+          { title: `Chân dung ${c.name}`, scene: 'portrait', caption: `${c.job} • ${c.location} ✨` },
+          c.isScammer
+            ? { title: idx % 2 === 0 ? 'Biểu đồ đầu tư & Lợi nhuận' : 'Tiệc đêm sang chảnh', scene: idx % 2 === 0 ? 'crypto_chart' : 'luxury_night', caption: idx % 2 === 0 ? 'Kênh đầu tư sinh lời ổn định mỗi tuần 📈' : 'Tận hưởng không khí VIP cuối tuần 🥂' }
+            : hasAqua
+              ? { title: 'Góc bể cá thủy sinh', scene: 'aquarium', caption: 'Thư giãn ngắm đàn cá bơi sau giờ làm 🐟🌿' }
+              : hasStage
+                ? { title: 'Ánh đèn sân khấu', scene: 'stage_lights', caption: 'Khoảnh khắc cháy hết mình với đam mê 🎤✨' }
+                : { title: 'Góc cà phê cuối tuần', scene: 'cafe_aesthetic', caption: 'Một ly cà phê thơm và bản nhạc nhẹ ☕🎶' },
+          idx % 3 === 0
+            ? { title: 'Hoàng hôn trên biển', scene: 'travel_beach', caption: 'Chuyến đi nạp lại năng lượng bên bờ biển 🏖️🌅' }
+            : (idx % 3 === 1
+              ? { title: 'Sương sớm Đà Lạt', scene: 'travel_mountain', caption: 'Không khí se lạnh và đồi thông bình yên 🌲☁️' }
+              : { title: 'Góc làm việc sáng tạo', scene: 'workspace', caption: `Một ngày tập trung hết mình với nghề ${c.job} 💻✨` }),
+          c.isScammer
+            ? { title: 'Dạo phố đêm & Skybar', scene: 'neon_club', caption: 'Cuộc sống về đêm luôn thú vị 🍸🌃' }
+            : (hasPet || idx % 2 === 0)
+              ? { title: 'Chilling cùng thú cưng', scene: 'pet_cozy', caption: 'Ở nhà ôm boss là hạnh phúc nhất rồi 🐾💛' }
+              : { title: 'Bữa tối ánh nến Rooftop', scene: 'evening_date', caption: 'Ngắm thành phố lên đèn từ tầng thượng 🍷✨' }
+        ];
+
+        const merged = [];
+        for (let k = 0; k < 4; k++) {
+          if (existing[k]) {
+            merged.push(existing[k]);
+          } else {
+            merged.push(defaults[k]);
+          }
+        }
+        c.album = merged;
+        c.photoCount = merged.length;
+      });
+
       return result;
     }
 
@@ -1246,18 +1287,22 @@
     function generateCharacterSVG(char, sceneIndex = 0) {
       const st = char.avatarStyle || {};
       const albumItem = (char.album && char.album[sceneIndex]) ? char.album[sceneIndex] : { title: char.name, scene: 'portrait' };
+      const sceneType = albumItem.scene || (sceneIndex === 0 ? 'portrait' : (sceneIndex === 1 ? 'cafe_aesthetic' : (sceneIndex === 2 ? 'travel_beach' : 'evening_date')));
+
       const palMap = {
         luxury_night: ['#090d16', '#3b0764', '#f59e0b'], yacht_sunset: ['#172554', '#be185d', '#fb923c'],
         neon_club: ['#130322', '#701a75', '#f43f5e'], interior_studio: ['#18181b', '#3f3f46', '#fbbf24'],
         office_modern: ['#0f172a', '#1d4ed8', '#38bdf8'], flower_shop: ['#4c0519', '#be123c', '#fda4af'],
         studio_pink: ['#4a044e', '#be185d', '#f9a8d4'], stage_lights: ['#1e1b4b', '#6d28d9', '#f472b6'],
         law_office: ['#172554', '#1e40af', '#93c5fd'], street_sunset: ['#1c1917', '#9a3412', '#fbbf24'],
-        aquarium: ['#042f2e', '#0f766e', '#34d399'], cafe_aesthetic: ['#24170f', '#78350f', '#fdba74']
+        aquarium: ['#042f2e', '#0f766e', '#34d399'], cafe_aesthetic: ['#24170f', '#78350f', '#fdba74'],
+        crypto_chart: ['#020617', '#064e3b', '#10b981'], travel_beach: ['#0c4a6e', '#ea580c', '#fde047'],
+        travel_mountain: ['#0f172a', '#1e3a5f', '#6ee7b7'], workspace: ['#0f172a', '#312e81', '#60a5fa'],
+        pet_cozy: ['#3b0764', '#9d174d', '#fbcfe8'], evening_date: ['#09090b', '#4c0519', '#f43f5e']
       };
-      const pal = palMap[st.bg] || ['#1e1b4b', '#4c1d95', '#ec4899'];
+      const pal = (sceneType !== 'portrait' && palMap[sceneType]) ? palMap[sceneType] : (palMap[st.bg] || ['#1e1b4b', '#4c1d95', '#ec4899']);
       const skin = st.skin || '#f2caa8';
       const isFemale = st.gender === 'female';
-      const isNonBinary = st.gender === 'nonbinary';
 
       const hairColorMap = { blonde: '#facc15', red: '#be123c', silver: '#e2e8f0', brown: '#6b3e26', chestnut: '#7c2d12', black: '#18181b' };
       let hairColor = '#18181b';
@@ -1270,8 +1315,121 @@
         suit_navy: '#1e3a8a', dress_emerald: '#047857', cardigan_pink: '#db2777', turtleneck_black: '#18181b',
         denim_jacket: '#2563eb', club_dress_black: '#be123c', blazer_beige: '#b45309', polo_navy: '#1e40af', blazer_rose: '#be185d'
       };
-      const outfitColor = outfitMap[st.outfit] || '#4f46e5';
-      const gradId = `g_${(char.id || 'u').replace(/[^a-zA-Z0-9_]/g, '')}_${sceneIndex}`;
+      const altOutfits = ['#334155', '#0f766e', '#7c2d12', '#6d28d9'];
+      const outfitColor = sceneIndex === 0 ? (outfitMap[st.outfit] || '#4f46e5') : altOutfits[(sceneIndex + (char.age || 0)) % altOutfits.length];
+      const gradId = `g_${(char.id || 'u').replace(/[^a-zA-Z0-9_]/g, '')}_${sceneIndex}_${sceneType}`;
+
+      // Build distinct background & foreground scenery per sceneType
+      let bgSceneSvg = `<circle cx="332" cy="78" r="88" fill="${pal[2]}" opacity="0.22"/><circle cx="64" cy="140" r="54" fill="${pal[2]}" opacity="0.12"/>`;
+      let fgPropSvg = '';
+      let charTransform = 'translate(0, 14)';
+
+      if (sceneType === 'aquarium') {
+        bgSceneSvg = `
+          <rect x="20" y="28" width="360" height="230" rx="18" fill="#042f2e" stroke="#34d399" stroke-width="3" opacity="0.9"/>
+          <rect x="26" y="34" width="348" height="218" rx="14" fill="#0d9488" opacity="0.35"/>
+          <path d="M40 250 Q55 180 48 125 M62 250 Q78 190 70 140 M330 250 Q315 170 326 115 M350 250 Q340 195 352 148" stroke="#10b981" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.8"/>
+          <ellipse cx="98" cy="110" rx="16" ry="8" fill="#fb923c"/><polygon points="82,110 70,102 70,118" fill="#fb923c"/>
+          <ellipse cx="305" cy="88" rx="14" ry="7" fill="#38bdf8"/><polygon points="319,88 330,81 330,95" fill="#38bdf8"/>
+          <ellipse cx="285" cy="148" rx="11" ry="6" fill="#facc15"/><polygon points="296,148 305,142 305,154" fill="#facc15"/>
+          <circle cx="110" cy="76" r="4" fill="#a7f3d0" opacity="0.7"/><circle cx="122" cy="58" r="6" fill="#a7f3d0" opacity="0.5"/><circle cx="270" cy="64" r="5" fill="#a7f3d0" opacity="0.6"/>`;
+        charTransform = 'translate(-34, 46) scale(0.86)';
+      } else if (sceneType === 'cafe_aesthetic') {
+        bgSceneSvg = `
+          <rect x="22" y="24" width="160" height="190" rx="14" fill="#451a03" opacity="0.55" stroke="#fdba74" stroke-width="2"/>
+          <line x1="102" y1="24" x2="102" y2="214" stroke="#fdba74" stroke-width="1.5" opacity="0.5"/>
+          <line x1="22" y1="118" x2="182" y2="118" stroke="#fdba74" stroke-width="1.5" opacity="0.5"/>
+          <line x1="295" y1="0" x2="295" y2="62" stroke="#fde68a" stroke-width="2"/>
+          <circle cx="295" cy="72" r="18" fill="#fde68a" opacity="0.85"/><circle cx="295" cy="72" r="40" fill="#fbbf24" opacity="0.22"/>
+          <line x1="348" y1="0" x2="348" y2="95" stroke="#fde68a" stroke-width="2"/>
+          <circle cx="348" cy="105" r="14" fill="#fde68a" opacity="0.8"/>`;
+        fgPropSvg = `
+          <rect x="0" y="346" width="400" height="60" fill="#451a03" opacity="0.92"/>
+          <rect x="282" y="314" width="46" height="36" rx="8" fill="#fef3c7"/>
+          <path d="M328 322 C340 322, 340 342, 328 342" fill="none" stroke="#fef3c7" stroke-width="4"/>
+          <path d="M296 306 Q300 294 296 286 M310 306 Q314 294 310 286" stroke="#fde68a" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.8"/>`;
+        charTransform = 'translate(-22, 32) scale(0.9)';
+      } else if (sceneType === 'crypto_chart') {
+        bgSceneSvg = `
+          <g stroke="#10b981" stroke-width="1" opacity="0.18">
+            <line x1="0" y1="80" x2="400" y2="80"/><line x1="0" y1="150" x2="400" y2="150"/><line x1="0" y1="220" x2="400" y2="220"/>
+            <line x1="80" y1="0" x2="80" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/><line x1="240" y1="0" x2="240" y2="320"/><line x1="320" y1="0" x2="320" y2="320"/>
+          </g>
+          <polyline points="20,240 75,215 125,228 185,165 245,180 315,92 375,58" fill="none" stroke="#34d399" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="304" y="84" width="12" height="44" rx="2" fill="#10b981"/><rect x="334" y="64" width="12" height="52" rx="2" fill="#34d399"/>
+          <rect x="250" y="34" width="130" height="32" rx="8" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+          <text x="262" y="55" fill="#6ee7b7" font-size="13" font-weight="800">+248.5% BTC</text>`;
+        charTransform = 'translate(-38, 42) scale(0.88)';
+      } else if (sceneType === 'travel_beach') {
+        bgSceneSvg = `
+          <circle cx="315" cy="128" r="52" fill="#fde047" opacity="0.9"/><circle cx="315" cy="128" r="78" fill="#fb923c" opacity="0.28"/>
+          <rect x="0" y="210" width="400" height="120" fill="#0369a1" opacity="0.72"/>
+          <path d="M0 228 Q50 218 100 228 T200 228 T300 228 T400 228" fill="none" stroke="#bae6fd" stroke-width="2.5" opacity="0.65"/>
+          <path d="M0 258 Q50 248 100 258 T200 258 T300 258 T400 258" fill="none" stroke="#fde047" stroke-width="2" opacity="0.45"/>
+          <path d="M24 320 Q42 180 76 92" stroke="#1c1917" stroke-width="11" fill="none"/>
+          <path d="M76 92 Q28 74 8 112 M76 92 Q52 48 18 58 M76 92 Q115 62 146 92 M76 92 Q108 108 128 142" stroke="#064e3b" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+        charTransform = 'translate(26, 36) scale(0.88)';
+      } else if (sceneType === 'travel_mountain') {
+        bgSceneSvg = `
+          <circle cx="88" cy="76" r="28" fill="#fef08a" opacity="0.85"/>
+          <ellipse cx="265" cy="78" rx="48" ry="18" fill="#e2e8f0" opacity="0.25"/><ellipse cx="305" cy="86" rx="34" ry="14" fill="#e2e8f0" opacity="0.2"/>
+          <polygon points="-20,310 110,130 240,310" fill="#1e293b" opacity="0.85"/>
+          <polygon points="150,310 295,112 430,310" fill="#0f172a" opacity="0.9"/>
+          <polygon points="34,310 56,245 78,310" fill="#065f46"/><polygon points="325,310 350,235 375,310" fill="#064e3b"/>`;
+        charTransform = 'translate(14, 38) scale(0.88)';
+      } else if (sceneType === 'workspace') {
+        bgSceneSvg = `
+          <rect x="220" y="30" width="156" height="145" rx="12" fill="#0f172a" stroke="#60a5fa" stroke-width="2" opacity="0.85"/>
+          <rect x="234" y="46" width="128" height="12" rx="4" fill="#38bdf8" opacity="0.5"/>
+          <rect x="234" y="68" width="90" height="8" rx="4" fill="#818cf8" opacity="0.45"/>
+          <rect x="234" y="86" width="110" height="8" rx="4" fill="#34d399" opacity="0.45"/>
+          <rect x="234" y="104" width="76" height="8" rx="4" fill="#f472b6" opacity="0.45"/>
+          <rect x="24" y="42" width="84" height="110" rx="8" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5" opacity="0.65"/>`;
+        fgPropSvg = `
+          <rect x="0" y="348" width="400" height="58" fill="#1e293b" opacity="0.95"/>
+          <polygon points="248,348 264,296 368,296 354,348" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+          <circle cx="308" cy="322" r="7" fill="#38bdf8"/>`;
+        charTransform = 'translate(-30, 34) scale(0.88)';
+      } else if (sceneType === 'stage_lights' || sceneType === 'neon_club') {
+        bgSceneSvg = `
+          <polygon points="40,0 160,380 80,380" fill="#ec4899" opacity="0.2"/>
+          <polygon points="360,0 240,380 320,380" fill="#38bdf8" opacity="0.22"/>
+          <polygon points="200,0 135,380 265,380" fill="#a855f7" opacity="0.18"/>
+          <circle cx="72" cy="84" r="14" fill="#f472b6" opacity="0.6"/><circle cx="332" cy="96" r="18" fill="#38bdf8" opacity="0.55"/>
+          <circle cx="300" cy="180" r="10" fill="#facc15" opacity="0.6"/>`;
+        fgPropSvg = `
+          <polygon points="315,305 349,305 332,332" fill="#f43f5e" opacity="0.85" stroke="#fde68a" stroke-width="2"/>
+          <line x1="332" y1="332" x2="332" y2="365" stroke="#fde68a" stroke-width="2.5"/><line x1="318" y1="365" x2="346" y2="365" stroke="#fde68a" stroke-width="2.5"/>`;
+        charTransform = 'translate(-18, 28) scale(0.91)';
+      } else if (sceneType === 'pet_cozy') {
+        bgSceneSvg = `
+          <circle cx="80" cy="82" r="46" fill="#fbcfe8" opacity="0.2"/><circle cx="330" cy="110" r="64" fill="#f472b6" opacity="0.18"/>
+          <text x="52" y="96" font-size="28" opacity="0.75">✨</text><text x="315" y="92" font-size="26" opacity="0.75">🐾</text>`;
+        fgPropSvg = `
+          <g transform="translate(274, 282)">
+            <ellipse cx="42" cy="64" rx="34" ry="30" fill="#fde68a"/>
+            <circle cx="42" cy="30" r="24" fill="#fde68a"/>
+            <polygon points="22,18 18,-2 36,12" fill="#f59e0b"/><polygon points="62,18 66,-2 48,12" fill="#f59e0b"/>
+            <circle cx="34" cy="28" r="3" fill="#1e293b"/><circle cx="50" cy="28" r="3" fill="#1e293b"/>
+            <path d="M39 36 Q42 40 45 36" stroke="#be123c" stroke-width="2" fill="none"/>
+          </g>`;
+        charTransform = 'translate(-30, 32) scale(0.9)';
+      } else if (sceneType === 'evening_date' || sceneType === 'luxury_night') {
+        bgSceneSvg = `
+          <rect x="18" y="135" width="44" height="190" fill="#1e1b4b" opacity="0.85"/>
+          <rect x="70" y="96" width="52" height="230" fill="#312e81" opacity="0.85"/>
+          <rect x="285" y="110" width="48" height="215" fill="#1e1b4b" opacity="0.85"/>
+          <rect x="340" y="75" width="46" height="250" fill="#312e81" opacity="0.85"/>
+          <g fill="#fde047" opacity="0.75">
+            <rect x="82" y="114" width="8" height="8"/><rect x="100" y="114" width="8" height="8"/><rect x="82" y="136" width="8" height="8"/>
+            <rect x="352" y="96" width="8" height="8"/><rect x="368" y="118" width="8" height="8"/><rect x="298" y="132" width="8" height="8"/>
+          </g>
+          <circle cx="200" cy="62" r="22" fill="#fef08a" opacity="0.85"/>`;
+        fgPropSvg = `
+          <rect x="52" y="328" width="14" height="32" rx="3" fill="#fef3c7"/>
+          <ellipse cx="59" cy="318" rx="6" ry="10" fill="#fb923c"/><ellipse cx="59" cy="320" rx="3" ry="6" fill="#fef08a"/>`;
+        charTransform = 'translate(16, 26) scale(0.91)';
+      }
 
       let hairBack = '', hairTop = '';
       const hStyle = st.hair || '';
@@ -1313,24 +1471,24 @@
       }
 
       let accSvg = '';
-      if (st.acc && st.acc.includes('glasses')) {
-        accSvg += `<g stroke="#fbbf24" stroke-width="2.4" fill="rgba(255,255,255,0.14)"><rect x="158" y="185" width="32" height="20" rx="7"/><rect x="210" y="185" width="32" height="20" rx="7"/><line x1="190" y1="195" x2="210" y2="195"/></g>`;
-      } else if (st.acc === 'sunglasses') {
+      if (sceneType === 'travel_beach' || st.acc === 'sunglasses') {
         accSvg += `<g fill="#090d16" stroke="#f8fafc" stroke-width="2"><rect x="156" y="182" width="35" height="22" rx="6"/><rect x="209" y="182" width="35" height="22" rx="6"/><line x1="191" y1="192" x2="209" y2="192"/></g>`;
+      } else if (sceneType === 'workspace' || (st.acc && st.acc.includes('glasses'))) {
+        accSvg += `<g stroke="#fbbf24" stroke-width="2.4" fill="rgba(255,255,255,0.14)"><rect x="158" y="185" width="32" height="20" rx="7"/><rect x="210" y="185" width="32" height="20" rx="7"/><line x1="190" y1="195" x2="210" y2="195"/></g>`;
       }
       if (st.acc && st.acc.includes('earrings')) {
         accSvg += `<circle cx="136" cy="212" r="4.5" fill="#fbbf24"/><circle cx="264" cy="212" r="4.5" fill="#fbbf24"/>`;
       }
 
-      const mouthSvg = st.face === 'charming_smirk'
+      const mouthSvg = (st.face === 'charming_smirk' || sceneIndex === 2)
         ? `<path d="M185 236 Q203 245 218 231" fill="none" stroke="#9f1239" stroke-width="3.2" stroke-linecap="round"/>`
         : `<path d="M183 234 Q200 248 217 234" fill="${isFemale ? '#fb7185' : 'none'}" stroke="#be123c" stroke-width="3.2" stroke-linecap="round"/>`;
 
       return `<svg viewBox="0 0 400 460" class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg">
         <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal[0]}"/><stop offset="55%" stop-color="${pal[1]}"/><stop offset="100%" stop-color="${pal[2]}"/></linearGradient></defs>
         <rect width="400" height="460" fill="url(#${gradId})"/>
-        <circle cx="332" cy="78" r="88" fill="${pal[2]}" opacity="0.22"/>
-        <g transform="translate(0, 14)">
+        ${bgSceneSvg}
+        <g transform="${charTransform}">
           ${hairBack}
           <path d="M90 450 C90 332, 138 298, 200 298 C262 298, 310 332, 310 450 Z" fill="${outfitColor}"/>
           <rect x="182" y="254" width="36" height="54" rx="14" fill="${skin}"/>
@@ -1344,6 +1502,7 @@
           <path d="M200 198 L196 217 L204 219" fill="none" stroke="#b47b5c" stroke-width="2.2" stroke-linecap="round"/>
           ${mouthSvg}${accSvg}${hairTop}
         </g>
+        ${fgPropSvg}
         <rect x="16" y="396" width="368" height="42" rx="12" fill="rgba(9, 13, 22, 0.82)"/>
         <text x="28" y="422" fill="#f8fafc" font-size="13" font-weight="600">📷 ${albumItem.title || 'Ảnh hồ sơ'}</text>
       </svg>`;
@@ -2219,10 +2378,9 @@ Chỉ trả về JSON, trường "latest_summary" ghi TRƯỚC (tóm tắt 1 câ
           cs.hasEverUnlocked18 = true;
           cs.messages.push({ sender: 'system', text: '🔞 Chế độ 18+ đã được kích hoạt! Bạn có thể bấm [🚪 Thoát 18+] bất cứ lúc nào để quay lại bình thường.' });
         } else {
-          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
           return {
             handled: true,
-            reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`),
+            reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu lịch sự nhé!`),
             affDelta: -12, trustDelta: -14
           };
         }
@@ -2409,8 +2567,7 @@ ${canInviteToDate(cs)
             cs.messages.push({ sender: 'system', text: '🔞 Chế độ 18+ đã được kích hoạt! Bạn có thể bấm [🚪 Thoát 18+] bất cứ lúc nào để quay lại bình thường.' });
           }
         } else {
-          cs.messages.push({ sender: 'system', text: `🔒 Chế độ 18+ chưa mở. Điều kiện với người này: ${getAdultUnlockRequirement(char).label}.` });
-          finalReply = applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện 18+ táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu nghiêm túc nhé!`);
+          finalReply = applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng để nói chuyện táo bạo như vậy đâu 😅. Mình giữ ranh giới tìm hiểu lịch sự nhé!`);
           affD = -12; truD = -14;
         }
       }
@@ -2728,17 +2885,16 @@ ${canInviteToDate(cs)
         if (canAcceptOvernightVenue(char, cs, venue)) {
           return { accepted: true };
         }
-        const req = getAdultUnlockRequirement(char).label;
         if (isSerious) {
           return {
             accepted: false, affDelta: -14, truDelta: -15,
-            sysMsg: `🔒 ${char.name} từ chối thẳng lời mời đến ${venue.name} (Yêu cầu: ${req}).`,
+            sysMsg: `🔒 ${char.name} từ chối thẳng lời mời đến ${venue.name}.`,
             reply: applyDialectFlavor(char, `Khoan đã ${state.player.name}! Tụi mình chưa đủ thân thiết và tin tưởng mà bạn đã rủ đi ${venue.name} rồi sao? Mình tìm hiểu nghiêm túc chứ không thể đồng ý kiểu vội vàng như vậy đâu!`)
           };
         }
         return {
           accepted: false, affDelta: -8, truDelta: -8,
-          sysMsg: `🔒 ${char.name} từ chối đến ${venue.name} vì mục đích của họ không phù hợp khi chưa đủ thân (Yêu cầu: ${req}).`,
+          sysMsg: `🔒 ${char.name} từ chối lời mời đến ${venue.name}.`,
           reply: applyDialectFlavor(char, `Hơi nhanh quá rồi đó ${state.player.name} 😅. Mình chưa thấy đủ tin tưởng để đi ${venue.name} đâu, gặp chỗ công cộng trước nha!`)
         };
       }
@@ -2865,7 +3021,7 @@ ${canInviteToDate(cs)
         }
         cs.inDatingTime = false;
         cs.inHotelDatingTime = false;
-        cs.messages.push({ sender: 'system', text: `🌙 Bạn và ${char.name} đến ${venue.icon || '🏨'} ${venue.name}. Vì chưa từng mở Chế độ 18+ với người này, buổi hẹn chuyển thẳng đến đoạn kết đêm riêng tư.` });
+        cs.messages.push({ sender: 'system', text: `🌙 Bạn và ${char.name} đến ${venue.icon || '🏨'} ${venue.name} cho một buổi tối riêng tư.` });
         saveState(); updateTopBarStats(); navToScreen('messages');
 
         document.getElementById('irlModalTitle').textContent = `🌙 Đêm Riêng Tư Cùng ${char.name}`;
@@ -2902,7 +3058,7 @@ ${canInviteToDate(cs)
         secret_corner_18: `[Lén lút 18+] Bạn kéo ${char.name} vào góc khuất tại điểm hẹn, hôn ngấu nghiến và vuốt ve đầy liều lĩnh 🔥🔞`,
         hotel_climax_18: `[18+] Hai bạn quấn lấy nhau cuồng nhiệt trên giường khách sạn 🔥🔞💦`
       };
-      if (act.includes('18') && !cs.adultChatUnlocked) { showToast('Chế độ 18+ chưa được mở với người này.', 'warn'); return; }
+      if (act.includes('18') && !cs.adultChatUnlocked) { return; }
       cs.messages.push({ sender: 'me', text: labels[act] || labels.hug });
 
       const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -3042,7 +3198,7 @@ ${canInviteToDate(cs)
         <button onclick="resolvePostDateNextChoice('escort_home')" class="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-left">🚗 1. Đưa về tận nhà an toàn & Hẹn buổi gặp tiếp theo (+18% Tình cảm)</button>
         <button onclick="resolvePostDateNextChoice('second_round')" class="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs text-left">🍸 2. Rủ đi Tăng 2 (Dạo phố đêm / Uống cocktail ngắm cảnh — 350.000đ)</button>
         <button onclick="resolvePostDateNextChoice('confess')" class="p-3 rounded-xl gradient-brand text-white font-bold text-xs text-left">💐 3. Nắm tay Tỏ Tình chính thức ngay tại chỗ!</button>
-        <button onclick="resolvePostDateNextChoice('hotel_next')" class="p-3 rounded-xl bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-bold text-xs text-left">🏨 4. Rủ ghé Khách Sạn / Homestay riêng tư (18+)</button>
+        <button onclick="resolvePostDateNextChoice('hotel_next')" class="p-3 rounded-xl bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-bold text-xs text-left">🏨 4. Rủ ghé Khách Sạn / Homestay riêng tư</button>
         <button onclick="resolvePostDateNextChoice('marry')" class="p-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs text-left">💍 5. Cầu Hôn / Xác lập gắn bó trăm năm</button>
         <button onclick="resolvePostDateNextChoice('goodbye')" class="p-3 rounded-xl bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700 text-left">👋 6. Chào tạm biệt kết thúc buổi hẹn vui vẻ</button>
       `;
@@ -3056,8 +3212,9 @@ ${canInviteToDate(cs)
         if (char.isUnderage || !canAcceptOvernightVenue(char, cs, hotelVenue)) {
           closeIRLDateModal();
           cs.affection = Math.max(0, cs.affection - 15);
-          const reason = char.isUnderage ? 'Đối phương chưa đủ 18 tuổi.' : getAdultUnlockRequirement(char).label;
-          cs.messages.push({ sender: 'system', text: `🔒 Chưa thể vào khách sạn: ${reason}` });
+          if (char.isUnderage) {
+            cs.messages.push({ sender: 'system', text: '⚠️ Đối phương chưa đủ 18 tuổi.' });
+          }
           cs.messages.push({ sender: 'them', text: applyDialectFlavor(char, `Xin lỗi ${state.player.name}, tụi mình chưa đủ thân thiết và tin tưởng để đi khách sạn đâu! Hôm nay mình về trước nhé.`) });
           saveState(); renderMessagesView(); return;
         }
